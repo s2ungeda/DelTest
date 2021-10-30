@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
 
 type
-  TForm3 = class(TForm)
+  TeSaac = class(TForm)
     Button1: TButton;
     procedure Button1Click(Sender: TObject);
   private
@@ -17,13 +17,13 @@ type
   end;
 
 var
-  Form3: TForm3;
+  eSaac: TeSaac;
 
 implementation
 
 {$R *.dfm}
 
-procedure TForm3.Button1Click(Sender: TObject);
+procedure TeSaac.Button1Click(Sender: TObject);
 begin
   showmessage('test');
 end;
