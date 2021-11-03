@@ -12,15 +12,26 @@ object eSaac: TeSaac
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Button1: TButton
-    Left = 8
-    Top = 24
+  object Button2: TButton
+    Left = 364
+    Top = 124
     Width = 75
     Height = 25
-    Caption = 'Button1'
+    Caption = #51333#47308
     TabOrder = 0
     OnClick = Button1Click
+  end
+  object Button3: TButton
+    Left = 24
+    Top = 124
+    Width = 75
+    Height = 25
+    Caption = #47196#44536
+    TabOrder = 1
+    OnClick = Button3Click
   end
 end
