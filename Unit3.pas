@@ -13,12 +13,14 @@ type
   TeSaac = class(TForm)
     Button2: TButton;
     Button3: TButton;
+    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Button1Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
   private
     { Private declarations }
+    procedure makeTrhead;
   public
     { Public declarations }
     Log : TLogThread;
@@ -53,6 +55,12 @@ end;
 procedure TeSaac.FormCreate(Sender: TObject);
 begin
   Log := TLogThread.Create;
+end;
+
+procedure TeSaac.makeTrhead;
+begin
+  if Log = nil then
+    Log := TLogThread.Create;
 end;
 
 end.

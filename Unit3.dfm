@@ -34,4 +34,12 @@ object eSaac: TeSaac
     TabOrder = 1
     OnClick = Button3Click
   end
+  object Button1: TButton
+    Left = 256
+    Top = 56
+    Width = 75
+    Height = 25
+    Caption = #47564#46308#44592
+    TabOrder = 2
+  end
 end
