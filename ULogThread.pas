@@ -4,28 +4,33 @@ interface
 
 uses
   System.Classes, System.SysUtils  , Windows, Forms
-
   ;
 
 type
 
+  {
+  1. LogLevel
+  2. PreFix
+  3. Data
+  }
+
   PLogData = ^TLogData;
   TLogData = record
-    LogType : char;
-    stDir: String;
-    stData: String;
-    stFile: string;
+    Level : char;
+    PreFix: String;
+    Data: String;
   end;
 
 
   TLogThread = class(TThread)
   private
-//    vLogData: PLogData;
+
     LogMutex: HWND;
+
     { Private declarations }
     function  LogPopQueue: PLogData;
     procedure LogWriteFile(vLogData: PLogData); overload;
-    procedure LogFileWrite(tLogDir, LogData: String; stFile : string=''); overload;
+    procedure LogFileWrite(cLevel : char; stPrefix, stData : string);
   protected
     procedure Execute; override;
   public
@@ -34,7 +39,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure LogPushQueue(stDir, stData: String;  bMaster : boolean = false; stFile : string='');
+    procedure Log( cLevel : char; stPrefix, stData : string ); overload;
+    procedure Log( cLevel : char; stPrefix : string; const fmt: string; const Args: array of const ); overload;
+
 
   end;
 
@@ -112,11 +119,10 @@ end;
 
 procedure TLogThread.LogWriteFile(vLogData: PLogData);
 begin
-  LogFileWrite(vLogData.stDir, vLogData.stData, vLogData.stFile); //파일로 쓰기..
+  LogFileWrite(vLogData.Level, vLogData.PreFix, vLogData.Data); //파일로 쓰기..
 end;
 
-procedure TLogThread.LogFileWrite(tLogDir, LogData: String; stFile: string);
-
+procedure TLogThread.LogFileWrite(cLevel: char; stPrefix, stData: string);
   function IsFileUse(fName: String): Boolean;
   var
     HFile: THandle;
@@ -136,26 +142,15 @@ procedure TLogThread.LogFileWrite(tLogDir, LogData: String; stFile: string);
 
 var
   OutFile: TextFile;
-  stDate, tStr, LogDir, LogFileName: String;
+  stDate, LogDir, LogFileName: String;
 begin
 
-
-  stDate  := FormatDateTime('YYYYMMDD',Date);
-  if Trim(tLogDir) = '' then
-    LogDir := ExtractFilePath(ParamStr(0))+'DataLog\'
-  else
-    LogDir := ExtractFilePath(ParamStr(0))+'Log\'+ stDate + '\';
-
-  tStr := LogData;
+  stDate := FormatDateTime('YYYYMMDD',Date);
+  LogDir := ExtractFilePath(ParamStr(0))+'Log\';
 
   if not DirectoryExists(LogDir) then CreateDir(LogDir);
 
-  if stFile = '' then
-    LogFileName := stDate+'_'+tLogDir
-  else
-    LogFileName := stDate+'_'+tLogDir +'_'+stFile;
-
-  LogFileName := LogDir + LogFileName + '.log';
+  LogFileName := LogDir + stPrefix+'_'+stDate + '.log';
 
   try
     if not IsFileUse(LogFileName) then begin
@@ -165,7 +160,7 @@ begin
         if Not FileExists(LogFileName) then
           ReWrite(OutFile)
         else Append(OutFile);
-        Writeln(OutFile,tStr);
+        Writeln(OutFile,stData);
       finally
         CloseFile(OutFile);
       end;
@@ -175,6 +170,7 @@ begin
   end;
 
 end;
+
 
 function TLogThread.LogPopQueue: PLogData;
 var
@@ -192,41 +188,32 @@ begin
 
 end;
 
-procedure TLogThread.LogPushQueue(stDir, stData: String; bMaster: boolean;
-  stFile: string);
+procedure TLogThread.Log(cLevel: char; stPrefix: string; const fmt: string;
+  const Args: array of const);
+begin
+  Log( cLevel, stPreFix, Format( fmt, Args ) );
+end;
+
+
+
+procedure TLogThread.Log(cLevel: char; stPreFix, stData: string);
 var
   vLogData: PLogData;
-//  stTmp: string;
-//  fMS : Single;
-  tNow : TDateTime;
+  stDiv   : string;
 begin
-
-  tNow := Now;
-//  if bMaster then
-//    stTmp := stData
-//  else begin
-//    if (stDir ='./log/sis') or ( stDir = './log/win') then
-//      stTmp := Format('%s, %s', [ FormatDateTime('H:NN:SS.Z', GetQuoteTime), stData ])
-//    else begin
-//      if stData = '' then
-//        stTmp := Format('%s', [ FormatDateTime('HH:NN:SS.ZZZ', GetQuoteTime) ])
-//      else
-//        stTmp := Format('%s, %s', [ FormatDateTime('HH:NN:SS.ZZZ', GetQuoteTime), stData ]);
-//    end;
-//  end;
-
   New(vLogData);
-  vLogData.stDir  := stDir;
-  vLogData.stData := Format('%s, %s', [ FormatDateTime('HH:NN:SS.ZZZ', tNow), stData ]);
-//  vLogData.bMaster := bMaster;
-//  vLogData.stFile := stFile;
+
+  stDiv := 'DEBUG';
+
+  vLogData.Level  := cLevel;
+  vLogData.PreFix := stPreFix;
+  vLogData.Data   := Format('[%s][%s]:%s', [ FormatDateTime('HH:NN:SS.ZZZ', Now)
+    , stDiv, stData ]);
 
   WaitForSingleObject(LogMutex, INFINITE);
   LogQueue.Add(vLogData);
   ReleaseMutex(LogMutex);
-
 end;
-
 
 
 end.
