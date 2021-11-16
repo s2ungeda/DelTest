@@ -7,7 +7,8 @@ uses
   UTypes in 'UTypes.pas',
   UStorage in 'UStorage.pas',
   UParsers in 'UParsers.pas',
-  Unit1 in 'Unit1.pas' {FrmPriceTable};
+  UPriceTable in 'UPriceTable.pas' {FrmPriceTable},
+  UTableConsts in 'UTableConsts.pas';
 
 {$R *.res}
 

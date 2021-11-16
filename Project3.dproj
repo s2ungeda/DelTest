@@ -134,10 +134,11 @@
         <DCCReference Include="UTypes.pas"/>
         <DCCReference Include="UStorage.pas"/>
         <DCCReference Include="UParsers.pas"/>
-        <DCCReference Include="Unit1.pas">
+        <DCCReference Include="UPriceTable.pas">
             <Form>FrmPriceTable</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="UTableConsts.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
