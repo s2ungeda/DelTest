@@ -34,10 +34,6 @@ object FrmPriceTable: TFrmPriceTable
     BevelOuter = bvNone
     Caption = 'plRight'
     TabOrder = 0
-    ExplicitLeft = 472
-    ExplicitTop = 113
-    ExplicitWidth = 417
-    ExplicitHeight = 544
     object plRightTop: TPanel
       Left = 0
       Top = 0
@@ -47,7 +43,6 @@ object FrmPriceTable: TFrmPriceTable
       BevelOuter = bvLowered
       Caption = 'plRightTop'
       TabOrder = 0
-      ExplicitWidth = 553
     end
     object plRightClient: TPanel
       Left = 0
@@ -58,10 +53,6 @@ object FrmPriceTable: TFrmPriceTable
       BevelOuter = bvLowered
       Caption = 'plRightClient'
       TabOrder = 1
-      ExplicitLeft = 2
-      ExplicitTop = 54
-      ExplicitWidth = 621
-      ExplicitHeight = 666
       object sgQuote: TStringGrid
         Left = 1
         Top = 1
@@ -72,9 +63,6 @@ object FrmPriceTable: TFrmPriceTable
         DefaultRowHeight = 19
         RowCount = 24
         TabOrder = 0
-        ExplicitLeft = 2
-        ExplicitTop = 2
-        ExplicitWidth = 1127
       end
     end
   end
@@ -84,9 +72,6 @@ object FrmPriceTable: TFrmPriceTable
     Width = 1772
     Height = 19
     Panels = <>
-    ExplicitLeft = 152
-    ExplicitTop = 697
-    ExplicitWidth = 845
   end
   object plLeft: TPanel
     Left = 0
@@ -106,9 +91,6 @@ object FrmPriceTable: TFrmPriceTable
       BevelOuter = bvLowered
       Caption = 'plLeftTop'
       TabOrder = 0
-      ExplicitLeft = -1
-      ExplicitTop = -4
-      ExplicitWidth = 559
       DesignSize = (
         870
         60)
@@ -176,9 +158,6 @@ object FrmPriceTable: TFrmPriceTable
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = -4
-      ExplicitWidth = 159
-      ExplicitHeight = 660
       object Splitter2: TSplitter
         Left = 0
         Top = 488
@@ -199,7 +178,6 @@ object FrmPriceTable: TFrmPriceTable
         BevelOuter = bvLowered
         Caption = 'plLeftClientTop'
         TabOrder = 0
-        ExplicitWidth = 900
         object sgKimp: TStringGrid
           Left = 1
           Top = 1
@@ -210,7 +188,6 @@ object FrmPriceTable: TFrmPriceTable
           DefaultRowHeight = 19
           RowCount = 24
           TabOrder = 0
-          ExplicitWidth = 900
         end
       end
       object plLeftClientClient: TPanel
@@ -222,10 +199,6 @@ object FrmPriceTable: TFrmPriceTable
         BevelOuter = bvLowered
         Caption = 'plLeftClientClient'
         TabOrder = 1
-        ExplicitLeft = 64
-        ExplicitTop = 368
-        ExplicitWidth = 185
-        ExplicitHeight = 41
         object sgInOut: TStringGrid
           Left = 1
           Top = 1
@@ -236,10 +209,6 @@ object FrmPriceTable: TFrmPriceTable
           DefaultRowHeight = 19
           RowCount = 24
           TabOrder = 0
-          ExplicitLeft = 2
-          ExplicitTop = 2
-          ExplicitWidth = 898
-          ExplicitHeight = 173
         end
       end
     end
