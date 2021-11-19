@@ -87,7 +87,7 @@ type
 implementation
 
 const
-  STORAGE_FORMAT_TOKEN = 'Lemon Engine Storage File Version 1.0';
+  STORAGE_FORMAT_TOKEN = 'Sweet Life Engine Storage File Version 1.0';
 
 { TStorageField }
 

@@ -129,15 +129,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="main\NMainMenu.pas">
-            <Form>DataModule1</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
-        <DCCReference Include="main\DalinMain.pas">
-            <Form>FrmMain</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="main\GApp.pas"/>
         <DCCReference Include="engine\UDalinEngine.pas"/>
         <DCCReference Include="engine\common\GLibs.pas"/>
@@ -146,6 +137,23 @@
         <DCCReference Include="engine\utils\ULogThread.pas"/>
         <DCCReference Include="engine\utils\UParsers.pas"/>
         <DCCReference Include="engine\utils\UStorage.pas"/>
+        <DCCReference Include="engine\utils\UFormBroker.pas"/>
+        <DCCReference Include="main\GAppForms.pas"/>
+        <DCCReference Include="wins\FPriceTable.pas">
+            <Form>FrmPriceTable</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="wins\_common\UTableConsts.pas"/>
+        <DCCReference Include="main\DalinMain.pas">
+            <Form>FrmDalinMain</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="main\NMainMenu.pas">
+            <Form>DataModule1</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="main\UDalinStatusEvent.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

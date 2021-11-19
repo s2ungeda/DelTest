@@ -1,8 +1,6 @@
 program Dalin;
 uses
   Vcl.Forms,
-  NMainMenu in 'main\NMainMenu.pas' {DataModule1: TDataModule},
-  DalinMain in 'main\DalinMain.pas' {FrmMain},
   GApp in 'main\GApp.pas',
   UDalinEngine in 'engine\UDalinEngine.pas',
   GLibs in 'engine\common\GLibs.pas',
@@ -10,14 +8,22 @@ uses
   UTypes in 'engine\common\UTypes.pas',
   ULogThread in 'engine\utils\ULogThread.pas',
   UParsers in 'engine\utils\UParsers.pas',
-  UStorage in 'engine\utils\UStorage.pas';
+  UStorage in 'engine\utils\UStorage.pas',
+  UFormBroker in 'engine\utils\UFormBroker.pas',
+  GAppForms in 'main\GAppForms.pas',
+  FPriceTable in 'wins\FPriceTable.pas' {FrmPriceTable},
+  UTableConsts in 'wins\_common\UTableConsts.pas',
+  DalinMain in 'main\DalinMain.pas' {FrmDalinMain},
+  NMainMenu in 'main\NMainMenu.pas' {DataModule1: TDataModule},
+  UDalinStatusEvent in 'main\UDalinStatusEvent.pas';
 
 {$R *.res}
 begin
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFrmDalinMain, FrmDalin);
   Application.CreateForm(TDataModule1, DataModule1);
-  Application.CreateForm(TFrmMain, FrmMain);
   Application.Run;
 
 end.

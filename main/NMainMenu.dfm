@@ -1,5 +1,6 @@
 object DataModule1: TDataModule1
   OldCreateOrder = False
+  OnCreate = DataModuleCreate
   Height = 172
   Width = 432
   object MainMenu1: TMainMenu
@@ -12,7 +13,11 @@ object DataModule1: TDataModule1
       end
     end
     object nAccount: TMenuItem
-      Caption = #44228#51340
+      Caption = #44144#47000#49548
+      object nExchange: TMenuItem
+        Caption = #51077#52636#44552#54788#54889#54364
+        OnClick = nExchangeClick
+      end
     end
     object nOrder: TMenuItem
       Caption = #51452#47928
@@ -23,13 +28,8 @@ object DataModule1: TDataModule1
         Caption = 'Kimp '#54788#54889#54364
         OnClick = Kimp1Click
       end
-      object N5: TMenuItem
-        Tag = 1
-        Caption = #51077#52636#44552' '#54788#54889#54364
-        OnClick = Kimp1Click
-      end
       object N6: TMenuItem
-        Tag = 2
+        Tag = 1
         Caption = #49884#49464#47784#45768#53552#47553
         OnClick = Kimp1Click
       end

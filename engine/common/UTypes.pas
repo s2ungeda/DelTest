@@ -3,9 +3,12 @@ unit UTypes;
 interface
 
 type
-  TLogLevel = ( llFatal, llError, llWarning, llInfo, llDebug, llTrace );
+
+  TAppStatus = ( asNone, asInit );
 
 
+
+  TAppStatusEvent  = procedure( asType : TAppStatus ) of object;
 
 implementation
 

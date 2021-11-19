@@ -1,11 +1,8 @@
 unit ULogThread;
-
 interface
-
 uses
   System.Classes, System.SysUtils  , Windows, Forms
   ;
-
 type
 
   {
@@ -13,20 +10,16 @@ type
   2. PreFix
   3. Data
   }
-
   PLogData = ^TLogData;
   TLogData = record
-    Level : char;
+    Level : string;
     PreFix: String;
     Data: String;
   end;
 
-
   TLogThread = class(TThread)
   private
-
     LogMutex: HWND;
-
     { Private declarations }
     function  LogPopQueue: PLogData;
     procedure LogWriteFile(vLogData: PLogData); overload;
@@ -35,26 +28,19 @@ type
     procedure Execute; override;
   public
     LogQueue: TList;
-
+    LogDir  : string;
     constructor Create;
     destructor Destroy; override;
-
-    procedure Log( cLevel : char; stPrefix, stData : string ); overload;
-    procedure Log( cLevel : char; stPrefix : string; const fmt: string; const Args: array of const ); overload;
-
+    procedure Log( llType : integer; stPrefix, stData : string ); overload;
+    procedure Log( llType : integer; stPrefix : string; const fmt: string; const Args: array of const ); overload;
 
   end;
-
 implementation
-
 { 
   Important: Methods and properties of objects in visual components can only be
   used in a method called using Synchronize, for example,
-
       Synchronize(UpdateCaption);  
-
   and UpdateCaption could look like,
-
     procedure TLogThread.UpdateCaption;
     begin
       Form1.Caption := 'Updated in a thread';
@@ -77,29 +63,24 @@ implementation
   the calling thread in a queue with the other thread.
     
 }
-
 { TLogThread }
-
 constructor TLogThread.Create;
 begin
   Inherited Create(False);
   FreeOnTerminate := True;
   LogMutex := CreateMutex(nil, False, 'LogMutex');
   LogQueue := TList.Create;
-
 //  if gEnv.RunMode = rtSimulation then
 //    Priority := tpNormal
 //  else
 //    Priority := tpLowest;
 end;
-
 destructor TLogThread.Destroy;
 begin
   CloseHandle(LogMutex);
   LogQueue.Free;
   Inherited Destroy;
 end;
-
 procedure TLogThread.Execute;
 var
   vLogData: PLogData;
@@ -116,12 +97,10 @@ begin
     end;
   end;
 end;
-
 procedure TLogThread.LogWriteFile(vLogData: PLogData);
 begin
-  LogFileWrite(vLogData.Level, vLogData.PreFix, vLogData.Data); //파일로 쓰기..
+  LogFileWrite(' ', vLogData.PreFix, vLogData.Data); //파일로 쓰기..
 end;
-
 procedure TLogThread.LogFileWrite(cLevel: char; stPrefix, stData: string);
   function IsFileUse(fName: String): Boolean;
   var
@@ -139,19 +118,12 @@ procedure TLogThread.LogFileWrite(cLevel: char; stPrefix, stData: string);
       end;
     end;
   end;
-
 var
   OutFile: TextFile;
-  stDate, LogDir, LogFileName: String;
+  stDate, LogFileName: String;
 begin
-
   stDate := FormatDateTime('YYYYMMDD',Date);
-  LogDir := ExtractFilePath(ParamStr(0))+'Log\';
-
-  if not DirectoryExists(LogDir) then CreateDir(LogDir);
-
-  LogFileName := LogDir + stPrefix+'_'+stDate + '.log';
-
+  LogFileName := LogDir +'\'+ stPrefix+'_'+stDate + '.log';
   try
     if not IsFileUse(LogFileName) then begin
     {$I-}
@@ -168,16 +140,13 @@ begin
     end;
   Except
   end;
-
 end;
-
 
 function TLogThread.LogPopQueue: PLogData;
 var
   vResult: PLogData;
 begin
   Result := nil;
-
   if LogQueue.Count < 1 then exit;
   New(Result);
   vResult := PLogData(LogQueue.Items[0]);
@@ -185,35 +154,38 @@ begin
   LogQueue.Delete(0);
   ReleaseMutex(LogMutex);
   Result := vResult;
-
 end;
-
-procedure TLogThread.Log(cLevel: char; stPrefix: string; const fmt: string;
+procedure TLogThread.Log(llType : integer; stPrefix: string; const fmt: string;
   const Args: array of const);
 begin
-  Log( cLevel, stPreFix, Format( fmt, Args ) );
+  Log( llType, stPreFix, Format( fmt, Args ) );
 end;
 
-
-
-procedure TLogThread.Log(cLevel: char; stPreFix, stData: string);
+procedure TLogThread.Log(llType : integer; stPreFix, stData: string);
 var
   vLogData: PLogData;
   stDiv   : string;
 begin
   New(vLogData);
+  case llType of
+    0: stDiv := 'FATAL';
+    1: stDiv := 'ERROR' ;
+    2: stDiv := 'WARNG' ;
+    3: stDiv := 'INFOM';
+    4: stDiv := 'DEBUG';
+    5: stDiv := 'TRACE' ;
+  end;
 
-  stDiv := 'DEBUG';
+  if stPreFix = '' then
+    stPreFix := 'Log';
 
-  vLogData.Level  := cLevel;
+  vLogData.Level  := stDiv;
   vLogData.PreFix := stPreFix;
   vLogData.Data   := Format('[%s][%s]:%s', [ FormatDateTime('HH:NN:SS.ZZZ', Now)
     , stDiv, stData ]);
-
   WaitForSingleObject(LogMutex, INFINITE);
   LogQueue.Add(vLogData);
   ReleaseMutex(LogMutex);
 end;
-
 
 end.
