@@ -10,6 +10,10 @@ procedure AppStatusEvent( asType : TAppStatus );
 
 implementation
 
+uses
+  GApp
+  ;
+
 procedure AppStatusEvent( asType : TAppStatus );
 begin
   case asType of

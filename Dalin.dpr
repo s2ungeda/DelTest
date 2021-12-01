@@ -15,7 +15,13 @@ uses
   UTableConsts in 'wins\_common\UTableConsts.pas',
   DalinMain in 'main\DalinMain.pas' {FrmDalinMain},
   NMainMenu in 'main\NMainMenu.pas' {DataModule1: TDataModule},
-  UDalinStatusEvent in 'main\UDalinStatusEvent.pas';
+  UDalinStatusEvent in 'main\UDalinStatusEvent.pas',
+  UFQN in 'engine\symbol\UFQN.pas',
+  USymbols in 'engine\symbol\USymbols.pas',
+  UMarketSpecs in 'engine\symbol\UMarketSpecs.pas',
+  UCollections in 'engine\utils\UCollections.pas',
+  USymbolParser in 'engine\symbol\USymbolParser.pas',
+  UMarkets in 'engine\symbol\UMarkets.pas';
 
 {$R *.res}
 begin

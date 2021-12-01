@@ -7,7 +7,6 @@ type
   TAppStatus = ( asNone, asInit );
 
 
-
   TAppStatusEvent  = procedure( asType : TAppStatus ) of object;
 
 implementation
