@@ -82,6 +82,8 @@ end;
 function TApp.LoadConfig: boolean;
 begin
   if not FConfig.LoadConfig then Exit(false);
+  if not FEngine.ApiConfig.LoadExchangeConfig then Exit(false);
+
   Result := SetDirInfo;
 
   FLog.LogDir := FLogDir;

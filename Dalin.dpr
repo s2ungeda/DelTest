@@ -21,7 +21,11 @@ uses
   UMarketSpecs in 'engine\symbol\UMarketSpecs.pas',
   UCollections in 'engine\utils\UCollections.pas',
   USymbolParser in 'engine\symbol\USymbolParser.pas',
-  UMarkets in 'engine\symbol\UMarkets.pas';
+  UMarkets in 'engine\symbol\UMarkets.pas',
+  UConsts in 'engine\common\UConsts.pas',
+  UApiConsts in 'api\UApiConsts.pas',
+  UApiConfigManager in 'api\UApiConfigManager.pas',
+  USymbolCore in 'engine\symbol\USymbolCore.pas';
 
 {$R *.res}
 begin

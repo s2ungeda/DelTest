@@ -3,7 +3,7 @@ unit UMarketSpecs;
 interface
 
 uses
-  system.Classes ,
+  system.Classes ,  system.SysUtils,
 
   UFQN, UCollections , USymbolParser
   ;
@@ -66,11 +66,6 @@ type
 
     function New(stFQN: String): TMarketSpec;
     function Find(stFQN: String): TMarketSpec;
-    function Find2(stPM: String): TMarketSpec;
-      // temporary until find a good architecture
-    function FindByUSSymbol(stSymbol: String): TMarketSpec;
-
-    function Represent: String;
 
     property Specs[i: Integer]: TMarketSpec read GetSpec; default;
   end;
@@ -82,7 +77,14 @@ implementation
 constructor TMarketSpec.Create(aColl: TCollection);
 begin
   inherited create(aColl);
+    // point value
+  FContractSize:= 1;
+  FPriceQuote:= 1;
+  FPointValue:= 1;
 
+  FTickSize:= 1.0;
+  FTickValue:= 1.0;
+  FPrecision:= 1;
 end;
 
 destructor TMarketSpec.Destroy;
@@ -95,43 +97,61 @@ end;
 
 constructor TMarketSpecs.Create;
 begin
+  inherited Create(TMarketSpec);
+
+  FFQNParser := TFQNParser.Create;
+  FSymbolParser := TSymbolParser.Create;
+
+  FDefault := New('*.*.*');
+  FDefault.FDescription := 'Default';
+  FDefault.FUnderlying := '';
 
 end;
 
 destructor TMarketSpecs.Destroy;
 begin
+  FSymbolParser.Free;
+  FFQNParser.Free;
 
   inherited;
 end;
 
 function TMarketSpecs.Find(stFQN: String): TMarketSpec;
+var
+  iPos: Integer;
 begin
+  stFQN := LowerCase(Trim(stFQN));
+
+  iPos := FSortedList.IndexOf(stFQN);
+  if iPos >= 0 then
+    Result := SortedItems[iPos] as TMarketSpec
+  else
+    Result := nil;
 
 end;
 
-function TMarketSpecs.Find2(stPM: String): TMarketSpec;
-begin
-
-end;
-
-function TMarketSpecs.FindByUSSymbol(stSymbol: String): TMarketSpec;
-begin
-
-end;
 
 function TMarketSpecs.GetSpec(i: Integer): TMarketSpec;
 begin
-
+  if (i >= 0) and (i <= Count-1) then
+    Result := SortedItems[i] as TMarketSpec
+  else
+    Result := nil;
 end;
 
 function TMarketSpecs.New(stFQN: String): TMarketSpec;
 begin
+  Result := Add(stFQN) as TMarketSpec;
+
+  FFQNParser.FQN := stFQN;
+
+  Result.FFQN := FFQNParser.MarketFQN;
+  Result.FCountry := FFQNParser.Country;
+  Result.FExchange := FFQNParser.Bourse;
+  Result.FMarket := FFQNParser.MarketType;
+  Result.FUnderlying := FFQNParser.Underlying;
 
 end;
 
-function TMarketSpecs.Represent: String;
-begin
-
-end;
 
 end.

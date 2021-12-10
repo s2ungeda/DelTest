@@ -67,7 +67,23 @@ type
     property StockMarkets[i:Integer]: TStockMarket read GetStockMarket; default;
   end;
 
+    //------------------------------------------< Margin Market >
 
+  TMarginMarket = class(TMarket)
+  private
+    function GetMargin(i: Integer): TMargin;
+  public
+    property Margins[i:Integer]: TMargin read GetMargin; default;
+  end;
+
+  TMarginMarkets = class(TMarkets)
+  private
+    function GetMarginMarket(i: Integer): TMarginMarket;
+  public
+    constructor Create;
+    function New(stFQN: String): TMarginMarket;
+    property MarginMarkets[i:Integer]: TMarginMarket read GetMarginMarket; default;
+  end;
 
     //------------------------------------------< Future Market >
 
@@ -474,4 +490,31 @@ begin
 end;
 
 
+{ TMarginMarket }
+
+function TMarginMarket.GetMargin(i: Integer): TMargin;
+begin
+  Result := FSymbols[i] as TMargin;
+end;
+
+{ TMarginMarkets }
+
+constructor TMarginMarkets.Create;
+begin
+  inherited Create(TMarginMarket);
+end;
+
+function TMarginMarkets.GetMarginMarket(i: Integer): TMarginMarket;
+begin
+  Result := GetMarket(i) as TMarginMarket;
+end;
+
+function TMarginMarkets.New(stFQN: String): TMarginMarket;
+begin
+  Result := Add as TMarginMarket;
+  Result.FFQN := stFQN;
+end;
+
 end.
+
+
