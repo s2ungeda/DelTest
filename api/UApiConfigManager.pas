@@ -3,19 +3,12 @@ unit UApiConfigManager;
 interface
 
 uses
-  system.Classes,  system.SysUtils , system.IniFiles
+  system.Classes,  system.SysUtils , system.IniFiles,
+
+  UApiTypes
   ;
 
 type
-
-  TExchangeInfo = record
-    Name : string;
-    Code : string;
-    IsMargin : boolean;
-    IsFuture : boolean;
-    IsDomestic : boolean;
-    procedure SetInfo( stCode : string ; isMar,isFut, isDome : boolean );
-  end;
 
 
   TApiConfigManager = class
@@ -102,18 +95,10 @@ begin
   end;
 end;
 
-{ TExchangeInfo }
 
 
 
-{ TExchangeInfo }
 
-procedure TExchangeInfo.SetInfo(stCode: string; isMar, isFut, isDome: boolean);
-begin
-  Code := stCode;
-  IsMargin := isMar;
-  IsFuture := isFut;
-  IsDomestic := isDome;
-end;
+
 
 end.

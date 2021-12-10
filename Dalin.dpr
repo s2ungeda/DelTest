@@ -25,7 +25,9 @@ uses
   UConsts in 'engine\common\UConsts.pas',
   UApiConsts in 'api\UApiConsts.pas',
   UApiConfigManager in 'api\UApiConfigManager.pas',
-  USymbolCore in 'engine\symbol\USymbolCore.pas';
+  USymbolCore in 'engine\symbol\USymbolCore.pas',
+  UExchange in 'api\UExchange.pas',
+  UApiTypes in 'api\UApiTypes.pas';
 
 {$R *.res}
 begin

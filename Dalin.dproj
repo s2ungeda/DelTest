@@ -164,6 +164,8 @@
         <DCCReference Include="api\UApiConsts.pas"/>
         <DCCReference Include="api\UApiConfigManager.pas"/>
         <DCCReference Include="engine\symbol\USymbolCore.pas"/>
+        <DCCReference Include="api\UExchange.pas"/>
+        <DCCReference Include="api\UApiTypes.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
