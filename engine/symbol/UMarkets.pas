@@ -51,20 +51,20 @@ type
 
     //------------------------------------------< Stock Market >
 
-  TStockMarket = class(TMarket)
+  TSpotMarket = class(TMarket)
   private
-    function GetStock(i: Integer): TStock;
+    function GetSpot(i: Integer): TSpot;
   public
-    property Stocks[i:Integer]: TStock read GetStock; default;
+    property Spots[i:Integer]: TSpot read GetSpot; default;
   end;
 
-  TStockMarkets = class(TMarkets)
+  TSpotMarkets = class(TMarkets)
   private
-    function GetStockMarket(i: Integer): TStockMarket;
+    function GetSpotMarket(i: Integer): TSpotMarket;
   public
     constructor Create;
-    function New(stFQN: String): TStockMarket;
-    property StockMarkets[i:Integer]: TStockMarket read GetStockMarket; default;
+    function New(stFQN: String): TSpotMarket;
+    property SpotMarkets[i:Integer]: TSpotMarket read GetSpotMarket; default;
   end;
 
     //------------------------------------------< Margin Market >
@@ -271,26 +271,26 @@ end;
 
 { TStockMarket }
 
-function TStockMarket.GetStock(i: Integer): TStock;
+function TSpotMarket.GetSpot(i: Integer): TSpot;
 begin
-  Result := FSymbols[i] as TStock;
+  Result := FSymbols[i] as TSpot;
 end;
 
 { TStockMarkets }
 
-constructor TStockMarkets.Create;
+constructor TSpotMarkets.Create;
 begin
-  inherited Create(TStockMarket);
+  inherited Create(TSpotMarket);
 end;
 
-function TStockMarkets.GetStockMarket(i: Integer): TStockMarket;
+function TSpotMarkets.GetSpotMarket(i: Integer): TSpotMarket;
 begin
-  Result := GetMarket(i) as TStockMarket;
+  Result := GetMarket(i) as TSpotMarket;
 end;
 
-function TStockMarkets.New(stFQN: String): TStockMarket;
+function TSpotMarkets.New(stFQN: String): TSpotMarket;
 begin
-  Result := Add as TStockMarket;
+  Result := Add as TSpotMarket;
   Result.FFQN := stFQN;
 end;
 

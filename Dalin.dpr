@@ -27,7 +27,9 @@ uses
   UApiConfigManager in 'api\UApiConfigManager.pas',
   USymbolCore in 'engine\symbol\USymbolCore.pas',
   UExchange in 'api\UExchange.pas',
-  UApiTypes in 'api\UApiTypes.pas';
+  UApiTypes in 'api\UApiTypes.pas',
+  UApiManager in 'api\UApiManager.pas',
+  UExchangeManager in 'api\UExchangeManager.pas';
 
 {$R *.res}
 begin

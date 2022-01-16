@@ -96,18 +96,18 @@ type
     property Symbols[i:Integer]: TSymbol read GetSymbol; default;
   end;
 
-  TStock  = class(TSymbol);
+  TSpot  = class(TSymbol);
 
-  TStocks = class(TSymbols)
+  TSpots = class(TSymbols)
   private
-    function GetStock(i: Integer): TStock;
+    function GetSpot(i: Integer): TSpot;
   public
     constructor Create;
-    function New(stCode: String): TStock;
-    property Stocks[i:Integer]: TStock read GetStock; default;
+    function New(stCode: String): TSpot;
+    property Stocks[i:Integer]: TSpot read GetSpot; default;
   end;
 
-  TMargin = class(TStock);
+  TMargin = class(TSpot);
 
   TMargins = class(TSymbols)
   private
@@ -259,20 +259,20 @@ end;
 
 { TStocks }
 
-constructor TStocks.Create;
+constructor TSpots.Create;
 begin
-  inherited Create(TStock)
+  inherited Create(TSpot)
 end;
 
-function TStocks.GetStock(i: Integer): TStock;
+function TSpots.GetSpot(i: Integer): TSpot;
 begin
   if (i >= 0) and (i <= Count-1) then
-    Result := Items[i] as TStock
+    Result := Items[i] as TSpot
   else
     Result := nil;
 end;
 
-function TStocks.New(stCode: String): TStock;
+function TSpots.New(stCode: String): TSpot;
 begin
 
 end;

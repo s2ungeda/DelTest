@@ -5,21 +5,36 @@ interface
 uses
   system.Classes, system.SysUtils ,
 
-  UFQN, UMarketSpecs, USymbols, UMarkets
+  UFQN, UMarketSpecs, USymbols, UMarkets,
+
+  UApiConsts
   ;
 
 type
 
+  TSymbolArray  = array [0..ExCnt-1] of TSymbolList;
+  TSpotArray    = array [0..ExCnt-1] of TSpots;
+  TMarginArray  = array [0..ExCnt-1] of TMargins;
+  TFutureArray  = array [0..ExCnt-1] of TFutures;
+
+  TMarketArray        = array [0..ExCnt-1] of TMarketList;
+  TSpotMarketArray    = array [0..ExCnt-1] of TSpotMarkets;
+  TMarginMarketArray  = array [0..ExCnt-1] of TMarginMarkets;
+  TFutureMarketArray  = array [0..ExCnt-1] of TFutureMarkets;
+
   TSymbolCore = class
   private
-    FFutures: TFutures;
-    FMarginMarkets: TMarginMarkets;
-    FMarkets: TMarketList;
-    FStockMarkets: TStockMarkets;
-    FMargins: TMargins;
-    FFutureMarkets: TFutureMarkets;
-    FSymbols: TSymbolList;
-    FStocks: TStocks;
+
+    FSymbols: TSymbolArray;
+    FSpots: TSpotArray;
+    FMargins: TMarginArray;
+    FFutures: TFutureArray;
+
+    FMarkets: TMarketArray;
+    FSpotMarkets: TSpotMarketArray;
+    FMarginMarkets: TMarginMarketArray;
+    FFutureMarkets: TFutureMarketArray;
+
     FSpecs: TMarketSpecs;
   public
     constructor Create;
@@ -28,15 +43,15 @@ type
     procedure RegisterSymbol(aSymbol: TSymbol);
     property Specs: TMarketSpecs read FSpecs;
 
-    property Symbols: TSymbolList read FSymbols;
-    property Stocks: TStocks read FStocks;
-    property Margins: TMargins read FMargins;
-    property Futures: TFutures read FFutures;
+    property Symbols: TSymbolArray read FSymbols;
+    property Spots: TSpotArray read FSpots;
+    property Margins: TMarginArray read FMargins;
+    property Futures: TFutureArray read FFutures;
 
-    property Markets: TMarketList read FMarkets;
-    property StockMarkets: TStockMarkets read FStockMarkets;
-    property MarginMarkets: TMarginMarkets read FMarginMarkets;
-    property FutureMarkets: TFutureMarkets read FFutureMarkets;
+    property Markets: TMarketArray read FMarkets;
+    property SpotMarkets: TSpotMarketArray read FSpotMarkets;
+    property MarginMarkets: TMarginMarketArray read FMarginMarkets;
+    property FutureMarkets: TFutureMarketArray read FFutureMarkets;
   end;
 
 implementation
@@ -44,34 +59,45 @@ implementation
 { TSymbolCore }
 
 constructor TSymbolCore.Create;
+var
+  I: Integer;
 begin
   FSpecs:= TMarketSpecs.Create;
-  FSymbols:= TSymbolList.Create;
 
-  FStocks:= TStocks.Create;
-  FMargins:= TMargins.Create;
-  FFutures:= TFutures.Create;
+  for I := 0 to ExCnt-1 do
+  begin
+    FSymbols[i] := TSymbolList.Create;
+    FSpots[i]   := TSpots.Create;
+    FMargins[i] := TMargins.Create;
+    FFutures[i] := TFutures.Create;
 
-  FMarkets:= TMarketList.Create;
-  FStockMarkets:= TStockMarkets.Create;
-  FFutureMarkets:= TFutureMarkets.Create;
-  FMarginMarkets:= TMarginMarkets.Create;
+    FMarkets[i]       := TMarketList.Create;
+    FSpotMarkets[i]   := TSpotMarkets.Create;
+    FFutureMarkets[i] := TFutureMarkets.Create;
+    FMarginMarkets[i] := TMarginMarkets.Create;
+  end;
+
 end;
 
 destructor TSymbolCore.Destroy;
+var
+  i : integer;
 begin
 
-  FMarkets.Free;
-  FStockMarkets.Free;
-  FFutureMarkets.Free;
-  FMarginMarkets.Free;
+  for I := 0 to ExCnt-1 do
+  begin
+    FSymbols[i].Free;
+    FSpots[i].Free;
+    FMargins[i].Free;
+    FFutures[i].Free;
 
-  FSpecs.Free;
-  FSymbols.Free;
+    FMarkets[i].Free;
+    FSpotMarkets[i].Free;
+    FFutureMarkets[i].Free;
+    FMarginMarkets[i].Free;
+  end;
 
-  FStocks.Free;
-  FMargins.Free;
-  FFutures.Free;
+   FSpecs.Free;
 
   inherited;
 end;

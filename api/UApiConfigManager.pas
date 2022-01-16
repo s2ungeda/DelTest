@@ -70,10 +70,10 @@ begin
 
       SetLength( ExchangeInfo, iCnt );
 
-      for I := 1 to iCnt do
+      for I := 0 to iCnt-1 do
       begin
         stDir := Format('Exchange_%d', [i]);
-        ExchangeInfo[i-1].SetInfo(
+        ExchangeInfo[i].SetInfo(
           pIniFile.ReadString(stDir, 'name', 'Sauri')
           , pIniFile.ReadInteger(stDir, 'domestic',0 ) = 1
           , pIniFile.ReadInteger(stDir, 'margin', 0) = 1
