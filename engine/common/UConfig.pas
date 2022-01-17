@@ -14,6 +14,7 @@ type
     DATA_DIR   : string;
     LOG_LEVEL : integer;
     DATA_FILE : string;
+    VERBOSE  : boolean;
 
     function LoadConfig : boolean;
   end;
@@ -37,6 +38,7 @@ begin
       /////////////////////////////////////////////////////////////
 
       LOG_LEVEL := pIniFile.ReadInteger('Log', 'Level', 3);
+      VERBOSE   := pIniFile.ReadInteger('Log', 'Verbose', 1) = 1;
 
       LOG_DIR   := pIniFile.ReadString('Dir', 'LogDir', 'Sauri');
       QUOTE_DIR := pIniFile.ReadString('Dir', 'QuoteDir', 'Sauri');

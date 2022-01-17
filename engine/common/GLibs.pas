@@ -3,12 +3,16 @@ unit GLibs;
 interface
 
 uses
-  system.SysUtils
-  , Vcl.Forms
+  system.SysUtils, system.Math,
+  Vcl.Forms
 
   ;
 function AppDir : String;
 function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): String;
+
+
+
+function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 
 implementation
 
@@ -47,6 +51,15 @@ begin
 
     // remove double delimiters
   Result := StringReplace(Result, cDelimiter + cDelimiter, cDelimiter, [rfReplaceAll]);
+end;
+
+
+function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
+begin
+  if AValue then
+    Result := ATrue
+  else
+    Result := AFalse;
 end;
 
 end.

@@ -5,9 +5,20 @@ interface
 type
 
 
-  TExchangeKind       = ( ekBinance , ekUpbit, etBitthumb );
-  TExchangeMarketType = ( emtSpot, emtMargin, emtFuture );
+  TExchangeKind   = ( ekBinance , ekUpbit, etBitthumb );
+  TMarketType     = ( emSpot, emFuture );
 
+
+  TAccountMarketType  = ( amSpot, amMargin, amFuture );
+
+  TApiInfo = record
+    BaseUrl    : string;
+    Port       : integer;
+    MarketType : TMarketType;
+
+    Key : string;
+    Secret  : string;
+  end;
 
   TExchangeInfo = record
     Name : string;
@@ -15,24 +26,27 @@ type
     IsMargin : boolean;
     IsFuture : boolean;
     IsDomestic : boolean;
+    Index   : integer;
 
-    BaseUrl    : string;
-    Port       : integer;
-    MarketType : TExchangeMarketType;
+    MarketInfo : array [ TMarketType ] of TApiInfo;
 
-    Key : string;
-    Secret  : string;
-
-    procedure SetInfo( stCode : string ; isMar,isFut, isDome : boolean );
+    procedure SetInfo( i:integer; stName : string ; isMar,isFut, isDome : boolean );
   end;
+
+const
+
+  TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
+  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('Spot', 'Margin', 'Future');
 
 implementation
 
+
 { TExchangeInfo }
 
-procedure TExchangeInfo.SetInfo(stCode: string; isMar, isFut, isDome: boolean);
+procedure TExchangeInfo.SetInfo(i:integer; stName: string; isMar, isFut, isDome: boolean);
 begin
-  Code := stCode;
+  Index := i;
+  Name  := stName  ;
   IsMargin := isMar;
   IsFuture := isFut;
   IsDomestic := isDome;

@@ -12,19 +12,19 @@ uses
 
 type
 
-  TMarketArray = array [ TExchangeMarketType ] of TExchange;
+  TMarketArray = array [ TMarketType ] of TExchange;
 
   TExchangeManaager = class
   private
 
-    FExchanges: TMarketArray;
+    FMarkets: TMarketArray;
     function GetMarketCount: integer;
   public
     Constructor Create;
     Destructor  Destroy; override;
 
     //  TExchangeMarketType
-    property Exchanges   : TMarketArray read FExchanges;
+    property Markets     : TMarketArray read FMarkets;
     property MarketCount : integer read GetMarketCount;
   end;
 
@@ -35,24 +35,24 @@ implementation
 
 constructor TExchangeManaager.Create;
 var
-  i : TExchangeMarketType;
+  i : TMarketType;
 begin
 
-  for I := emtSpot to High(TExchangeMarketType) do
+  for I := emSpot to High(TMarketType) do
   begin
-    FExchanges[i] :=  TExchange.Create(nil);
+    FMarkets[i] :=  TExchange.Create(nil);
   end;
 
 end;
 
 destructor TExchangeManaager.Destroy;
 var
-  i : TExchangeMarketType;
+  i : TMarketType;
 begin
 
-  for I := emtSpot to High(TExchangeMarketType) do
+  for I := emSpot to High(TMarketType) do
   begin
-    FExchanges[i].Free;
+    FMarkets[i].Free;
   end;
 
   inherited;
@@ -61,7 +61,7 @@ end;
 
 function TExchangeManaager.GetMarketCount: integer;
 begin
-  Result := Integer(High(TExchangeMarketType));
+  Result := Integer(High(TMarketType));
 end;
 
 end.
