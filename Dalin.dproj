@@ -168,6 +168,13 @@
         <DCCReference Include="api\UApiTypes.pas"/>
         <DCCReference Include="api\UApiManager.pas"/>
         <DCCReference Include="api\UExchangeManager.pas"/>
+        <DCCReference Include="api\binance\UBinanceManager.pas"/>
+        <DCCReference Include="api\upbit\UUpbitManager.pas"/>
+        <DCCReference Include="api\bithumb\UBithManager.pas"/>
+        <DCCReference Include="api\binance\UBinanceSpotNMargin.pas"/>
+        <DCCReference Include="api\binance\UBinanceFutures.pas"/>
+        <DCCReference Include="api\upbit\UUpbitSpot.pas"/>
+        <DCCReference Include="api\bithumb\UBithSpot.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

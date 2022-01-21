@@ -14,6 +14,13 @@ function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): Strin
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 
+
+
+//---------------------------------------- file
+
+
+
+
 implementation
 
 function AppDir : String;
@@ -61,5 +68,7 @@ begin
   else
     Result := AFalse;
 end;
+
+
 
 end.

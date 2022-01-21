@@ -3,7 +3,7 @@ object FrmDalinMain: TFrmDalinMain
   Top = 0
   HelpType = htKeyword
   Caption = 'Dalin'
-  ClientHeight = 69
+  ClientHeight = 49
   ClientWidth = 347
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET

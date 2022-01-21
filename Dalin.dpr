@@ -29,7 +29,14 @@ uses
   UExchange in 'api\UExchange.pas',
   UApiTypes in 'api\UApiTypes.pas',
   UApiManager in 'api\UApiManager.pas',
-  UExchangeManager in 'api\UExchangeManager.pas';
+  UExchangeManager in 'api\UExchangeManager.pas',
+  UBinanceManager in 'api\binance\UBinanceManager.pas',
+  UUpbitManager in 'api\upbit\UUpbitManager.pas',
+  UBithManager in 'api\bithumb\UBithManager.pas',
+  UBinanceSpotNMargin in 'api\binance\UBinanceSpotNMargin.pas',
+  UBinanceFutures in 'api\binance\UBinanceFutures.pas',
+  UUpbitSpot in 'api\upbit\UUpbitSpot.pas',
+  UBithSpot in 'api\bithumb\UBithSpot.pas';
 
 {$R *.res}
 begin

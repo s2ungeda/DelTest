@@ -25,6 +25,10 @@ type
     destructor Destroy; override;
     function LoadExchangeConfig : boolean;
 
+    function GetBaseUrl( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
+    function GetPrepare( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
+
+
     property ToTalCnt : integer read GetTotal;
     property DomesticCnt : integer read FDomesticCnt;
     property OverseasCnt : integer read FOverseasCnt;
@@ -49,6 +53,18 @@ destructor TApiConfigManager.Destroy;
 begin
   ExchangeInfo := nil;
   inherited;
+end;
+
+function TApiConfigManager.GetBaseUrl(aExKind: TExchangeKind;
+  aMarket: TMarketType): string;
+begin
+  Result := ExchangeInfo[ integer( aExKind )].MarketInfo[ aMarket].BaseUrl;
+end;
+
+function TApiConfigManager.GetPrepare(aExKind: TExchangeKind;
+  aMarket: TMarketType): string;
+begin
+  Result := ExchangeInfo[ integer( aExKind )].MarketInfo[ aMarket].Prepare;
 end;
 
 function TApiConfigManager.GetTotal: integer;
@@ -101,6 +117,7 @@ begin
             stDir := Format( '%s_%s', [ ExchangeInfo[i].Name, ifThenStr( j = emSpot,'spot', 'future')  ] );
 
             ExchangeInfo[i].MarketInfo[j].BaseUrl  :=  pIniFile.ReadString( stDir, 'Url', 'Sauri');
+            ExchangeInfo[i].MarketInfo[j].Prepare  :=  pIniFile.ReadString( stDir, 'PrePare', 'Sauri');
             ExchangeInfo[i].MarketInfo[j].Port     :=  pIniFile.ReadInteger( stDir, 'Port', 443 );
             ExchangeInfo[i].MarketInfo[j].Key      :=  pIniFile.ReadString( stDir, 'ApiKey', 'Sauri' );
             ExchangeInfo[i].MarketInfo[j].Secret   :=  pIniFile.ReadString( stDir, 'SecretKey', 'Sauri' );

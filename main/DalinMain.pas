@@ -51,6 +51,9 @@ begin
   SetEnv;
 
   App.Log(llInfo, '', '---start---');
+
+  if not App.Engine.ApiManager.GetMaster then
+    App.Log(llError, '', 'Failed PrepareMaster');
 end;
 
 

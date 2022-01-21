@@ -60,10 +60,21 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.btnMasterClick(Sender: TObject);
+var
+  sTmp : string;
 begin
   SetBaseUrl( 'https://api.binance.com' );
   req.Resource := '/api/v3/exchangeInfo';
   req.Execute;
+
+//  if res.Status.Success then
+//    sTmp := 'suc'
+//  else sTmp := 'failed';
+//
+//  DoLog( Format(' %d, %s, %s ', [
+//  res.StatusCode, res.StatusText
+//  , sTmp
+//  ] ));
 
   parseJson(  res.Content );
 end;

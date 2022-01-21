@@ -7,12 +7,11 @@ type
 
   TExchangeKind   = ( ekBinance , ekUpbit, etBitthumb );
   TMarketType     = ( emSpot, emFuture );
-
-
   TAccountMarketType  = ( amSpot, amMargin, amFuture );
 
   TApiInfo = record
     BaseUrl    : string;
+    Prepare    : string;
     Port       : integer;
     MarketType : TMarketType;
 
@@ -35,6 +34,7 @@ type
 
 const
 
+  TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
   TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
   TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('Spot', 'Margin', 'Future');
 
