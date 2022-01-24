@@ -17,7 +17,7 @@ type
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
-    function PrepareMaster : boolean;
+    function ParsePrepareMaster : integer; override;
   end;
 
 implementation
@@ -36,7 +36,9 @@ begin
   inherited;
 end;
 
-function TUpbitSpot.PrepareMaster: boolean;
+
+
+function TUpbitSpot.ParsePrepareMaster: integer;
 begin
 
 end;

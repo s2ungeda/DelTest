@@ -16,15 +16,10 @@ type
   TBinanceSpotNMargin = class( TExchange )
   private
 
-    FCodes: TStrings;
-
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
-
-    procedure ParsePrepareMaster; override;
-
-    property Codes  : TStrings read FCodes;
+    function ParsePrepareMaster : integer; override;
   end;
 
 implementation
@@ -39,17 +34,17 @@ constructor TBinanceSpotNMargin.Create(aObj: TObject; aMarketType: TMarketType);
 begin
   inherited Create( aObj, aMarketType );
 
-  FCodes:= TStringList.Create;
+
 end;
 
 destructor TBinanceSpotNMargin.Destroy;
 begin
-  FCodes.Free;
+
   inherited;
 end;
 
 
-procedure TBinanceSpotNMargin.ParsePrepareMaster;
+function TBinanceSpotNMargin.ParsePrepareMaster : integer;
 var
   master : TJsonObject;
   aObj  : TJsonObject;
@@ -73,7 +68,7 @@ begin
     sTmp  := aObj.GetValue('quoteAsset').Value;
 
     if sTmp = 'USDT' then
-      FCodes.Add( aObj.GetValue('baseAsset').Value );
+      Codes.Add( aObj.GetValue('baseAsset').Value );
   end;
 
 end;

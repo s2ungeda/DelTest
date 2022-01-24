@@ -23,6 +23,7 @@ type
     FMarketType: TMarketType;
     FMarketIdx: integer;
     FMasterData: string;
+    FCodes: TStrings;
 
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType ); overload;
@@ -36,7 +37,7 @@ type
 
 //----------------------------------------------------------- common request
     function PrepareMaster : boolean;
-    procedure  ParsePrepareMaster; virtual; abstract;
+    function ParsePrepareMaster : integer ; virtual; abstract;
 
     property Parent : TObject read FParent;
 
@@ -49,6 +50,8 @@ type
     property MasterData : string read FMasterData;
     property MarketType : TMarketType read FMarketType;
     property MarketIdx  : integer read FMarketIdx;
+
+    property Codes  : TStrings read FCodes;
   end;
 
 implementation
@@ -73,10 +76,14 @@ begin
   FParent := aObj;
   FMarketType := aMarketType;
   FMarketIdx  := integer(FMarketType);
+
+  FCodes := TStringList.Create;
 end;
 
 destructor TExchange.Destroy;
 begin
+
+  FCodes.Free;
 
   FRestRes.Free;
   FRestReq.Free;
@@ -104,12 +111,12 @@ begin
     ParsePrepareMaster;
   end else
   begin
-    App.Log( llError, '', 'Failed Binance spot PreparMaster (%s, %s)',
-      [sOut, sJson] );
+    App.Log( llError, '', 'Failed %s spot PreparMaster (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
     Exit( false );
   end;
 
-  Result := true;
+  Result := FCodes.Count > 0 ;
 end;
 
 

@@ -1,20 +1,12 @@
 unit UApiManager;
-
 interface
-
 uses
   System.Classes, System.SysUtils, System.DateUtils,
-
   UExchangeManager,
-
   UApiTypes
-
   ;
-
 type
-
   TExchangeArray = array [ TExchangeKind ] of TExchangeManager;
-
   TApiManager = class
   private
     FExManagers: TExchangeArray;
@@ -24,23 +16,16 @@ type
   public
     Constructor Create;
     Destructor  Destroy; override;
-
     function GetMaster : boolean;
     function PrepareMaster : boolean;
-
     property ExManagers  : TExchangeArray read FExManagers;
     property ExManagerCount : integer read GetExManager;
-
   end;
-
 implementation
-
 uses
   UBinanceManager ,  UUpbitManager, UBithManager
   ;
-
 { TApiManager }
-
 constructor TApiManager.Create;
 var
   I: TExchangeKind;
@@ -51,9 +36,7 @@ begin
       ekUpbit: FExManagers[i]   := TUpbitManager.Create(i) as TExchangeManager;
       etBitthumb: FExManagers[i]:= TBithManager.Create(i) as TExchangeManager;
     end;
-
 end;
-
 destructor TApiManager.Destroy;
 var
   I: TExchangeKind;
@@ -62,15 +45,12 @@ begin
   begin
     FExManagers[i].Free;
   end;
-
   inherited;
 end;
-
 function TApiManager.GetExManager: integer;
 begin
   Result := Integer(high(  TExchangeKind ));
 end;
-
 
 function TApiManager.GetMaster: boolean;
 var

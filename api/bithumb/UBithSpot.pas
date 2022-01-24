@@ -16,17 +16,13 @@ uses
 type
   TBithSpot = class( TExchange )
   private
-    FMasterData: string;
-    FCodes: TStrings;
-    procedure ParsePrepareMaster;
+
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
-    function PrepareMaster : boolean;
+    function ParsePrepareMaster : integer  ; override;
 
-    property MasterData : string read FMasterData;
-    property Codes  : TStrings read FCodes;
   end;
 
 implementation
@@ -51,29 +47,10 @@ end;
 
 
 
-procedure TBithSpot.ParsePrepareMaster;
+function TBithSpot.ParsePrepareMaster : integer;
 begin
 
 end;
 
-function TBithSpot.PrepareMaster: boolean;
-var
-  sUrl, sOut, sJson : string;
-begin
-  sUrl  := App.Engine.ApiConfig.GetBaseUrl( etBitthumb , emSpot );
-  SetBaseUrl( sUrl );
-  if Request( rmGET, '/public/ticker/ALL_KRW' , '', sJson, sOut ) then
-  begin
-    FMasterData := sJson ;
-    ParsePrepareMaster;
-  end else
-  begin
-    App.Log( llError, '', 'Failed Binance spot PreparMaster (%s, %s)',
-      [sOut, sJson] );
-    Exit( false );
-  end;
-
-  Result := true;
-end;
 
 end.
