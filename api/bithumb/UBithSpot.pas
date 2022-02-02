@@ -48,8 +48,26 @@ end;
 
 
 function TBithSpot.ParsePrepareMaster : integer;
+var
+  aObj, master : TJsonObject;
+  aVal : TJsonValue;
+  aPair : TJsonPair;
+  i : Integer;
 begin
+  master := TJsonObject.ParseJSONValue( MasterData ) as TJsonObject;
+  if master = nil then Exit;
+  aObj := master.GetValue('data') as TJsonObject;
 
+  for I := 0 to aObj.Size-1 do
+  begin
+    aPair := aObj.Get(i);
+    if aPair.JsonValue.ClassType = TJSONObject then
+    begin
+      aVal := aPair.JsonValue;
+//      DoLog( Format('%d. %s : %s ', [ i, aPair.JsonString.Value, aPair.JsonValue.Value]));
+      Codes.Add( aPair.JsonString.Value );
+    end;
+  end;
 end;
 
 

@@ -33,12 +33,17 @@ type
       var OutJson, OutRes  : string  ) : boolean;
 
     procedure SetBaseUrl(url : string); inline;
+    procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; inline;
     function  GetExKind : TExchangeKind;
+    function  GetCodeIndex( S : string ) : integer;
 
 //----------------------------------------------------------- common request
-    function PrepareMaster : boolean;
     function ParsePrepareMaster : integer ; virtual; abstract;
+    function RequestMaster : boolean ; virtual; abstract;
 
+//--------------------------------------------------------------
+    function PrepareMaster : boolean;
+//--------------------------------------------------------------
     property Parent : TObject read FParent;
 
     property RESTClient: TRESTClient read FRESTClient;
@@ -47,10 +52,13 @@ type
 
     property Info : TExchangeInfo read FInfo;
     property LastTime : TDateTime read FLastTime write FLastTime;
-    property MasterData : string read FMasterData;
+
     property MarketType : TMarketType read FMarketType;
     property MarketIdx  : integer read FMarketIdx;
 
+    // 종목마스터 데이타.
+    property MasterData : string read FMasterData;
+    // 공통 Base Currency Code 가 담겨 있음.
     property Codes  : TStrings read FCodes;
   end;
 
@@ -93,6 +101,11 @@ end;
 
 
 
+function TExchange.GetCodeIndex( S : string ) : integer;
+begin
+  Result := ( FParent as TExchangeManager ).Codes.IndexOf(S);
+end;
+
 function TExchange.GetExKind: TExchangeKind;
 begin
   Result := ( FParent as TExchangeManager ).ExchangeType;
@@ -102,9 +115,9 @@ function TExchange.PrepareMaster: boolean;
 var
   sTmp, sOut, sJson : string;
 begin
-  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , emSpot );
+  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot );
   SetBaseUrl( sTmp );
-  sTmp  := App.Engine.ApiConfig.GetPrepare(GetExKind , emSpot );
+  sTmp  := App.Engine.ApiConfig.GetPrepare(GetExKind , mtSpot );
   if Request( rmGET, sTmp , '', sJson, sOut ) then
   begin
     FMasterData := sJson ;
@@ -130,14 +143,10 @@ begin
   begin
     Method   := AMethod;
     Resource := AResource;
-    Body.Add( ABody);
+    if ABody <> '' then
+      Body.Add( ABody);
 //  Body.Add( ABody, ctAPPLICATION_JSON);
   end;
-
-//  aParam := FRestReq.Params.AddItem;
-//  aParam.Value := ABody;
-//  aParam.Value := TJSONObject.ParseJSONValue( ABody );
-//  aParam.ContentType := ctAPPLICATION_JSON;
 
   try
     FRestReq.Execute;
@@ -167,5 +176,10 @@ begin
 end;
 
 
+procedure TExchange.SetParam(const aName, aValue: string;
+  aKind: TRESTRequestParameterKind);
+begin
+  FRestReq.AddParameter(aName, aValue, aKind);
+end;
 
 end.

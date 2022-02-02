@@ -7,51 +7,59 @@ uses
 
   UFQN, UMarketSpecs, USymbols, UMarkets,
 
+  UApiTypes,
+
   UApiConsts
   ;
 
 type
 
-  TSymbolArray  = array [0..ExCnt-1] of TSymbolList;
-  TSpotArray    = array [0..ExCnt-1] of TSpots;
-  TMarginArray  = array [0..ExCnt-1] of TMargins;
-  TFutureArray  = array [0..ExCnt-1] of TFutures;
+  TSymbolArray  = array [TExchangeKind] of TSymbolList;
+  TSpotArray    = array [TExchangeKind] of TSpots;
+  TFutureArray  = array [TExchangeKind] of TFutures;
 
-  TMarketArray        = array [0..ExCnt-1] of TMarketList;
-  TSpotMarketArray    = array [0..ExCnt-1] of TSpotMarkets;
-  TMarginMarketArray  = array [0..ExCnt-1] of TMarginMarkets;
-  TFutureMarketArray  = array [0..ExCnt-1] of TFutureMarkets;
+  TMarketArray        = array [TExchangeKind] of TMarketList;
+  TSpotMarketArray    = array [TExchangeKind] of TSpotMarkets;
+  TFutureMarketArray  = array [TExchangeKind] of TFutureMarkets;
+
+  TMarketGroupsArray  = array [ TExchangeKind ] of TMarketGroups;
+
 
   TSymbolCore = class
   private
 
     FSymbols: TSymbolArray;
     FSpots: TSpotArray;
-    FMargins: TMarginArray;
     FFutures: TFutureArray;
 
     FMarkets: TMarketArray;
     FSpotMarkets: TSpotMarketArray;
-    FMarginMarkets: TMarginMarketArray;
     FFutureMarkets: TFutureMarketArray;
 
     FSpecs: TMarketSpecs;
+
+    FExchanges: TMarketGroupsArray;
+    FUnderlyings: TMarketGroupsArray;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure RegisterSymbol(aSymbol: TSymbol);
+    procedure RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol); overload;
+    function  RegisterSymbol(aExKind : TExchangeKind; aMarket : TMarketType; aCode : string ) : TSymbol ; overload;
+    function  FindSymbol(aExKind : TExchangeKind; aCode : string ): TSymbol;
+
     property Specs: TMarketSpecs read FSpecs;
 
     property Symbols: TSymbolArray read FSymbols;
     property Spots: TSpotArray read FSpots;
-    property Margins: TMarginArray read FMargins;
     property Futures: TFutureArray read FFutures;
 
     property Markets: TMarketArray read FMarkets;
     property SpotMarkets: TSpotMarketArray read FSpotMarkets;
-    property MarginMarkets: TMarginMarketArray read FMarginMarkets;
     property FutureMarkets: TFutureMarketArray read FFutureMarkets;
+
+    property Underlyings : TMarketGroupsArray read FUnderlyings;
+    property Exchanges   : TMarketGroupsArray read FExchanges;
   end;
 
 implementation
@@ -60,41 +68,46 @@ implementation
 
 constructor TSymbolCore.Create;
 var
-  I: Integer;
+  I: TExchangeKind;
 begin
   FSpecs:= TMarketSpecs.Create;
 
-  for I := 0 to ExCnt-1 do
+  for I := ekBinance to High( TExchangeKind ) do
   begin
     FSymbols[i] := TSymbolList.Create;
     FSpots[i]   := TSpots.Create;
-    FMargins[i] := TMargins.Create;
+
     FFutures[i] := TFutures.Create;
 
     FMarkets[i]       := TMarketList.Create;
     FSpotMarkets[i]   := TSpotMarkets.Create;
     FFutureMarkets[i] := TFutureMarkets.Create;
-    FMarginMarkets[i] := TMarginMarkets.Create;
+
+    FExchanges[i]   := TMarketGroups.Create;
+    FUnderlyings[i] := TMarketGroups.Create;
+
   end;
 
 end;
 
 destructor TSymbolCore.Destroy;
 var
-  i : integer;
+  I: TExchangeKind;
 begin
 
-  for I := 0 to ExCnt-1 do
+  for I := ekBinance to High( TExchangeKind ) do
   begin
     FSymbols[i].Free;
     FSpots[i].Free;
-    FMargins[i].Free;
+
     FFutures[i].Free;
 
     FMarkets[i].Free;
     FSpotMarkets[i].Free;
     FFutureMarkets[i].Free;
-    FMarginMarkets[i].Free;
+
+    FExchanges[i].Free;
+    FUnderlyings[i].Free;
   end;
 
    FSpecs.Free;
@@ -102,8 +115,97 @@ begin
   inherited;
 end;
 
-procedure TSymbolCore.RegisterSymbol(aSymbol: TSymbol);
+function TSymbolCore.FindSymbol(aExKind: TExchangeKind; aCode: string): TSymbol;
 begin
+  Result := FSymbols[aExKind].FindCode( aCode );
+end;
+
+function TSymbolCore.RegisterSymbol(aExKind: TExchangeKind;
+  aMarket: TMarketType; aCode: string): TSymbol;
+  var
+    aSpec : TMarketSpec;
+    sFQN  : string;
+    aUnder: TSymbol;
+begin
+  case aMarket of
+    mtSpot:
+      begin
+        Result := FSpots[aExKind].New(aCode);
+        sFQN   := Format( '%s@%s', [ aCode,  GetBaseSpotFQN( aExKind ) ]);
+        aSpec  := FSpecs.Find( sFQN );
+        if aSpec = nil then
+        begin
+          aSpec := FSpecs.New(sFQN);
+        end;
+      end;
+    mtFutures:
+      begin
+        Result := FFutures[aExKind].New(aCode);
+        aUnder := FSpots[aExKind].Find( aCode );
+
+        if aUnder = nil then
+          Exit ( nil );
+
+        with Result as TFuture do
+          Underlying := aUnder;
+
+        sFQN   := Format( '%s@%s', [ aCode,  GetBaseFuturesFQN( aExKind ) ]);
+        aSpec  := FSpecs.Find( sFQN );
+        if aSpec = nil then
+        begin
+          aSpec := FSpecs.New(sFQN);
+        end;
+      end;
+  end;
+
+  if aSpec <> nil then
+    Result.Spec := aSpec
+  else
+    Result := nil;
+end;
+
+procedure TSymbolCore.RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol);
+var
+  aMarket : TMarket;
+begin
+  if aSymbol = nil then Exit;
+
+  if FSymbols[aExKind].IndexOfObject(aSymbol) < 0 then
+    FSymbols[aExKind].AddObject(aSymbol.Code, aSymbol );
+
+  if aSymbol.Spec <> nil then
+  begin
+    aMarket := FMarkets[aExKind].FindMarket( aSymbol.Spec.FQN );
+
+    if aMarket = nil then
+    begin
+
+      case aSymbol.Spec.Market of
+        mtSpot:     aMarket := FSpotMarkets[aExKind].New(aSymbol.Spec.FQN);
+        mtFutures:  aMarket := FFutureMarkets[aExKind].New(aSymbol.Spec.FQN);
+        else
+          Exit;
+      end;
+    end;
+
+    aMarket.Spec  := aSymbol.Spec;
+    FMarkets[aExKind].AddMarket(aMarket);
+
+    if (aSymbol.Spec.Market = mtFutures ) and (( aSymbol as TFuture ).Underlying <> nil ) then
+        FUnderlyings[aExKind].AddMarket(aMarket,
+                               aSymbol.Spec.SubMarket
+                               + aSymbol.Spec.Underlying
+                               + '.' + aSymbol.Spec.Exchange
+                               + '.' + aSymbol.Spec.Country,
+                               (aSymbol as TFuture).Underlying.Code,
+                               (aSymbol as TFuture).Underlying);
+
+    FExchanges[aExKind].AddMarket(aMarket,
+                         aSymbol.Spec.Exchange + '.' + aSymbol.Spec.Country,
+                         aSymbol.Spec.Exchange);
+  end;
+
+  aMarket.AddSymbol( aSymbol );
 
 end;
 

@@ -7,27 +7,39 @@ uses
   ;
 type
   TMarketArray = array [ TMarketType ] of TExchange;
+
   TExchangeManager = class
   private
     FExchanges: TMarketArray;
     FExchangeType: TExchangeKind;
     FExchangeIdx: integer;
+    FCodes: TStrings;
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
   public
     Constructor Create( aExType : TExchangeKind ); overload;
     Destructor  Destroy; override;
-//    function RequestData: boolean; virtual; abstract;
-    function PrepareMaster : boolean; virtual; abstract;
+
+    // 공통으로 같이 처리할수 있는것은 상속 처리 하지 않음..
+    // 1. preparemaster
+    function PrepareMaster : boolean; //virtual; abstract;
+
+    // 상속 받아서 각 거래소 매니저에서 처리
+    // 1. requestmaster
+    function RequestMaster : boolean; virtual; abstract;
+
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
     property MarketCount : integer read GetMarketCount;
     property ExchangeType: TExchangeKind read FExchangeType;
     property ExchangeIdx : integer read FExchangeIdx;
+    // 교집합 코드를 담을 리스트..
+    property Codes       : TStrings read FCodes;
   end;
 
 implementation
 uses
+  GApp,
   UBinanceSpotNMargin, UBinanceFutures ,
   UBithSpot, UUpbitSpot
   ;
@@ -40,34 +52,36 @@ begin
   FExchangeType := aExType;
   FExchangeIdx  := integer( FExchangeIdx );
   
-  for I := emSpot to High(TMarketType) do
+  for I := mtSpot to High(TMarketType) do
   begin
     FExchanges[i] :=  CreateMarket( i);
   end;
+
+  FCodes:= TStringList.Create;
 end;
 
 function TExchangeManager.CreateMarket(aMarket: TMarketType): TExchange;
 begin
   Result := nil;  
   case FExchangeType of
-    ekBinance: 
+    ekBinance:
       begin
         case aMarket of
-          emSpot  : Result := TBinanceSpotNMargin.Create( self, aMarket) ;
-          emFuture: Result := TBinanceFutures.Create( self, aMarket) ;
+          mtSpot  : Result := TBinanceSpotNMargin.Create( self, aMarket) ;
+          mtFutures: Result := TBinanceFutures.Create( self, aMarket) ;
         end;
       end;                 
     ekUpbit:
       begin
         case aMarket of
-          emSpot  : Result := TUpbitSpot.Create( self, aMarket) ;
+          mtSpot  : Result := TUpbitSpot.Create( self, aMarket) ;
         end;
 
       end;
-    etBitthumb: 
+    ekBithumb:
       begin
         case aMarket of
-          emSpot  : Result := TBithSpot.Create( self, aMarket) ;
+          mtSpot  : Result := TBithSpot.Create( self, aMarket) ;
         end;     
       end;                       
   end;
@@ -77,7 +91,9 @@ destructor TExchangeManager.Destroy;
 var
   i : TMarketType;
 begin
-  for I := emSpot to High(TMarketType) do
+
+  FCodes.Free;
+  for I := mtSpot to High(TMarketType) do
   begin
     if FExchanges[i] <> nil then
       FExchanges[i].Free;
@@ -89,4 +105,16 @@ function TExchangeManager.GetMarketCount: integer;
 begin
   Result := Integer(High(TMarketType));
 end;
+
+function TExchangeManager.PrepareMaster: boolean;
+var
+  I: Integer;
+  sTmp : string;
+begin
+  Result := Exchanges[mtSpot].PrepareMaster;
+  App.Log(llDebug, '', ' ---------- %s codes count %d -----------',
+    [ TExchangeKindDesc[FExchangeType], Exchanges[mtSpot].Codes.Count ] );
+
+end;
+
 end.

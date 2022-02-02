@@ -27,6 +27,8 @@ type
 
     function GetBaseUrl( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
     function GetPrepare( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
+    function GetSceretKey( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
+    function GetApiKey( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
 
 
     property ToTalCnt : integer read GetTotal;
@@ -55,10 +57,24 @@ begin
   inherited;
 end;
 
+
+
 function TApiConfigManager.GetBaseUrl(aExKind: TExchangeKind;
   aMarket: TMarketType): string;
 begin
   Result := ExchangeInfo[ integer( aExKind )].MarketInfo[ aMarket].BaseUrl;
+end;
+
+function TApiConfigManager.GetSceretKey(aExKind: TExchangeKind;
+  aMarket: TMarketType): string;
+begin
+  Result := ExchangeInfo[ integer( aExKind )].MarketInfo[ aMarket].Secret;
+end;
+
+function TApiConfigManager.GetApiKey(aExKind: TExchangeKind;
+  aMarket: TMarketType): string;
+begin
+  Result := ExchangeInfo[ integer( aExKind )].MarketInfo[ aMarket].Key;
 end;
 
 function TApiConfigManager.GetPrepare(aExKind: TExchangeKind;
@@ -111,10 +127,10 @@ begin
       begin
 
 
-        for j := emSpot to High(TMarketType) do
-          if ( j = emSpot ) or ((  j = emFuture ) and ( ExchangeInfo[i].IsFuture ))  then
+        for j := mtSpot to High(TMarketType) do
+          if ( j = mtSpot ) or ((  j = mtFutures ) and ( ExchangeInfo[i].IsFuture ))  then
           begin
-            stDir := Format( '%s_%s', [ ExchangeInfo[i].Name, ifThenStr( j = emSpot,'spot', 'future')  ] );
+            stDir := Format( '%s_%s', [ ExchangeInfo[i].Name, ifThenStr( j = mtSpot,'spot', 'future')  ] );
 
             ExchangeInfo[i].MarketInfo[j].BaseUrl  :=  pIniFile.ReadString( stDir, 'Url', 'Sauri');
             ExchangeInfo[i].MarketInfo[j].Prepare  :=  pIniFile.ReadString( stDir, 'PrePare', 'Sauri');
@@ -128,7 +144,7 @@ begin
       /////////////////////////////////////////////////////////////
       if App.Config.VERBOSE then
         for I := 0 to iCnt-1 do
-          for j := emSpot to emFuture do
+          for j := mtSpot to mtFutures do
           begin
             App.Log( llDebug, '', '%d %s[%s] %s, %s, %s', [i, ExchangeInfo[i].Name
                 , TMarketTypeDesc[j]

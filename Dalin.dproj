@@ -175,6 +175,7 @@
         <DCCReference Include="api\binance\UBinanceFutures.pas"/>
         <DCCReference Include="api\upbit\UUpbitSpot.pas"/>
         <DCCReference Include="api\bithumb\UBithSpot.pas"/>
+        <DCCReference Include="engine\common\UEncrypts.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

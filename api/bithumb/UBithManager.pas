@@ -18,7 +18,7 @@ type
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
 
-    function PrepareMaster : boolean; override;
+    function RequestMaster : boolean; override;
   end;
 
 implementation
@@ -40,9 +40,11 @@ begin
   inherited;
 end;
 
-function TBithManager.PrepareMaster: boolean;
+
+
+function TBithManager.RequestMaster: boolean;
 begin
-  App.Log( llDebug, '', 'TBithManager.PrepareMaster');
+
 end;
 
 end.

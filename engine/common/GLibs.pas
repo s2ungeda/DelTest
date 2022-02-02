@@ -3,22 +3,20 @@ unit GLibs;
 interface
 
 uses
-  system.SysUtils, system.Math,
+  system.SysUtils, system.Math, system.DateUtils,
   Vcl.Forms
 
   ;
 function AppDir : String;
 function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): String;
 
-
+//----------------------------------------
+function GetPrecision( aText : string ) : integer;
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
-
-
-
 //---------------------------------------- file
 
-
+function GetTimestamp(vlen: Integer = 13): string;
 
 
 implementation
@@ -70,5 +68,37 @@ begin
 end;
 
 
+function GetPrecision( aText : string ) : integer;
+var
+  iLen, iPos, iPos2 : integer;
+begin
+  iLen  := Length( aText );
+  iPos  := Pos( '.', aText);
+  if iPos > 0 then
+  begin
+    iPos2 := Pos('1', aText);
+    if ( iPos2 < 0 ) or ( iPos2 <= iPos ) then
+      Result := iLen - iPos - 1
+    else
+      Result := iPos2 - iPos;
+  end else
+    Result := 0;
+end;
+
+
+function GetTimestamp(vlen: Integer): string;
+var
+  ss: string;
+begin
+  if vlen = 13 then
+  begin
+    ss := DateTimeToTimeStamp(now).time .ToString;
+    Result := IntToStr(DateTimeToUnix(Now,false)) + Copy(ss,Length(ss) - 2,Length(ss) );
+  end
+  else if vlen = 10 then
+  begin
+    Result := IntToStr(DateTimeToUnix(Now,false));
+  end
+end;
 
 end.

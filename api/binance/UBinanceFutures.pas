@@ -16,6 +16,8 @@ type
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
+
+    function RequestMaster : boolean ; override;
   end;
 
 implementation
@@ -32,6 +34,11 @@ destructor TBinanceFutures.Destroy;
 begin
 
   inherited;
+end;
+
+function TBinanceFutures.RequestMaster: boolean;
+begin
+
 end;
 
 end.

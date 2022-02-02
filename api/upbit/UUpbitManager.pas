@@ -18,7 +18,7 @@ type
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
 
-    function PrepareMaster : boolean; override;
+    function RequestMaster : boolean; override;
   end;
 
 implementation
@@ -41,9 +41,11 @@ begin
   inherited;
 end;
 
-function TUpbitManager.PrepareMaster: boolean;
+function TUpbitManager.RequestMaster: boolean;
 begin
-  App.Log( llDebug, '', 'TUpbitManager.PrepareMaster');
+
 end;
+
+
 
 end.

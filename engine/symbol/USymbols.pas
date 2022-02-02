@@ -6,7 +6,7 @@ uses
 
   system.Classes, system.SysUtils, system.DateUtils ,
 
-  UFQN , UMarketSpecs
+  UFQN , UApiTypes, UMarketSpecs
   ;
 
 type
@@ -16,7 +16,7 @@ type
   private
     FExchangeCode: string;
     FCode: string;
-    FMarketType: TMarketType;
+
     FQuoteCode: string;
     FOrgCode: string;
     FBaseCode: string;
@@ -26,7 +26,7 @@ type
     FDayLow: Double;
     FChange: Double;
     FPrevClose: Double;
-    FUnderlyingType: TUnderlyingType;
+
     FLocalTime: TDateTime;
     FTime: TDateTime;
     FSide: Integer;
@@ -39,6 +39,10 @@ type
     FPrevLow: Double;
     FDailyVolume: int64;
     FSpec: TMarketSpec;
+    FSettleCode: string;
+    FTradeAble: boolean;
+    FIsFuture: boolean;
+    FIsMargin: boolean;
   public
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
@@ -48,6 +52,7 @@ type
     property  OrgCode : string read FOrgCode write FOrgCode;
     property  BaseCode  : string read FBaseCode write FQuoteCode;
     property  QuoteCode  : string read FQuoteCode write FQuoteCode;
+    property  SettleCode : string read FSettleCode write FSettleCode;
 
     property Base: Double read FBase write FBase;
     property PrevClose: Double read FPrevClose write FPrevClose;
@@ -69,9 +74,11 @@ type
     property LocalTime : TDateTime read FLocalTime write FLocalTime;
     property Side: Integer read FSide write FSide;
 
-    property MarketType : TMarketType read FMarketType write FMarketType;
-    property UnderlyingType : TUnderlyingType read FUnderlyingType write FUnderlyingType;
     property Spec: TMarketSpec read FSpec write FSpec;
+    //
+    property TradeAble : boolean read FTradeAble write FTradeAble;
+    property IsMargin  : boolean read FIsMargin write FIsMargin;
+    property IsFuture  : boolean read FIsFuture write FIsFuture;
   end;
 
   TSymbols = class(TCollection)
@@ -156,6 +163,9 @@ constructor TSymbol.Create(aColl: TCollection);
 begin
   inherited Create( aColl );
 
+  FIsFuture:= false;
+  FIsMargin:= false;
+
 end;
 
 destructor TSymbol.Destroy;
@@ -202,7 +212,7 @@ begin
   end;
 end;
 
-procedure TSymbolList.GetList(aList: TStrings; aMarket: TMarketType);
+procedure TSymbolList.GetList(aList: TStrings; aMarket: TMarketType );
 var
   i: Integer;
   aSymbol: TSymbol;
@@ -212,7 +222,7 @@ begin
   for i := 0 to Count - 1 do
   begin
     aSymbol := GetSymbol(i);
-    if aSymbol.MarketType = aMarket then
+    if aSymbol.Spec.Market = aMarket then
       aList.AddObject(aSymbol.Code, aSymbol);
   end;
 
@@ -228,7 +238,7 @@ begin
   for i := 0 to Count - 1 do
   begin
     aSymbol := GetSymbol(i);
-    if aSymbol.MarketType in aMarkets then
+    if aSymbol.Spec.Market in aMarkets then
       aList.AddObject( aSymbol.Code, aSymbol);
   end;
 end;
@@ -274,6 +284,8 @@ end;
 
 function TSpots.New(stCode: String): TSpot;
 begin
+  Result  := Add as TSpot;
+  Result.FCode  := stCode;
 
 end;
 

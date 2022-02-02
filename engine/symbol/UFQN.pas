@@ -5,18 +5,26 @@ interface
 uses
   SysUtils,
 
+  UApiTypes,
+
   UParsers
   ;
 
-type
+const
+
   // FQN = symbol@[sub-market.][underlying.].market.exchange.country
 
-  TMarketType = (mtNotAssigned,
-                 mtIndex, mtStock, mtMargin, mtETF, mtFutures, mtOption  );
+  FQN_BINAN_SPOT = 'spot.binance.os';
+  FQN_UPBIT_SOPT = 'spot.upbit.os';
+  FQN_BITHU_SPOT = 'spot.bithumb.kr';
+
+  FQN_BINAN_FUTURES = 'future.binance.os';
+
+type
 
   TMarketTypes = set of TMarketType;
 
-  TUnderlyingType = ( utStock );
+  TUnderlyingType = ( utSpot, utIndex );
 
   TFQNParser = class(TParser)
   private
@@ -59,6 +67,10 @@ type
     property MarketType: TMarketType read FMarketType;
   end;
 
+
+  function GetBaseSpotFQN( aExKind : TExchangeKind ) : string;
+  function GetBaseFuturesFQN( aExKind : TExchangeKind ) : string;
+
 implementation
 
 type
@@ -68,14 +80,9 @@ type
   end;
 
 const
-  MARKET_TOKENS: array[0..5] of TMarketToken =
-            ((Market: mtIndex;   Token: 'index'),
-             (Market: mtStock;   Token: 'stock'),
-             (Market: mtMargin;  Token: 'margin'),
-//             (Market: mtBond;    Token: 'bond'),
-             (Market: mtETF;     Token: 'etf'),
-             (Market: mtFutures; Token: 'future'),
-             (Market: mtOption;  Token: 'option')
+  MARKET_TOKENS: array[0..1] of TMarketToken =
+            ((Market: mtSpot;   Token: 'spot'),
+             (Market: mtFutures; Token: 'future')
 //             (Market: mtELW;     Token: 'elw'),
 //             (Market: mtCurrency;   Token: 'currency'),
 //             (Market: mtCommodity;  Token: 'commodity'),
@@ -104,7 +111,7 @@ begin
   FSubMarket := '';
   FSymbol := '';
 
-  FMarketType := mtNotAssigned;
+  FMarketType := mtSpot;
 
     // separate symbol from FQN if any
   iPos := Pos('@', Value);
@@ -149,11 +156,10 @@ begin
       // underlying or submarket
     if Count >= 4 then
     case FMarketType of
-      mtNotAssigned: ;
-      mtIndex, mtStock, mtETF:
+      mtSpot:
         for i := 4 to Count do
           FSubMarket := Strings[Count-i] + '.' + FSubMarket;
-      mtFutures, mtOption :
+      mtFutures :
         begin
           FUnderlying := Strings[Count-4];
           if Count >= 5 then
@@ -165,5 +171,25 @@ begin
   end;
 end;
 
+
+
+function GetBaseSpotFQN( aExKind : TExchangeKind ) : string;
+begin
+
+  case aExKind of
+    ekBinance: Result := FQN_BINAN_SPOT;
+    ekUpbit:   Result := FQN_UPBIT_SOPT;
+    ekBithumb: Result := FQN_BITHU_SPOT;
+  end;
+end;
+
+
+function GetBaseFuturesFQN( aExKind : TExchangeKind ) : string;
+begin
+  case aExKind of
+    ekBinance: Result := FQN_BINAN_FUTURES;
+    else Result := '';
+  end;
+end;
 
 end.

@@ -94,11 +94,12 @@ function  TFrmDalinMain.IsRealyClose : boolean;
 var
   stLog : string;
 begin
-    stLog  := '정말로 종료하시겠습니까?';
-    if (MessageDlg( stLog, mtInformation, [mbYes, mbNo], 0) = mrYes ) then
-      Result := true
-    else
-      Result := false;
+  Exit (true);
+  stLog  := '정말로 종료하시겠습니까?';
+  if (MessageDlg( stLog, mtInformation, [mbYes, mbNo], 0) = mrYes ) then
+    Result := true
+  else
+    Result := false;
 end;
 
 procedure TFrmDalinMain.SetEnv;

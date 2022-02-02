@@ -5,8 +5,8 @@ interface
 type
 
 
-  TExchangeKind   = ( ekBinance , ekUpbit, etBitthumb );
-  TMarketType     = ( emSpot, emFuture );
+  TExchangeKind   = ( ekBinance , ekUpbit, ekBithumb );
+  TMarketType     = ( mtSpot, mtFutures );
   TAccountMarketType  = ( amSpot, amMargin, amFuture );
 
   TApiInfo = record

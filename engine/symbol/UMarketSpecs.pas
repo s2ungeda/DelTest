@@ -5,7 +5,7 @@ interface
 uses
   system.Classes ,  system.SysUtils,
 
-  UFQN, UCollections , USymbolParser
+  UFQN, UApiTypes, UCollections , USymbolParser
   ;
 
 type
@@ -31,18 +31,32 @@ type
       // minimum price movement(it's not fixed in Korean market)
     FTickSize: Double;   // actual tick size, if 'Fraction' > 0, TickSize = 1 / FFraction
     FTickValue: Double;  // = FTickSize * FPointValue
-    FPrecision: Integer; // floating point precision
+    FQtySize: Double;
+    FPrecision: Integer;  // floating point precision
+
+    FQuoteCode: string;
+    FSettleCode: string;
+    FBaseCode: string;
+    FSubMarket: string;
+
   public
     constructor Create(aColl: TCollection); override;
     Destructor  Destroy; override;
+
+    procedure SetSpec( iPre : integer; dTickSize, dQtySize : double );
 
     property FQN: String read FFQN write FFQN;
 
     property Country: String read FCountry;
     property Exchange: String read FExchange;
     property Underlying: String read FUnderlying;
+    property SubMarket : string read FSubMarket;
 
     property Description: String read FDescription write FDescription;
+
+    property SettleCode: string read FSettleCode write FSettleCode;
+    property BaseCode: string read FBaseCode write FBaseCode;
+    property QuoteCode: string read FQuoteCode write FQuoteCode;
 
     property ContractSize: Double read FContractSize;
     property PriceQuote: Double read FPriceQuote;
@@ -51,6 +65,10 @@ type
     property TickSize: Double read FTickSize;
     property TickValue: Double read FTickValue;
     property Precision: Integer read FPrecision;
+    property Market : TMarketType read FMarket;
+
+    property QtySize : double read FQtySize;
+
   end;
 
   TMarketSpecs = class(TCodedCollection)
@@ -85,12 +103,22 @@ begin
   FTickSize:= 1.0;
   FTickValue:= 1.0;
   FPrecision:= 1;
+
+  FSubMarket  := '*';
+
 end;
 
 destructor TMarketSpec.Destroy;
 begin
 
   inherited;
+end;
+
+procedure TMarketSpec.SetSpec(iPre: integer; dTickSize, dQtySize: double);
+begin
+  FPrecision  := iPre;
+  FTickSize   := dTickSize;
+  FQtySize    := dQtySize;
 end;
 
 { TMarketSpecs }
@@ -150,6 +178,7 @@ begin
   Result.FExchange := FFQNParser.Bourse;
   Result.FMarket := FFQNParser.MarketType;
   Result.FUnderlying := FFQNParser.Underlying;
+  Result.FSubMarket  := FFQNParser.SubMarket;
 
 end;
 
