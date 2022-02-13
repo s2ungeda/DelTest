@@ -37,7 +37,8 @@ uses
   UBinanceFutures in 'api\binance\UBinanceFutures.pas',
   UUpbitSpot in 'api\upbit\UUpbitSpot.pas',
   UBithSpot in 'api\bithumb\UBithSpot.pas',
-  UEncrypts in 'engine\common\UEncrypts.pas';
+  UEncrypts in 'engine\common\UEncrypts.pas',
+  UBinanceParse in 'api\Binance\UBinanceParse.pas';
 
 {$R *.res}
 begin

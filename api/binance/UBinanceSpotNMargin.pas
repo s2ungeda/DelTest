@@ -33,6 +33,7 @@ implementation
 
 uses
   GApp, GLibs
+  , UBinanceParse
   , UFQN
   , UEncrypts
   ;
@@ -86,7 +87,7 @@ function TBinanceSpotNMargin.RequestMaster: boolean;
 begin
   Result := RequestSpotMaster          
          and RequestMarginMaster
-         and RequestSpotTicker
+//         and RequestSpotTicker
          ;
 end;
 
@@ -208,36 +209,8 @@ var
   data, sig, sTime: string;
   sOut, sJson : string;
 
-  key, t : string;
-begin                 
+begin
 
-  key := 'ZGzriTauLgOYQ35aNXlKJWFHf07CLxBLZ0i3yeIW7Fiht9gTJanPLGBRrp5FzFKf';
-
-  //memo1.Lines.Add(CalculateHMACSHA256(data,key ) );
-
-  restClient.BaseURL := 'https://api.binance.com';
-  restReq.Resource := '/sapi/v1/margin/isolated/allPairs';
-//  restReq.Resource := '/sapi/v1/margin/isolated/pair';
-
-  t :=  GetTimestamp;
-  data := Format('timestamp=%s', [t]);
-  sig  := CalculateHMACSHA256(data,key );
-
-
-
-//  restReq.AddParameter('symbol', 'BTCUSDT' );
-  restReq.AddParameter('timestamp', t );
-  restReq.AddParameter('signature', sig );
-
-  restReq.AddParameter('X-MBX-APIKEY', 'bzJPEfytBMVlyJNGBKmuJLuJGHJnpQ28lUhyaDOudMS9ZPPWfalu4hFb0HVt798H', pkHTTPHEADER );
-
-  restReq.Method   := rmGET;
-  restReq.Execute;
-
-  App.Log( llDebug, '', '%s', [restRes.JSONValue.ToString] );  
-
-  exit (true);
-                              
   SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
   sTime:= GetTimestamp;
   data := Format('timestamp=%s', [sTime]); 
@@ -261,9 +234,7 @@ begin
     Exit( false );  
   end;
 
-  Result := true; 
-
-
+  Result := true;
 
   
 end;
