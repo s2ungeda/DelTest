@@ -33,7 +33,10 @@ type
     function SetDirInfo : boolean;
 
     procedure Log( lLevel : TLogLevel; stPrefix, stData : string ); overload;
+    procedure Log( lLevel : TLogLevel; stData : string ); overload;
+    procedure Log( lLevel : TLogLevel; const fmt: string; const Args: array of const ); overload;
     procedure Log( lLevel : TLogLevel; stPrefix : string; const fmt: string; const Args: array of const ); overload;
+    procedure DebugLog( const fmt: string; const Args: array of const );
 
     property Engine : TDalinEngine read FEngine;
 
@@ -68,6 +71,8 @@ begin
 
   FAppStatus := asNone;
 end;
+
+
 
 destructor TApp.Destroy;
 begin
@@ -135,10 +140,29 @@ end;
 
 
 
+procedure TApp.Log(lLevel: TLogLevel; stData: string);
+begin
+  if IsLogLevel(lLevel) then
+    FLog.Log(integer(lLevel), '', stData);
+end;
+
+procedure TApp.Log(lLevel: TLogLevel; const fmt: string;
+  const Args: array of const);
+begin
+  if IsLogLevel(lLevel) then
+    FLog.Log(integer(lLevel), '', Format( fmt, Args ) );
+end;
+
 procedure TApp.Log(lLevel : TLogLevel; stPrefix, stData: string);
 begin
   if IsLogLevel(lLevel) then
     FLog.Log(integer(lLevel), stPrefix, stData);
 end;
 
+
+procedure TApp.DebugLog(const fmt: string; const Args: array of const);
+begin
+  if IsLogLevel(llDebug) then
+    FLog.Log(integer(llDebug), '', Format( fmt, Args ) );
+end;
 end.

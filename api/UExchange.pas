@@ -148,26 +148,33 @@ begin
 //  Body.Add( ABody, ctAPPLICATION_JSON);
   end;
 
+
   try
-    FRestReq.Execute;
+    try
+      FRestReq.Execute;
 
-    if FRestRes.StatusCode <> 200 then
-    begin
-      OutRes := Format( 'status : %d, %s', [ FRestRes.StatusCode, FRestRes.StatusText ] );
-      OutJson:= FRestRes.Content;
-      Exit( false );
+      if FRestRes.StatusCode <> 200 then
+      begin
+        OutRes := Format( 'status : %d, %s', [ FRestRes.StatusCode, FRestRes.StatusText ] );
+        OutJson:= FRestRes.Content;
+        Exit( false );
+      end;
+
+      OutJson := FRestRes.Content;
+      Result := true;
+
+    except
+      on E: Exception do
+      begin
+        OutRes := E.Message;
+        Exit(false);
+      end
     end;
-
-    OutJson := FRestRes.Content;
-    Result := true;
-
-  except
-    on E: Exception do
-    begin
-      OutRes := E.Message;
-      Exit(false);
-    end
+  finally
+    FRestReq.Params.Clear;
   end;
+
+
 end;
 
 procedure TExchange.SetBaseUrl(url: string);

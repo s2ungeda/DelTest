@@ -87,7 +87,7 @@ function TBinanceSpotNMargin.RequestMaster: boolean;
 begin
   Result := RequestSpotMaster          
          and RequestMarginMaster
-//         and RequestSpotTicker
+         and RequestSpotTicker
          ;
 end;
 
@@ -190,18 +190,18 @@ var
   sOut, sJson : string;
 begin
 
-  data := Format('symbol=%s', [ 'BTCUSDT' ]);
-
-  if Request( rmGET, '/api/v3/ticker/24hr', data, sJson, sOut ) then
+  if Request( rmGET, '/api/v3/ticker/24hr', '', sJson, sOut ) then
   begin
-    App.Log( llDebug, '', '%s (%s, %s)',
-          [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseSpotTicker( sJson );
   end else
   begin
     App.Log( llError, '', 'Failed %s RequestMarginMaster (%s, %s)',
       [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    Exit( false );  
+    Exit( false );
   end;
+
+  Result := true;
 end;
 
 function TBinanceSpotNMargin.RequestMarginMaster: boolean;
@@ -213,25 +213,25 @@ begin
 
   SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
   sTime:= GetTimestamp;
-  data := Format('timestamp=%s', [sTime]); 
-  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );       
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
 
   App.Log( llDebug, '', '%s : %s',  [ App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot )
                                     , App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot )] );
-  
+
   SetParam('timestamp', sTime );
   SetParam('signature', sig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
 
   if Request( rmGET, '/sapi/v1/margin/isolated/allPairs', '', sJson, sOut ) then
   begin
-    App.Log( llDebug, '', '%s (%s, %s)',
-          [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseMarginPair( sJson );
   end else
   begin
     App.Log( llError, '', 'Failed %s RequestMarginMaster (%s, %s)',
       [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    Exit( false );  
+    Exit( false );
   end;
 
   Result := true;
