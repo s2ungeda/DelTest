@@ -6,11 +6,95 @@ uses
 
   system.Classes, system.SysUtils, system.DateUtils ,
 
-  UFQN , UApiTypes, UMarketSpecs
+  UFQN , UApiTypes, UMarketSpecs ,
+
+  UTicks
   ;
 
 type
 
+
+  TMarketDepth = class(TCollectionItem)
+  private
+    FPrice: Double;   // order price
+    FVolume: double; // number of contracts
+    FCnt: Integer;
+  public
+    property Price: Double read FPrice write FPrice;
+    property Volume: double read FVolume write FVolume;
+    property Cnt: Integer read FCnt write FCnt;
+  end;
+
+  TMarketDepths = class(TCollection)
+  private
+    FVolumeTotal: double;
+    FCntTotal: Integer;
+    FRealTimeAvg: double;
+    FRealCount: integer;
+    FRealVolSum: integer;
+
+    function GetSize: Integer;
+    procedure SetSize(const Value: Integer);
+    function GetDepth(i: Integer): TMarketDepth;
+  public
+    constructor Create;
+
+    property VolumeTotal: double read FVolumeTotal write FVolumeTotal;
+    property CntTotal: Integer read FCntTotal write FCntTotal;
+
+    property RealTimeAvg : double read FRealTimeAvg write FRealTimeAvg;
+    property RealVolSum  : integer read FRealVolSum write FRealVolSum;
+    property RealCount : integer read FRealCount write FRealCount;
+    property Size: Integer read GetSize write SetSize;
+    property Depths[i:Integer]: TMarketDepth read GetDepth; default;
+  end;
+
+  TTimeNSale = class(TCollectionItem)
+  private
+      // required
+    FPrice: Double;
+    FVolume: double;
+    FTime: TDateTime;
+      // optional I
+    FSide: Integer;  // 1=long, -1=short
+      // Korea only
+    FDailyVolume: double;
+    FDailyAmount: Currency;
+
+    FLocalTime: TDateTime;
+    FTick : TTickItem;
+    FPrevPrice: Double;
+
+  public
+    property Price: Double read FPrice write FPrice;
+    property PrevPrice : Double read FPrevPrice write FPrevPrice;
+    property Volume: double read FVolume write FVolume;
+    property Time: TDateTime read FTime write FTime;
+    property LocalTime : TDateTime read FLocalTime write FLocalTime;
+
+    property Side: Integer read FSide write FSide;
+      //
+    property DayVolume: double read FDailyVolume write FDailyVolume;
+    property DayAmount: Currency read FDailyAmount write FDailyAmount;
+
+    property Tick : TTickItem read FTick write FTick;
+  end;
+
+  TTimeNSales = class(TCollection)
+  private
+    FLast: TTimeNSale;
+    FPrev: TTimeNSale;
+    FMaxCount: Integer;
+    function GetSale(i: Integer): TTimeNSale;
+  public
+    constructor Create;
+
+    function New: TTimeNSale;
+    property MaxCount: Integer read FMaxCount write FMaxCount;
+    property Prev: TTimeNSale read FPrev;
+    property Last: TTimeNSale read FLast;
+    property Sales[i:Integer]: TTimeNSale read GetSale; default;
+  end;
 
   TSymbol = class( TCollectionItem )
   private
@@ -30,19 +114,23 @@ type
     FLocalTime: TDateTime;
     FTime: TDateTime;
     FSide: Integer;
-    FVolume: int64;
+    FVolume: double;
     FDayOpen: Double;
     FBase: Double;
     FDayHigh: Double;
     FDailyAmount: Currency;
     FPrevLast: Double;
     FPrevLow: Double;
-    FDailyVolume: int64;
+    FDailyVolume: double;
     FSpec: TMarketSpec;
     FSettleCode: string;
     FTradeAble: boolean;
     FIsFuture: boolean;
     FIsMargin: boolean;
+    FBids: TMarketDepths;
+    FAsks: TMarketDepths;
+    FSales: TTimeNSales;
+    FTicks: TCollection;
   public
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
@@ -66,15 +154,19 @@ type
     property PrevLow : Double read FPrevLow write FPrevLow;
     property PrevOpen: double read FPrevOpen write FPrevOpen;
 
-    property DayVolume: int64 read FDailyVolume write FDailyVolume;
+    property DayVolume: double read FDailyVolume write FDailyVolume;
     property DayAmount: Currency read FDailyAmount write FDailyAmount;
 
-    property Volume: int64 read FVolume write FVolume;
+    property Volume: double read FVolume write FVolume;
     property Time: TDateTime read FTime write FTime;
     property LocalTime : TDateTime read FLocalTime write FLocalTime;
     property Side: Integer read FSide write FSide;
 
     property Spec: TMarketSpec read FSpec write FSpec;
+    property Asks : TMarketDepths read FAsks;
+    property Bids : TMarketDepths read FBids;
+    property Sales: TTimeNSales read FSales;
+    property Ticks: TCollection read FTicks;
     //
     property TradeAble : boolean read FTradeAble write FTradeAble;
     property IsMargin  : boolean read FIsMargin write FIsMargin;
@@ -166,10 +258,20 @@ begin
   FIsFuture:= false;
   FIsMargin:= false;
 
+  FBids:= TMarketDepths.Create;
+  FAsks:= TMarketDepths.Create;
+  FSales:= TTimeNSales.Create;
+  FTicks := TCollection.Create( TTickItem);
+
 end;
 
 destructor TSymbol.Destroy;
 begin
+
+  FTicks.free;
+  FBids.Free;
+  FAsks.Free;
+  FSales.Free;
 
   inherited;
 end;
@@ -344,6 +446,83 @@ begin
 
   FExpMonth := wMonth;
   FExpYear := wYear;
+end;
+
+{ TMarketDepths }
+
+constructor TMarketDepths.Create;
+begin
+  inherited Create(TMarketDepth);
+  FRealCount  := 0;
+  SetSize(5);
+end;
+
+function TMarketDepths.GetDepth(i: Integer): TMarketDepth;
+begin
+  if (i >= 0) and (i <= Count-1) then
+    Result := Items[i] as TMarketDepth
+  else
+    Result := nil;
+end;
+
+function TMarketDepths.GetSize: Integer;
+begin
+  Result := Count;
+end;
+
+procedure TMarketDepths.SetSize(const Value: Integer);
+var
+  i: Integer;
+begin
+  if Value > 0 then
+    if Value > Count then
+    begin
+      for i := Count to Value-1 do Add;
+    end else
+    if Value < Count then
+    begin
+      for i := Count-1 downto Value do Items[i].Free;
+    end;
+
+end;
+
+{ TTimeNSales }
+
+constructor TTimeNSales.Create;
+begin
+  inherited Create(TTimeNSale);
+
+  FPrev := nil;
+  FLast := nil;
+  FMaxCount := 1000;
+end;
+
+function TTimeNSales.GetSale(i: Integer): TTimeNSale;
+begin
+  if (i >= 0) and (i <= Count-1) then
+    Result := Items[i] as TTimeNSale
+  else
+    Result := nil;
+end;
+
+function TTimeNSales.New: TTimeNSale;
+begin
+    // limit size
+  if (FMaxCount > 0) and (Count >= FMaxCount) then
+    Items[Count-1].Free;
+
+    // insert new object
+  Result := Insert(0) as TTimeNSale;
+
+  with Result do
+  begin
+    FVolume := 0;
+    FSide := 0; // not assigned
+  end;
+
+    // store
+  FPrev := FLast;
+  FLast := Result;
 end;
 
 end.

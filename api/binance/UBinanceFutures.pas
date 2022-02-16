@@ -13,6 +13,9 @@ uses
 
 type
   TBinanceFutures = class( TExchange )
+  private
+    function RequestFuttMaster : boolean;
+    function RequestFutTicker  : boolean;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -21,6 +24,12 @@ type
   end;
 
 implementation
+
+uses
+  GApp
+  , UBinanceParse
+  , REST.Types
+  ;
 
 { TBinanceSpotNMargin }
 
@@ -36,9 +45,37 @@ begin
   inherited;
 end;
 
-function TBinanceFutures.RequestMaster: boolean;
+function TBinanceFutures.RequestFutTicker: boolean;
 begin
 
+end;
+
+function TBinanceFutures.RequestFuttMaster: boolean;
+var
+  sTmp, sOut, sJson : string;
+begin
+  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures );
+  SetBaseUrl( sTmp );
+
+  if Request( rmGET, '/fapi/v1/exchangeInfo' , '', sJson, sOut ) then
+  begin
+    gBinReceiver.ParseFuttMaster(sJson);
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s Fut PreparMaster (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit( false );
+  end;
+
+  Result := true;
+
+
+end;
+
+function TBinanceFutures.RequestMaster: boolean;
+begin
+  Result := RequestFuttMaster
+         and RequestFutTicker;
 end;
 
 end.

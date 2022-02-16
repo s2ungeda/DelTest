@@ -38,7 +38,10 @@ uses
   UUpbitSpot in 'api\upbit\UUpbitSpot.pas',
   UBithSpot in 'api\bithumb\UBithSpot.pas',
   UEncrypts in 'engine\common\UEncrypts.pas',
-  UBinanceParse in 'api\Binance\UBinanceParse.pas';
+  UBinanceParse in 'api\Binance\UBinanceParse.pas',
+  UTicks in 'engine\symbol\UTicks.pas',
+  UCircularQueue in 'engine\utils\UCircularQueue.pas',
+  UQuoteTimers in 'engine\utils\UQuoteTimers.pas';
 
 {$R *.res}
 begin
