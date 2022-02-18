@@ -34,8 +34,10 @@ type
 
     procedure SetBaseUrl(url : string); inline;
     procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; inline;
+    procedure GetCodeList( var aList : TStringList ) ;
     function  GetExKind : TExchangeKind;
     function  GetCodeIndex( S : string ) : integer;
+
 
 //----------------------------------------------------------- common request
     function ParsePrepareMaster : integer ; virtual; abstract;
@@ -104,6 +106,14 @@ end;
 function TExchange.GetCodeIndex( S : string ) : integer;
 begin
   Result := ( FParent as TExchangeManager ).Codes.IndexOf(S);
+end;
+
+procedure TExchange.GetCodeList(var aList: TStringList);
+var
+  i : integer;
+begin
+  for I := 0 to ( FParent as TExchangeManager ).Codes.Count-1 do
+    aList.Add( ( FParent as TExchangeManager ).Codes[i]);
 end;
 
 function TExchange.GetExKind: TExchangeKind;

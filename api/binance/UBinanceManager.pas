@@ -18,7 +18,7 @@ type
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
 
-    function RequestMaster : boolean; override;
+//    function RequestMaster : boolean; override;
   end;
 
 implementation
@@ -40,16 +40,16 @@ begin
   inherited;
 end;
 
-function TBinanceManager.RequestMaster: boolean;
-var
-  I: TMarketType;
-begin
-  for I := mtSpot to High(TMarketType) do
-    if not Exchanges[i].RequestMaster then
-      Exit (false);
-
-  Result := true;
-end;
+//function TBinanceManager.RequestMaster: boolean;
+//var
+//  I: TMarketType;
+//begin
+//  for I := mtSpot to High(TMarketType) do
+//    if not Exchanges[i].RequestMaster then
+//      Exit (false);
+//
+//  Result := true;
+//end;
 
 
 

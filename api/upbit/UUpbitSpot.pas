@@ -20,9 +20,15 @@ type
     Destructor  Destroy; override;
 
     function ParsePrepareMaster : integer; override;
+    function RequestMaster : boolean ; override;
   end;
 
 implementation
+
+uses
+  GApp
+  , UUpbitParse
+  ;
 
 { TBinanceSpotNMargin }
 
@@ -63,6 +69,47 @@ begin
       Codes.Add( sts[1] );
     end;
   end;
+end;
+
+function TUpbitSpot.RequestMaster: boolean;
+var
+  aList : TStringList;
+  sTmp, sOut, sJson, sData  : string;
+  I: Integer;
+begin
+  aList := TStringList.Create;
+  try
+    GetCodeList(aList);
+    if aList.Count <= 0 then Exit;
+    sTmp := '';
+    for I := 0 to aList.Count-1 do
+    begin
+      sTmp := sTmp + 'KRW-'+aList[i];
+      if i < aList.Count-1  then
+        sTmp := sTmp + ','
+    end;
+
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    SetParam('markets', sTmp );
+
+    if Request( rmGET, 'v1/ticker', '', sJson, sOut ) then
+    begin
+      //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+//      gBinReceiver.ParseMarginPair( sJson );
+      gUpReceiver.ParseSpotTicker( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestMaster (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit( false );
+    end;
+
+    Result := App.Engine.SymbolCore.Symbols[ GetExKind].Count > 0 ;
+
+  finally
+    aList.Free;
+  end;
+
 end;
 
 end.

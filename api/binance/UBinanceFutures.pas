@@ -46,8 +46,23 @@ begin
 end;
 
 function TBinanceFutures.RequestFutTicker: boolean;
+var
+  sOut, sJson : string;
 begin
+//  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures );
+//  SetBaseUrl( sTmp );
 
+  if Request( rmGET, '/fapi/v1/ticker/24hr' , '', sJson, sOut ) then
+  begin
+    gBinReceiver.ParseFuttTicker(sJson);
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s ParseFuttTicker (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit( false );
+  end;
+
+  Result := App.Engine.SymbolCore.Futures[ GetExKind].Count > 0;
 end;
 
 function TBinanceFutures.RequestFuttMaster: boolean;
@@ -67,8 +82,7 @@ begin
     Exit( false );
   end;
 
-  Result := true;
-
+  Result := App.Engine.SymbolCore.Futures[ GetExKind].Count > 0;
 
 end;
 

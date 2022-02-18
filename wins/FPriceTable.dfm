@@ -2,8 +2,8 @@ object FrmPriceTable: TFrmPriceTable
   Left = 549
   Top = 75
   Caption = 'Price Table'
-  ClientHeight = 1000
-  ClientWidth = 1772
+  ClientHeight = 584
+  ClientWidth = 870
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,71 +17,25 @@ object FrmPriceTable: TFrmPriceTable
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
-    Left = 870
-    Top = 0
-    Height = 981
-    ExplicitLeft = 264
-    ExplicitTop = 344
-    ExplicitHeight = 100
-  end
-  object plRight: TPanel
-    Left = 873
-    Top = 0
-    Width = 899
-    Height = 981
-    Align = alClient
-    BevelOuter = bvNone
-    Caption = 'plRight'
-    TabOrder = 0
-    object plRightTop: TPanel
-      Left = 0
-      Top = 0
-      Width = 899
-      Height = 60
-      Align = alTop
-      BevelOuter = bvLowered
-      Caption = 'plRightTop'
-      TabOrder = 0
-    end
-    object plRightClient: TPanel
-      Left = 0
-      Top = 60
-      Width = 899
-      Height = 921
-      Align = alClient
-      BevelOuter = bvLowered
-      Caption = 'plRightClient'
-      TabOrder = 1
-      object sgQuote: TStringGrid
-        Left = 1
-        Top = 1
-        Width = 897
-        Height = 919
-        Align = alClient
-        ColCount = 13
-        DefaultRowHeight = 19
-        RowCount = 24
-        TabOrder = 0
-      end
-    end
-  end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 981
-    Width = 1772
+    Top = 565
+    Width = 870
     Height = 19
     Panels = <>
+    ExplicitTop = 981
+    ExplicitWidth = 1772
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
     Width = 870
-    Height = 981
-    Align = alLeft
+    Height = 565
+    Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
-    TabOrder = 2
+    TabOrder = 1
+    ExplicitHeight = 981
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -154,62 +108,28 @@ object FrmPriceTable: TFrmPriceTable
       Left = 0
       Top = 60
       Width = 870
-      Height = 921
+      Height = 505
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      object Splitter2: TSplitter
-        Left = 0
-        Top = 488
-        Width = 870
-        Height = 3
-        Cursor = crVSplit
-        Align = alTop
-        ExplicitLeft = 1
-        ExplicitTop = 201
-        ExplicitWidth = 458
-      end
-      object plLeftClientTop: TPanel
+      ExplicitHeight = 921
+      object sgKimp: TStringGrid
         Left = 0
         Top = 0
         Width = 870
-        Height = 488
-        Align = alTop
-        BevelOuter = bvLowered
-        Caption = 'plLeftClientTop'
-        TabOrder = 0
-        object sgKimp: TStringGrid
-          Left = 1
-          Top = 1
-          Width = 868
-          Height = 486
-          Align = alClient
-          ColCount = 13
-          DefaultRowHeight = 19
-          RowCount = 24
-          TabOrder = 0
-        end
-      end
-      object plLeftClientClient: TPanel
-        Left = 0
-        Top = 491
-        Width = 870
-        Height = 430
+        Height = 505
         Align = alClient
-        BevelOuter = bvLowered
-        Caption = 'plLeftClientClient'
-        TabOrder = 1
-        object sgInOut: TStringGrid
-          Left = 1
-          Top = 1
-          Width = 868
-          Height = 428
-          Align = alClient
-          ColCount = 13
-          DefaultRowHeight = 19
-          RowCount = 24
-          TabOrder = 0
-        end
+        ColCount = 13
+        DefaultRowHeight = 19
+        DefaultDrawing = False
+        FixedCols = 0
+        RowCount = 25
+        TabOrder = 0
+        OnDrawCell = sgKimpDrawCell
+        ExplicitLeft = 1
+        ExplicitTop = 1
+        ExplicitWidth = 868
+        ExplicitHeight = 486
       end
     end
   end

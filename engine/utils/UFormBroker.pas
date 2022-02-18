@@ -500,6 +500,15 @@ begin
 
     end;
   end;
+
+  if Assigned(FOnSave) then
+  try
+    FStorage.New;
+    FStorage.FieldByName('FormID').AsInteger := ID_DALIN_MAIN;
+    FOnSave(ID_DALIN_MAIN, FStorage, aForm);
+  except
+
+  end;
     // save storage
   FStorage.Save(stFile);
 end;

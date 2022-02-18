@@ -15,6 +15,8 @@ type
     function RequestMaster : boolean;
     function LoadMaster( sMasterFile : string ) : boolean;
     function GetCodesIntersection : boolean;
+
+    procedure MasterLog;
   public
     Constructor Create;
     Destructor  Destroy; override;
@@ -137,11 +139,19 @@ begin
       Result := RequestMaster ;
   end;
 
+  if Result  then
+    MasterLog;
+
 end;
 
 function TApiManager.LoadMaster(sMasterFile: string): boolean;
 begin
 
+end;
+
+procedure TApiManager.MasterLog;
+begin
+  App.Engine.SymbolCore.Log;
 end;
 
 function TApiManager.PrepareMaster: boolean;
@@ -158,6 +168,15 @@ begin
 
 end;
 
+{
+TApiManager.RequestMaster
+	бщ
+TBinanceManager.RequestMaster
+	бщ
+TBinanceSpotNMargin.RequestMaster
+	бщ
+TBinanceFutures.RequestMaster
+}
 function TApiManager.RequestMaster: boolean;
 var
   i :  TExchangeKind;

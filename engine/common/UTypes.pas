@@ -4,7 +4,7 @@ interface
 
 type
 
-  TAppStatus = ( asNone, asInit );
+  TAppStatus = ( asNone, asInit, asLoad );
 
 
   TAppStatusEvent  = procedure( asType : TAppStatus ) of object;
@@ -15,6 +15,8 @@ type
   TPositionTypes = set of TPositionType;
 
   TSideType = ( stNone, stLong, stShort );
+
+
 
 implementation
 

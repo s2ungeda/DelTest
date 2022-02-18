@@ -36,7 +36,8 @@ type
     procedure Log( lLevel : TLogLevel; stData : string ); overload;
     procedure Log( lLevel : TLogLevel; const fmt: string; const Args: array of const ); overload;
     procedure Log( lLevel : TLogLevel; stPrefix : string; const fmt: string; const Args: array of const ); overload;
-    procedure DebugLog( const fmt: string; const Args: array of const );
+    procedure DebugLog( const fmt: string; const Args: array of const ); overload;
+    procedure DebugLog( const fmt: string ); overload;
 
     property Engine : TDalinEngine read FEngine;
 
@@ -71,6 +72,8 @@ begin
 
   FAppStatus := asNone;
 end;
+
+
 
 
 
@@ -165,4 +168,11 @@ begin
   if IsLogLevel(llDebug) then
     FLog.Log(integer(llDebug), '', Format( fmt, Args ) );
 end;
+
+procedure TApp.DebugLog(const fmt: string);
+begin
+  if IsLogLevel(llDebug) then
+    FLog.Log(integer(llDebug), '', Format( '%s', [fmt] ) );
+end;
+
 end.

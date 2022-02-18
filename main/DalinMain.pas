@@ -5,6 +5,8 @@ uses
   , System.SysUtils, System.Variants, System.Classes, System.IniFiles
   , Vcl.Graphics,  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls ,
 
+  UStorage,
+
   NMainMenu,
 
   UTypes
@@ -20,9 +22,12 @@ type
     function IsRealyClose: boolean;
     procedure SetEnv;
     procedure DalinStatusEvent( asType : TAppStatus );
+
   public
     { Public declarations }
-
+    procedure Start;
+    procedure LoadEnv(aStorage: TStorage);
+    procedure SaveEnv(aStorage: TStorage);
   end;
 
 var
@@ -52,8 +57,8 @@ begin
 
   App.Log(llInfo, '', '---start---');
 
-  if not App.Engine.ApiManager.GetMaster then
-    App.Log(llError, '', 'Failed PrepareMaster');
+
+
 end;
 
 
@@ -112,4 +117,33 @@ begin
 
 end;
 
+procedure TFrmDalinMain.Start;
+begin
+  App.AppStatus := asLoad;
+end;
+
+
+procedure TFrmDalinMain.SaveEnv( aStorage : TStorage );
+begin
+  if aStorage = nil then Exit;
+
+  aStorage.FieldByName('Left').AsInteger := Left;
+  aStorage.FieldByName('Top').AsInteger := Top;
+  aStorage.FieldByName('width').AsInteger := Width;
+  aStorage.FieldByName('Height').AsInteger := Height;
+
+end;
+
+procedure TFrmDalinMain.LoadEnv( aStorage : TStorage );
+var
+  isSave : boolean;
+begin
+  if aStorage = nil then Exit;
+  Left  := aStorage.FieldByName('Left').AsInteger;
+  Top   := aStorage.FieldByName('Top').AsInteger;
+
+  Width := aStorage.FieldByName('width').AsInteger;
+  Height:= aStorage.FieldByName('Height').AsInteger;
+
+end;
 end.

@@ -38,6 +38,7 @@ type
     FSettleCode: string;
     FBaseCode: string;
     FSubMarket: string;
+    FExchangeType: TExchangeKind;
 
   public
     constructor Create(aColl: TCollection); override;
@@ -65,7 +66,9 @@ type
     property TickSize: Double read FTickSize;
     property TickValue: Double read FTickValue;
     property Precision: Integer read FPrecision;
+
     property Market : TMarketType read FMarket;
+    property ExchangeType : TExchangeKind read FExchangeType write FExchangeType;
 
     property QtySize : double read FQtySize;
 
@@ -87,6 +90,8 @@ type
 
     property Specs[i: Integer]: TMarketSpec read GetSpec; default;
   end;
+
+
 
 implementation
 

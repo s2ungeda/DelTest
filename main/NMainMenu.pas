@@ -60,12 +60,51 @@ end;
 
 procedure TDataModule1.FormLoad(iFormID: Integer; aStorage: TStorage;
   var aForm: TForm);
+var
+  bForm : TForm;
 begin
 
+  if iFormID = ID_DALIN_MAIN then
+  begin
+    if FrmDalin <> nil then
+      FrmDalin.LoadEnv( aStorage );
+    Exit;
+  end;
+
+
+  FormOpen(iFormID, 0, aForm);
+    //
+  if aForm = nil then Exit;
+
+  case iFormID of
+    ID_KIMP_TABLE :
+      if aForm is TFrmPriceTable then
+        (aForm as TFrmPriceTable).LoadEnv( aStorage );
+
+
+  end;
+
+end;
+
+procedure TDataModule1.FormSave(iFormID: Integer; aStorage: TStorage;
+  aForm: TForm);
+begin
+  if aForm = nil then Exit;
+    //
+  case iFormID of
+    ID_KIMP_TABLE :
+      if aForm is TFrmPriceTable then
+        (aForm as TFrmPriceTable).SaveEnv( aStorage );
+    ID_DALIN_MAIN :
+      if FrmDalin <> nil then
+        FrmDalin.SaveEnv(aStorage);
+  end;
 end;
 
 procedure TDataModule1.FormOpen(iFormID, iVar: Integer; var aForm: TForm);
 begin
+  aForm := nil;
+
   case iFormID of
     ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalin );
 
@@ -81,11 +120,7 @@ begin
 
 end;
 
-procedure TDataModule1.FormSave(iFormID: Integer; aStorage: TStorage;
-  aForm: TForm);
-begin
 
-end;
 
 // Quote wins open
 procedure TDataModule1.Kimp1Click(Sender: TObject);

@@ -41,7 +41,9 @@ uses
   UBinanceParse in 'api\Binance\UBinanceParse.pas',
   UTicks in 'engine\symbol\UTicks.pas',
   UCircularQueue in 'engine\utils\UCircularQueue.pas',
-  UQuoteTimers in 'engine\utils\UQuoteTimers.pas';
+  UQuoteTimers in 'engine\utils\UQuoteTimers.pas',
+  UBithParse in 'api\bithumb\UBithParse.pas',
+  UUpbitParse in 'api\upbit\UUpbitParse.pas';
 
 {$R *.res}
 begin
@@ -50,6 +52,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmDalinMain, FrmDalin);
   Application.CreateForm(TDataModule1, DataModule1);
+  FrmDalin.Start;
   Application.Run;
 
 end.

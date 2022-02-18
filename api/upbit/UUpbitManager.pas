@@ -14,11 +14,12 @@ uses
 type
 
   TUpbitManager = class( TExchangeManager )
+  private
+
   public
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
-
-    function RequestMaster : boolean; override;
+//    function RequestMaster : boolean; override;
   end;
 
 implementation
@@ -41,10 +42,22 @@ begin
   inherited;
 end;
 
-function TUpbitManager.RequestMaster: boolean;
-begin
 
-end;
+
+//function TUpbitManager.RequestMaster: boolean;
+//var
+//  I: TMarketType;
+//begin
+//  for I := mtSpot to High(TMarketType) do
+//  begin
+//    if Exchanges[i] = nil then continue;
+//    if not Exchanges[i].RequestMaster then
+//      Exit (false);
+//  end;
+//
+//  Result := true;
+//
+//end;
 
 
 

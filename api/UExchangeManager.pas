@@ -22,11 +22,11 @@ type
 
     // 공통으로 같이 처리할수 있는것은 상속 처리 하지 않음..
     // 1. preparemaster
+    // 2. requestmaster
     function PrepareMaster : boolean; //virtual; abstract;
+    function RequestMaster : boolean;
 
     // 상속 받아서 각 거래소 매니저에서 처리
-    // 1. requestmaster
-    function RequestMaster : boolean; virtual; abstract;
 
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
@@ -114,6 +114,21 @@ begin
   Result := Exchanges[mtSpot].PrepareMaster;
   App.Log(llDebug, '', ' ---------- %s codes count %d -----------',
     [ TExchangeKindDesc[FExchangeType], Exchanges[mtSpot].Codes.Count ] );
+
+end;
+
+function TExchangeManager.RequestMaster: boolean;
+var
+  I: TMarketType;
+begin
+  for I := mtSpot to High(TMarketType) do
+  begin
+    if Exchanges[i] = nil then continue;
+    if not Exchanges[i].RequestMaster then
+      Exit (false);
+  end;
+
+  Result := true;
 
 end;
 
