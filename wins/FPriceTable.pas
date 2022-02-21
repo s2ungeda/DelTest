@@ -6,6 +6,7 @@ uses
   Vcl.Grids, Vcl.ValEdit, Vcl.CategoryButtons
 
   , UStorage
+  , USymbolCore
   ;
 type
   TFrmPriceTable = class(TForm)

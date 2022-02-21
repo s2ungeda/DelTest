@@ -2,8 +2,8 @@ object FrmPriceTable: TFrmPriceTable
   Left = 549
   Top = 75
   Caption = 'Price Table'
-  ClientHeight = 584
-  ClientWidth = 870
+  ClientHeight = 487
+  ClientWidth = 866
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,37 +19,39 @@ object FrmPriceTable: TFrmPriceTable
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 565
-    Width = 870
+    Top = 468
+    Width = 866
     Height = 19
     Panels = <>
-    ExplicitTop = 981
-    ExplicitWidth = 1772
+    ExplicitTop = 565
+    ExplicitWidth = 870
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 870
-    Height = 565
+    Width = 866
+    Height = 468
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitHeight = 981
+    ExplicitWidth = 870
+    ExplicitHeight = 565
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 870
+      Width = 866
       Height = 60
       Align = alTop
       BevelOuter = bvLowered
       Caption = 'plLeftTop'
       TabOrder = 0
+      ExplicitWidth = 870
       DesignSize = (
-        870
+        866
         60)
       object SpeedButtonRightPanel: TSpeedButton
-        Left = 839
+        Left = 835
         Top = 19
         Width = 25
         Height = 21
@@ -107,17 +109,18 @@ object FrmPriceTable: TFrmPriceTable
     object plLeftClient: TPanel
       Left = 0
       Top = 60
-      Width = 870
-      Height = 505
+      Width = 866
+      Height = 408
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitHeight = 921
+      ExplicitWidth = 870
+      ExplicitHeight = 505
       object sgKimp: TStringGrid
         Left = 0
         Top = 0
-        Width = 870
-        Height = 505
+        Width = 866
+        Height = 408
         Align = alClient
         ColCount = 13
         DefaultRowHeight = 19
@@ -126,10 +129,7 @@ object FrmPriceTable: TFrmPriceTable
         RowCount = 25
         TabOrder = 0
         OnDrawCell = sgKimpDrawCell
-        ExplicitLeft = 1
-        ExplicitTop = 1
-        ExplicitWidth = 868
-        ExplicitHeight = 486
+        ExplicitTop = -6
       end
     end
   end
