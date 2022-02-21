@@ -20,12 +20,13 @@ begin
     asNone: ;
     asInit:
         if not App.Engine.ApiManager.GetMaster then
-          App.Log(llError, '', 'Failed PrepareMaster');
+          App.Log(llError, '', 'Failed PrepareMaster')
+        else
+          App.AppStatus := asLoad;
 
     asLoad :
           App.Engine.FormBroker.Load(ComposeFilePath([App.DataDir, App.Config.DATA_FILE]))
           ;
-
   end;
 end;
 

@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  GApp, GLibs
+  GApp, GLibs  , UApiConsts
   , UBinanceParse
   , UFQN
   , UEncrypts

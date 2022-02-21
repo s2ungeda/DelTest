@@ -119,7 +119,7 @@ end;
 
 procedure TFrmDalinMain.Start;
 begin
-  App.AppStatus := asLoad;
+  App.AppStatus := asinit;//asLoad;
 end;
 
 

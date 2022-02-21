@@ -26,7 +26,7 @@ type
 implementation
 
 uses
-  GApp
+  GApp, UApiConsts
   , UBinanceParse
   , REST.Types
   ;

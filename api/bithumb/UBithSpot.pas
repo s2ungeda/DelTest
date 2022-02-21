@@ -29,7 +29,7 @@ type
 implementation
 
 uses
-  GApp
+  GApp   , UApiConsts
   , UBithParse
   ;
 

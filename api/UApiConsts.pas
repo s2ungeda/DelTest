@@ -2,6 +2,10 @@ unit UApiConsts;
 
 interface
 
+uses
+  UApiTypes
+  ;
+
 const
 
   // spot 이랑 future 랑 종목코드가 같아서  구분을 위한 접미사
@@ -18,6 +22,14 @@ const
   ExCnt = 3;
 
  }
+
+  TMajorSymbol  : array [0..2] of string = ('BTC', 'ETH', 'XRP');
+
+
+  TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
+  TExchangeKindShortDesc : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
+  TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
+  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('Spot', 'Margin', 'Future');
 
 implementation
 

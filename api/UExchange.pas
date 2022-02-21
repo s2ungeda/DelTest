@@ -69,7 +69,7 @@ implementation
 uses
   GApp,
   System.JSON,
-  UExchangeManager
+  UExchangeManager, UApiConsts
   ;
 
 { TExchagne }

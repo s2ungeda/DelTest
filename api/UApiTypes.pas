@@ -32,11 +32,7 @@ type
     procedure SetInfo( i:integer; stName : string ; isMar,isFut, isDome : boolean );
   end;
 
-const
 
-  TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
-  TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
-  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('Spot', 'Margin', 'Future');
 
 implementation
 

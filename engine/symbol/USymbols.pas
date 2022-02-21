@@ -203,7 +203,7 @@ type
   public
     constructor Create;
     function New(stCode: String): TSpot;
-    property Stocks[i:Integer]: TSpot read GetSpot; default;
+    property Spots[i:Integer]: TSpot read GetSpot; default;
   end;
 
   TMargin = class(TSpot);

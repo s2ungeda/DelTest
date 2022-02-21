@@ -39,9 +39,9 @@ type
 
 implementation
 uses
-  GApp,
-  UBinanceSpotNMargin, UBinanceFutures ,
-  UBithSpot, UUpbitSpot
+  GApp,  UApiConsts
+  , UBinanceSpotNMargin, UBinanceFutures
+,   UBithSpot, UUpbitSpot
   ;
 
 { TExchangeManaager }

@@ -47,6 +47,7 @@ type
     procedure RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol); overload;
     function  RegisterSymbol(aExKind : TExchangeKind; aMarket : TMarketType; aCode : string ) : TSymbol ; overload;
     function  FindSymbol(aExKind : TExchangeKind; aCode : string ): TSymbol;
+    function  FindQuoteSymbol(aExKind : TExchangeKind; sBaseCode : string ): TSymbol;
 
     procedure Log;
 
@@ -123,6 +124,21 @@ begin
    FSpecs.Free;
 
   inherited;
+end;
+
+function TSymbolCore.FindQuoteSymbol(aExKind: TExchangeKind;
+  sBaseCode: string): TSymbol;
+var
+  I: Integer;
+begin
+  Result := nil;
+  // 일단 나중에..빠른  검색 로직을 추가 하자..
+  for I := 0 to FSpots[aExKind].Count -1 do
+    if FSpots[aExKind].Spots[i].Spec.BaseCode = sBaseCode then
+    begin
+      Result := FSpots[aExKind].Spots[i];
+      break;
+    end;
 end;
 
 function TSymbolCore.FindSymbol(aExKind: TExchangeKind; aCode: string): TSymbol;
