@@ -13,6 +13,9 @@ uses
 
 type
 
+  TSymbol = class;
+
+  TSymbolFindEvent = function(stCode: String): TSymbol of object;
 
   TMarketDepth = class(TCollectionItem)
   private
@@ -98,7 +101,7 @@ type
 
   TSymbol = class( TCollectionItem )
   private
-    FExchangeCode: string;
+ //   FExchangeCode: string;
     FCode: string;
 
     FQuoteCode: string;
@@ -119,7 +122,7 @@ type
     FBase: Double;
     FDayHigh: Double;
     FDailyAmount: Currency;
-    FPrevLast: Double;
+//    FPrevLast: Double;
     FPrevLow: Double;
     FDailyVolume: double;
     FSpec: TMarketSpec;
@@ -135,7 +138,7 @@ type
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
 
-    property  ExchangeCode : string read FExchangeCode;
+//    property  ExchangeCode : string read FExchangeCode;
     property  Code  : string read FCode write FCode;
     property  OrgCode : string read FOrgCode write FOrgCode;
     property  BaseCode  : string read FBaseCode write FQuoteCode;
@@ -149,7 +152,7 @@ type
     property DayLow: Double read FDayLow write FDayLow;
     property Last: Double read FLast write FLast;
     property Change: Double read FChange write FChange;
-    property PrevLast : Double read FPrevLast write FPrevLast;
+//    property PrevLast : Double read FPrevLast write FPrevLast;
     property PrevHigh : Double read FPrevHigh write FPrevHigh;
     property PrevLow : Double read FPrevLow write FPrevLow;
     property PrevOpen: double read FPrevOpen write FPrevOpen;

@@ -232,6 +232,7 @@ begin
       aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'lastPrice' ), 0.0 );
       aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'quoteVolume' ), 0.0 );
       aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'volume' ), 0.0 );
+      aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prevClosePrice' ), 0.0 );
 
       aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'closeTime' ) );
       aSymbol.LocalTime := now;

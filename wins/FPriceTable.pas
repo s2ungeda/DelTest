@@ -3,10 +3,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.Buttons,
-  Vcl.Grids, Vcl.ValEdit, Vcl.CategoryButtons
+  Vcl.Grids, Vcl.ValEdit, Vcl.CategoryButtons, Vcl.StdCtrls
 
   , UStorage, USymbols
-  , UApiTypes
+  , UApiTypes, UDistributor
   ;
 type
   TFrmPriceTable = class(TForm)
@@ -20,14 +20,24 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
       State: TGridDrawState);
+    procedure sgKimpMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure sgKimpKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+
   private
     FFontSize: integer;
+    FSaveRow, FSaveCol,  FRow   : integer;
+
     { Private declarations }
     procedure initControls;
     procedure InitObject;
     procedure UpdateSymbol(aSymbol: TSymbol; iRow : integer);
     procedure SetFontSize(const Value: integer);
 
+    procedure EnableEdit( bAble : boolean ) ;
+
+    procedure QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
+    procedure SetSymbolToGrid(sCode: string );
 
   public
     { Public declarations }
@@ -41,7 +51,7 @@ var
 implementation
 {$R *.dfm}
 uses
-  GApp
+  GApp  , GLibs
   , UTableConsts
   , UConsts , UApiConsts
   ;
@@ -67,8 +77,10 @@ begin
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
   end;
 
-  FontSize := 9;
-
+  FontSize  := 10;
+  FRow      := -1;
+  FSaveRow  := -1;
+  FSaveCol  := -1;
 //  for I := 0 to prcTbl2_TitleCnt - 1 do
 //  begin
 //    sgQuote.Cells[i,0] := prcTbll2_Title[i];
@@ -93,25 +105,89 @@ begin
       begin
         iRow := GetMajorRow(i ) + integer(j) ;
         sgKimp.Objects[CoinCol, iRow ] := aSymbol;
-        if j = ekUpbit then   sgKimp.Cells[CoinCol, iRow ] := TMajorSymbol[i];
-        sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
 
+        sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
         UpdateSymbol( aSymbol, iRow );
+
+        if j = ekBinance then
+        begin
+          sgKimp.Cells[CoinCol, iRow ] := TMajorSymbol[i];
+        end;
       end;
+
+      App.Engine.QuoteBroker.Subscribe(Self, aSymbol, QuoteEvnet);
     end;
+end;
+
+procedure TFrmPriceTable.SetSymbolToGrid( sCode: string );
+var
+  j : TExchangeKind;
+  iRow : integer;
+  aSymbol : TSymbol;
+begin
+
+  for j := ekBinance to High(TExchangeKind) do
+  begin
+
+    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
+    if aSymbol = nil then Continue;
+
+    iRow := FSaveRow + integer(j) ;
+    sgKimp.Objects[CoinCol, iRow ] := aSymbol;
+
+    sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
+    UpdateSymbol( aSymbol, iRow );
+
+    App.Engine.QuoteBroker.Subscribe(Self, aSymbol, QuoteEvnet);
+  end;
 
 end;
 
 procedure TFrmPriceTable.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
+var
+  iBRow : integer;
+  aSymbol2 : TSymbol;
+  dTmp , dVal: double;
 begin
   if aSymbol <> nil then
 
   with sgKimp do
   begin
-    Cells[ CurCol - 4, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Volume ]);
-    Cells[ CurCol - 3, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Price ]);
-    Cells[ CurCol - 2, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Price ]);
-    Cells[ CurCol - 1, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Volume ]);
+
+
+    if aSymbol.Spec.ExchangeType = ekBinance then
+    begin
+      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
+      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
+    end else
+    begin
+      Cells[ CurCol - 4, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Volume ]);
+      Cells[ CurCol - 3, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Price ]);
+      Cells[ CurCol - 2, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Price ]);
+      Cells[ CurCol - 1, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Volume ]);
+    end;
+
+    Cells[ CurCol , iRow] := Format('%*.n', [ 0, aSymbol.Last ]);
+    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount / 100000000  ]);
+
+    iBRow := FindBinRow( iRow );
+
+    if Objects[CoinCol, iBRow] <> nil then
+    begin
+      aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );
+      if aSymbol2.PrevClose <= 0 then  dTmp := 1
+      else dTmp := aSymbol2.PrevClose;
+
+      case aSymbol.Spec.ExchangeType of
+        ekBinance: dVal := (aSymbol2.DayHigh - aSymbol2.PrevClose) / dTmp * 100;
+        ekUpbit:   dVal := (aSymbol2.Last  - aSymbol2.PrevClose) / dTmp * 100;
+        ekBithumb: dVal := (aSymbol2.DayLow - aSymbol2.PrevClose) / dTmp * 100;
+      end;
+
+      Cells[CurCol+1, iRow] := Format('%.1f%%', [ dVal ]);
+
+      // 당일고가 - 전일종가 / 전일종가
+    end;
   end;
 end;
 
@@ -119,6 +195,7 @@ procedure TFrmPriceTable.LoadEnv(aStorage: TStorage);
 begin
 
 end;
+
 
 procedure TFrmPriceTable.SaveEnv(aStorage: TStorage);
 begin
@@ -138,6 +215,7 @@ procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
     aFont, aBack : TColor;
     dFormat : Word;
     iMode : integer;
+
 begin
 
   aFont   := clBlack;
@@ -147,19 +225,6 @@ begin
 
   with sgKimp do
   begin
-
-   {
-  SELECTED_FONT_COLOR = $000000;
-
-  GRID_SELECT_COLOR = $F0F0F0;
-  GRID_REVER_COLOR  = $00EEEEEE;
-  FUND_FORM_COLOR   = $00D8E5EE;
-
-  DISABLED_COLOR  = $BBBBBB;
-  ERROR_COLOR     = $008080FF;
-  ODD_COLOR       = $FFFFFF;
-  EVEN_COLOR      = $EEEEEE;
-  }
 
     stTxt := Cells[ ACol, ARow];
 
@@ -173,12 +238,15 @@ begin
       if iMode mod 2 <> 0 then
         aBack := GRID_MOD_COLOR;
 
-      if ACol in [ CurCol-4..CurCol] then
-        dFormat := DT_RIGHT
-
+      if ( ACol in [ CurCol-4..CurCol] ) then
+      begin
+        dFormat := DT_RIGHT  ;
+        if Objects[CoinCol, ARow] <> nil then
+          dFormat := DT_CENTER;
+      end;
     end;
 
-    Canvas.Font.Name    := '굴림체';
+    Canvas.Font.Name    := '나눔고딕';
     Canvas.Font.Size    := FFontSize;
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
@@ -206,6 +274,62 @@ begin
   end;
 end;
 
+procedure TFrmPriceTable.sgKimpKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  var
+    sText : string;
+begin
+  if Key = VK_RETURN then
+  begin
+
+    sText := sgKimp.Cells[FSaveCol, FSaveRow];
+    if sText <> '' then
+      SetSymbolToGrid( sText );
+
+    EnableEdit(false );
+  end;
+end;
+
+procedure TFrmPriceTable.sgKimpMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+  var
+   iMode, aCol : integer;
+begin
+  with (Sender as TStringGrid) do
+  begin
+
+    MouseToCell(X,y, aCol, FRow );
+
+    if (FRow > 9) and  ((( FRow-1) mod 3 ) = 0 ) and  ( aCol = CoinCol ) then
+    begin
+      FSaveRow   := FRow;
+      FSaveCol   := aCol;
+      Options    := Options + [ goEditing, goAlwaysShowEditor] - [goRangeSelect];
+    end else
+    begin
+      EnableEdit(false );
+    end;
+  end;
+end;
+
+
+procedure TFrmPriceTable.EnableEdit(bAble: boolean);
+begin
+  if bAble then
+  begin
+
+  end else
+  begin
+    FSaveRow    := -1;
+    FSaveCol    := -1;
+    with sgKimp do
+    begin
+      Options     := Options - [goEditing, goAlwaysShowEditor] + [goRangeSelect];
+      EditorMode := false;
+    end;
+  end;
+end;
+
 procedure TFrmPriceTable.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
@@ -214,9 +338,15 @@ end;
 procedure TFrmPriceTable.FormDestroy(Sender: TObject);
 begin
   //
+  App.Engine.QuoteBroker.Cancel( Self );
 end;
 
 
+procedure TFrmPriceTable.QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;
+  DataObj: TObject; EventID: TDistributorID);
+begin
+
+end;
 
 
 end.

@@ -13,9 +13,11 @@ uses
   ;
 type
   TFrmDalinMain = class(TForm)
+    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     procedure init;
@@ -61,6 +63,11 @@ begin
 
 end;
 
+
+procedure TFrmDalinMain.Button1Click(Sender: TObject);
+begin
+  App.Engine.ApiManager.RequestExRate;
+end;
 
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);
 begin
@@ -119,7 +126,8 @@ end;
 
 procedure TFrmDalinMain.Start;
 begin
-  App.AppStatus := asinit;//asLoad;
+  App.AppStatus := asinit;
+//  App.AppStatus := asLoad;
 end;
 
 

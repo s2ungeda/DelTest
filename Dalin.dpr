@@ -43,7 +43,10 @@ uses
   UCircularQueue in 'engine\utils\UCircularQueue.pas',
   UQuoteTimers in 'engine\utils\UQuoteTimers.pas',
   UBithParse in 'api\bithumb\UBithParse.pas',
-  UUpbitParse in 'api\upbit\UUpbitParse.pas';
+  UUpbitParse in 'api\upbit\UUpbitParse.pas',
+  UQuoteBroker in 'engine\symbol\UQuoteBroker.pas',
+  UDistributor in 'engine\utils\UDistributor.pas',
+  UExchangeRate in 'api\exrate\UExchangeRate.pas';
 
 {$R *.res}
 begin

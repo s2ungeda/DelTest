@@ -228,6 +228,8 @@ begin
         with Result as TFuture do
           Underlying := aUnder;
 
+        aUnder.IsFuture := true;
+
         sFQN   := Format( '%s@%s.%s', [ aCode+Fut_Suf, aCode, GetBaseFuturesFQN( aExKind ) ]);
         aSpec  := FSpecs.Find( sFQN );
         if aSpec = nil then

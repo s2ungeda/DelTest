@@ -2,7 +2,7 @@ unit UApiManager;
 interface
 uses
   System.Classes, System.SysUtils, System.DateUtils,
-  UExchangeManager,
+  UExchangeManager, UExchangeRate,
   UApiTypes
   ;
 type
@@ -11,6 +11,7 @@ type
   private
     FExManagers: TExchangeArray;
     FCommCodes: TStrings;
+    FExRate: TExchangeRate;
     function GetExManager: integer;
     function RequestMaster : boolean;
     function LoadMaster( sMasterFile : string ) : boolean;
@@ -23,8 +24,12 @@ type
     function GetMaster : boolean;
     function PrepareMaster : boolean;
 
+    procedure RequestExRate;
+
     property ExManagers  : TExchangeArray read FExManagers;
     property ExManagerCount : integer read GetExManager;
+    //
+    property ExRate : TExchangeRate read FExRate;
     // 국내 거래소간 공통 코드
     property CommCodes : TStrings read FCommCodes;
   end;
@@ -49,12 +54,14 @@ begin
     end;
 
   FCommCodes:= TStringList.Create;
+  FExRate:= TExchangeRate.Create(self, mtSpot );
 end;
 destructor TApiManager.Destroy;
 var
   I: TExchangeKind;
 begin
   FCommCodes.Free;
+  FExRate.Free;
 
   for I := ekBinance to High(TExchangeKind) do
   begin
@@ -180,6 +187,11 @@ TBinanceSpotNMargin.RequestMaster
 	↓
 TBinanceFutures.RequestMaster
 }
+procedure TApiManager.RequestExRate;
+begin
+  FExRate.RequestData;
+end;
+
 function TApiManager.RequestMaster: boolean;
 var
   i :  TExchangeKind;

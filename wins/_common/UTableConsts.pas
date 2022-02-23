@@ -28,14 +28,23 @@ const
   BidKipCol = 3;
 
   CurCol = 8;
+  DayAmtCol = 12;
 
 function GetMajorRow( i : integer ) : integer;
+function FindBinRow( iRow : integer ) : integer;
 
 implementation
 
 function GetMajorRow( i : integer ) : integer;
 begin
   Result := i * 3  + 1;
+end;
+
+function FindBinRow( iRow : integer ) : integer;
+begin
+  // 1-> 1,  2->1, 3-> 1
+  // 4-> 4   5->4  6->4
+  Result := iRow div 3 + 1;
 end;
 
 end.

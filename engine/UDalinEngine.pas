@@ -7,7 +7,7 @@ uses
   System.Classes,
 
   UFormBroker , USymbolCore, UApiConfigManager      ,
-  UApiManager
+  UApiManager, UQuoteBroker
   ;
 
 type
@@ -17,6 +17,7 @@ type
     FSymbolCore: TSymbolCore;
     FApiConfig: TApiConfigManager;
     FApiManager: TApimanager;
+    FQuoteBroker: TQuoteBroker;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -24,6 +25,8 @@ type
     property FormBroker: TFormBroker read FFormBroker;
     property SymbolCore: TSymbolCore read FSymbolCore;
     property ApiManager: TApimanager read FApiManager;
+
+    property QuoteBroker : TQuoteBroker read FQuoteBroker;
 
     property ApiConfig : TApiConfigManager read FApiConfig;
   end;
@@ -39,6 +42,8 @@ begin
   FFormBroker := TFormBroker.Create;
   FSymbolCore := TSymbolCore.Create;
 
+  FQuoteBroker:= TQuoteBroker.Create;
+
 end;
 
 destructor TDalinEngine.Destroy;
@@ -47,6 +52,7 @@ begin
   FFormBroker.Free;
   FSymbolCore.Free;
   FApiConfig.Free;
+  FQuoteBroker.Free;
   inherited;
 end;
 

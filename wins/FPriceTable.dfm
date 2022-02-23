@@ -2,7 +2,7 @@ object FrmPriceTable: TFrmPriceTable
   Left = 549
   Top = 75
   Caption = #44608#54532#54788#54889#54364
-  ClientHeight = 487
+  ClientHeight = 577
   ClientWidth = 987
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,22 +19,20 @@ object FrmPriceTable: TFrmPriceTable
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 468
+    Top = 558
     Width = 987
     Height = 19
     Panels = <>
-    ExplicitWidth = 866
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
     Width = 987
-    Height = 468
+    Height = 558
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitWidth = 866
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -44,22 +42,20 @@ object FrmPriceTable: TFrmPriceTable
       BevelOuter = bvLowered
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 866
     end
     object plLeftClient: TPanel
       Left = 0
       Top = 60
       Width = 987
-      Height = 408
+      Height = 498
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 866
       object sgKimp: TStringGrid
         Left = 0
         Top = 0
         Width = 987
-        Height = 408
+        Height = 498
         Align = alClient
         ColCount = 13
         DefaultRowHeight = 19
@@ -69,7 +65,8 @@ object FrmPriceTable: TFrmPriceTable
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         TabOrder = 0
         OnDrawCell = sgKimpDrawCell
-        ExplicitWidth = 866
+        OnKeyDown = sgKimpKeyDown
+        OnMouseDown = sgKimpMouseDown
       end
     end
   end

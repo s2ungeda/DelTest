@@ -3,8 +3,8 @@ object FrmDalinMain: TFrmDalinMain
   Top = 0
   HelpType = htKeyword
   Caption = 'Dalin'
-  ClientHeight = 41
-  ClientWidth = 347
+  ClientHeight = 79
+  ClientWidth = 342
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,4 +18,13 @@ object FrmDalinMain: TFrmDalinMain
   OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
+  object Button1: TButton
+    Left = 48
+    Top = 32
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 0
+    OnClick = Button1Click
+  end
 end
