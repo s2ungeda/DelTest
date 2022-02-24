@@ -244,6 +244,10 @@ begin
         if Objects[CoinCol, ARow] <> nil then
           dFormat := DT_CENTER;
       end;
+
+      if ACol = DayAmtCol then
+        dFormat := DT_RIGHT  ;
+
     end;
 
     Canvas.Font.Name    := '³ª´®°íµñ';

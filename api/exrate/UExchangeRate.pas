@@ -16,22 +16,25 @@ uses
 type
   TExchangeRate = class( TExchange )
   private
-    FValue: double;
+    FExRate : double;
     procedure ParseExchangeRate( sData : string );
+    function GetValue: double;
+    procedure SetValue(const val: double);
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
     procedure RequestData ;
 
-    property Value : double read FValue;
+    property Value : double read GetValue write SetValue;
   end;
 
 
 implementation
 
 uses
-  GApp
+  GApp   ,
+  UConsts
 
   ;
 
@@ -40,6 +43,8 @@ uses
 constructor TExchangeRate.Create(aObj: TObject; aMarketType: TMarketType);
 begin
   inherited Create( aObj, aMarketType );
+
+  FExRate := 0;
 end;
 
 destructor TExchangeRate.Destroy;
@@ -50,12 +55,20 @@ end;
 
 
 
+function TExchangeRate.GetValue: double;
+begin
+  if FExRate <= PRICE_EPSILON then
+    Result := 1
+  else
+    Result := FExRate;
+end;
+
 procedure TExchangeRate.ParseExchangeRate(sData: string);
 var
   aArr : TJsonArray;
   aVal : TJsonValue;
   iVal, I: Integer;
-  sTmp : string;
+  sTmp, sVal : string;
 begin
   if sData = '' then
   begin
@@ -76,8 +89,9 @@ begin
 
       if (iVal = 1) and ( sTmp = 'USD')  then
       begin
-        sTmp := aVal.GetValue<string>('bkpr');
-        FValue  := StrToFloat( sTmp );
+        sTmp := trim( aVal.GetValue<string>('deal_bas_r') );
+        sVal := sTmp.Replace(',', '');
+        Value  := StrToFloat( sVal );
 //        :"1,194.7","bkpr":"1,194","yy_efee_r":"0","ten_dd_efee_r":"0","kftc_bkpr":"1,194","kftc_deal_bas_r":"1,194.7"
       end;
     end;
@@ -93,6 +107,7 @@ begin
 
   SetBaseUrl('https://koreaexim.go.kr');
   SetParam('authkey', 'mEN1OkANsoKalML5mAiPMn9h8aGUeCcZ' );
+  SetParam('searchdate', FormatDateTime('yyyymmdd', now) );
   SetParam('data', 'AP01' );
 
   if Request( rmGET, '/site/program/financial/exchangeJSON', '', sJson, sOut ) then
@@ -104,6 +119,11 @@ begin
     App.Log( llError, '', 'Failed ExRate RequestData (%s, %s)',  [  sOut, sJson] );
     Exit;
   end;
+end;
+
+procedure TExchangeRate.SetValue(const val : double);
+begin
+  FExRate := val;
 end;
 
 end.

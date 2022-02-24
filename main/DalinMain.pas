@@ -9,25 +9,31 @@ uses
 
   NMainMenu,
 
-  UTypes
+  UTypes, Vcl.ExtCtrls, Vcl.ComCtrls
   ;
 type
   TFrmDalinMain = class(TForm)
-    Button1: TButton;
+    QryTimer: TTimer;
+    stsBar: TStatusBar;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+
+    procedure QryTimerTimer(Sender: TObject);
   private
     { Private declarations }
+    FExRate : integer;
+    FDnw    : integer;
     procedure init;
     function IsRealyClose: boolean;
     procedure SetEnv;
+    procedure GetExRate;
     procedure DalinStatusEvent( asType : TAppStatus );
 
   public
     { Public declarations }
     procedure Start;
+    procedure SetValue;
     procedure LoadEnv(aStorage: TStorage);
     procedure SaveEnv(aStorage: TStorage);
   end;
@@ -59,15 +65,10 @@ begin
 
   App.Log(llInfo, '', '---start---');
 
-
-
 end;
 
 
-procedure TFrmDalinMain.Button1Click(Sender: TObject);
-begin
-  App.Engine.ApiManager.RequestExRate;
-end;
+
 
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);
 begin
@@ -81,6 +82,9 @@ begin
     Action := caNone;
     Exit;
   end;
+
+  QryTimer.Enabled := false;
+
 
   App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
@@ -97,9 +101,18 @@ end;
 
 
 
+procedure TFrmDalinMain.GetExRate;
+begin
+  App.Engine.ApiManager.RequestExRate;
+  stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
+end;
+
 procedure TFrmDalinMain.init;
 begin
   App := TApp.Create;
+
+  FExRate := 0;
+  FDnw    := 0;
 end;
 
 function  TFrmDalinMain.IsRealyClose : boolean;
@@ -124,12 +137,31 @@ begin
 
 end;
 
+procedure TFrmDalinMain.SetValue;
+begin
+  GetExRate;
+  QryTimer.Enabled := true;
+  App.AppStatus := asLoad;
+end;
+
 procedure TFrmDalinMain.Start;
 begin
   App.AppStatus := asinit;
-//  App.AppStatus := asLoad;
+  //App.AppStatus := asSetValue;
 end;
 
+procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);
+begin
+  if FExRate >= ( 60 * 2 ) then
+  begin
+    FExRate := 0;
+    GetExRate;
+  end;
+  inc(FExRate);
+  inc(FDnw);
+
+  stsBar.Panels[1].Text := FormatDateTime('hh:nn:ss', now) ;
+end;
 
 procedure TFrmDalinMain.SaveEnv( aStorage : TStorage );
 begin
