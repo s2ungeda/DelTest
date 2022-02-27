@@ -17,13 +17,16 @@ type
   TBithSpot = class( TExchange )
   private
     function RequestTicker : boolean;
-    function RequestOrderBook : boolean;
+    function RequestOrderBook : boolean;  overload;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
+    procedure RequestOrderBook( c : char ) ; overload;
+
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
+
   end;
 
 implementation
@@ -79,6 +82,13 @@ begin
   Result := RequestTicker
     and RequestOrderBook
     ;
+end;
+
+
+
+procedure TBithSpot.RequestOrderBook( c : char );
+begin
+  RequestOrderBook;
 end;
 
 function TBithSpot.RequestTicker: boolean;
@@ -139,18 +149,22 @@ begin
   Result := App.Engine.SymbolCore.Spots[GetExKind].Count > 0 ;
 end;
 
+
 function TBithSpot.RequestOrderBook: boolean;
 var
   sOut, sJson : string;
 begin
   SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
 
+  // 406 에러 때문에 아래 와 같이 헤더 추가
+  Set406;
+
   if Request( rmGET, '/public/orderbook/ALL_KRW', '', sJson, sOut ) then
   begin
     gBithReceiver.ParseSpotOrderBook( sJson );
   end else
   begin
-    App.Log( llError, '', 'Failed %s RequestTicker (%s, %s)',
+    App.Log( llError, '', 'Failed %s RequestOrderBook (%s, %s)',
       [ TExchangeKindDesc[GetExKind], sOut, sJson] );
     Exit( false );
   end;

@@ -51,6 +51,8 @@ type
 
     procedure Log;
 
+    function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
+
     property Specs: TMarketSpecs read FSpecs;
 
     property Symbols: TSymbolArray read FSymbols;
@@ -72,10 +74,34 @@ implementation
 
 uses
   GApp, UConsts
+  , Math
   ;
 
 
 { TSymbolCore }
+
+function TSymbolCore.CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
+var
+  tmp : TSymbol;
+  dEx : double;
+begin
+  if (aOSSymbol = nil) or (aKSymbol = nil) then Exit (0);
+//
+  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
+
+  case iType of
+    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
+    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
+    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
+  end;
+
+//  if iType = -1 then
+//    App.DebugLog( 'ex : %f %f, %f,  ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last ] );
+
+//  Result := Result * 100;
+//  if Result < 0 then Result := 0.0;
+
+end;
 
 constructor TSymbolCore.Create;
 var
@@ -156,7 +182,15 @@ var
   aMarket : TMarket;
   stData : string;
 begin
+
   Exit;
+
+  App.DebugLog('%s_%s:%d, %s_%s:%d, %s:%d, %s:%d', [
+    TExchangeKindDesc[ekBinance], TMarketTypeDesc[mtSpot], FSpots[ekBinance].Count
+    , TExchangeKindDesc[ekBinance], TMarketTypeDesc[mtFutures], FFutures[ekBinance].Count
+    , TExchangeKindDesc[ekUpbit], FSpots[ekUpbit].Count
+    , TExchangeKindDesc[ekBithumb],  FSpots[ekBithumb].Count
+    ]);
 
   for I := ekBinance to High(TExchangeKind) do
   begin

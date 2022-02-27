@@ -22,6 +22,9 @@ const
   ExCnt = 3;
 
  }
+  QOUTE_SOCK = 0;
+  TRADE_SOCK = 1;
+
 
   TMajorSymbol  : array [0..2] of string = ('BTC', 'ETH', 'XRP');
 

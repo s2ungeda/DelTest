@@ -2,7 +2,7 @@ unit UExchangeManager;
 interface
 uses
   system.Classes, system.SysUtils,
-  UExchange     ,
+  UExchange     , UWebSockets,
   UApiTypes
   ;
 type
@@ -17,6 +17,10 @@ type
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
   public
+
+    QuoteSock : array of TWebSocket;
+    TradeSock : array [TMarketType] of TWebSocket;
+
     Constructor Create( aExType : TExchangeKind ); overload;
     Destructor  Destroy; override;
 
@@ -27,6 +31,9 @@ type
     function RequestMaster : boolean;
 
     // 상속 받아서 각 거래소 매니저에서 처리
+    function InitMarketWebSockets : boolean ; virtual; abstract;
+    function SubscribeAll : boolean; virtual; abstract;
+    procedure UnSubscribeAll ; virtual; abstract;
 
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
@@ -58,6 +65,11 @@ begin
   end;
 
   FCodes:= TStringList.Create;
+
+  QuoteSock := nil;
+  TradeSock[mtSpot] := nil;
+  TradeSock[mtFutures] := nil;
+
 end;
 
 function TExchangeManager.CreateMarket(aMarket: TMarketType): TExchange;
@@ -90,14 +102,21 @@ end;
 destructor TExchangeManager.Destroy;
 var
   i : TMarketType;
+  j : integer;
 begin
 
-  FCodes.Free;
+  if QuoteSock <> nil then
+    for j := 0 to High(QuoteSock) do
+      QuoteSock[j].Free;
+
   for I := mtSpot to High(TMarketType) do
   begin
     if FExchanges[i] <> nil then
       FExchanges[i].Free;
   end;
+
+  FCodes.Free;
+
   inherited;
 end;
 

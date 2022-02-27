@@ -107,7 +107,7 @@ begin
 
   FTickSize:= 1.0;
   FTickValue:= 1.0;
-  FPrecision:= 1;
+  FPrecision:= 2;
 
   FSubMarket  := '*';
 

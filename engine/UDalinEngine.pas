@@ -17,7 +17,7 @@ type
     FSymbolCore: TSymbolCore;
     FApiConfig: TApiConfigManager;
     FApiManager: TApimanager;
-    FQuoteBroker: TQuoteBroker;
+    FQuoteBroker: TQuoteBrokerManager;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -26,7 +26,7 @@ type
     property SymbolCore: TSymbolCore read FSymbolCore;
     property ApiManager: TApimanager read FApiManager;
 
-    property QuoteBroker : TQuoteBroker read FQuoteBroker;
+    property QuoteBroker : TQuoteBrokerManager read FQuoteBroker;
 
     property ApiConfig : TApiConfigManager read FApiConfig;
   end;
@@ -38,11 +38,10 @@ implementation
 constructor TDalinEngine.Create;
 begin
   FApiConfig  := TApiConfigManager.Create;
+  FQuoteBroker:= TQuoteBrokerManager.Create;
   FApiManager := TApimanager.Create;
   FFormBroker := TFormBroker.Create;
   FSymbolCore := TSymbolCore.Create;
-
-  FQuoteBroker:= TQuoteBroker.Create;
 
 end;
 

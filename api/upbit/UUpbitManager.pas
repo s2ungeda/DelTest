@@ -20,6 +20,9 @@ type
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
 //    function RequestMaster : boolean; override;
+    function InitMarketWebSockets : boolean ; override;
+    function SubscribeAll : boolean; override;
+    procedure UnSubscribeAll ; override;
   end;
 
 implementation
@@ -43,6 +46,22 @@ begin
 end;
 
 
+
+function TUpbitManager.InitMarketWebSockets: boolean;
+begin
+  Result := true;
+end;
+
+function TUpbitManager.SubscribeAll: boolean;
+begin
+  Result := true;
+end;
+
+procedure TUpbitManager.UnSubscribeAll;
+begin
+  inherited;
+
+end;
 
 //function TUpbitManager.RequestMaster: boolean;
 //var

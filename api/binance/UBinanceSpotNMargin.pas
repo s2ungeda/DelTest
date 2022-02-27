@@ -137,7 +137,7 @@ begin
 
         with aSymbol do
         begin
-          OrgCode     := sCode;
+          OrgCode     := lowercase( sCode );
           Spec.BaseCode    := sBase;
           Spec.QuoteCode   := sTmp;
           Spec.SettleCode  := sTmp;

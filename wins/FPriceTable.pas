@@ -54,6 +54,7 @@ uses
   GApp  , GLibs
   , UTableConsts
   , UConsts , UApiConsts
+  , UQuoteBroker
   ;
 { TFrmPriceTable }
 
@@ -115,7 +116,7 @@ begin
         end;
       end;
 
-      App.Engine.QuoteBroker.Subscribe(Self, aSymbol, QuoteEvnet);
+      App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol, QuoteEvnet);
     end;
 end;
 
@@ -138,56 +139,102 @@ begin
     sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
     UpdateSymbol( aSymbol, iRow );
 
-    App.Engine.QuoteBroker.Subscribe(Self, aSymbol, QuoteEvnet);
+    App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol, QuoteEvnet);
   end;
-
 end;
+
+
+
 
 procedure TFrmPriceTable.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
 var
-  iBRow : integer;
+  iBRow, iPre : integer;
   aSymbol2 : TSymbol;
   dTmp , dVal: double;
+  dKip : array [0..1] of double;
+  bMain : boolean;
 begin
   if aSymbol <> nil then
 
   with sgKimp do
   begin
-
-
-    if aSymbol.Spec.ExchangeType = ekBinance then
+    bMain := aSymbol.Spec.ExchangeType = ekBinance ;
+    dKip[0] := 0; dKip[1] := 0;
+    if bMain then
     begin
-      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
-      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
-    end else
-    begin
-      Cells[ CurCol - 4, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Volume ]);
-      Cells[ CurCol - 3, iRow] := Format('%*.n', [ 0, aSymbol.Asks[0].Price ]);
-      Cells[ CurCol - 2, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Price ]);
-      Cells[ CurCol - 1, iRow] := Format('%*.n', [ 0, aSymbol.Bids[0].Volume ]);
-    end;
 
-    Cells[ CurCol , iRow] := Format('%*.n', [ 0, aSymbol.Last ]);
-    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount / 100000000  ]);
+      if Objects[CoinCol, iRow+1] <> nil then
+      begin
+        aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
+        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
+        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-    iBRow := FindBinRow( iRow );
-
-    if Objects[CoinCol, iBRow] <> nil then
-    begin
-      aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );
-      if aSymbol2.PrevClose <= 0 then  dTmp := 1
-      else dTmp := aSymbol2.PrevClose;
-
-      case aSymbol.Spec.ExchangeType of
-        ekBinance: dVal := (aSymbol2.DayHigh - aSymbol2.PrevClose) / dTmp * 100;
-        ekUpbit:   dVal := (aSymbol2.Last  - aSymbol2.PrevClose) / dTmp * 100;
-        ekBithumb: dVal := (aSymbol2.DayLow - aSymbol2.PrevClose) / dTmp * 100;
+        Cells[ 2, iRow+1] := Format('%*.n', [ aSymbol2.Spec.Precision, dKip[0] ]);
+        Cells[ 3, iRow+1] := Format('%*.n', [ aSymbol2.Spec.Precision, dKip[1] ]);
       end;
 
-      Cells[CurCol+1, iRow] := Format('%.1f%%', [ dVal ]);
+      if Objects[CoinCol, iRow+2] <> nil then
+      begin
+        aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
+        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
+        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-      // 당일고가 - 전일종가 / 전일종가
+        Cells[ 2, iRow+2] := Format('%.2f%s', [ dKip[0], '%' ]);
+        Cells[ 3, iRow+2] := Format('%.2f%s', [ dKip[1], '%' ]);
+      end;
+
+      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
+      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
+
+      if aSymbol.DayOpen <= 0 then  dTmp := 1
+      else dTmp := aSymbol.DayOpen;
+
+      Cells[CurCol+1, iRow]   := Format('%.1f%%',[(aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ]);
+      Cells[CurCol+1, iRow+1] := Format('%.1f%%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
+      Cells[CurCol+1, iRow+2] := Format('%.1f%%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
+
+    end else
+    begin
+      iBRow := FindBinRow( iRow );
+
+      if Objects[CoinCol, iBRow] <> nil then
+      begin
+        aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
+
+        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
+        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
+
+        Cells[ 2, iRow] := Format('%.2f%s', [ dKip[0], '%' ]);
+        Cells[ 3, iRow] := Format('%.2f%s', [ dKip[1], '%' ]);
+      end;
+
+      Cells[ CurCol - 4, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
+      Cells[ CurCol - 3, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
+      Cells[ CurCol - 2, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
+      Cells[ CurCol - 1, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
     end;
+
+    Cells[ CurCol , iRow]   := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
+    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount / 100000000  ]);
+
+//    iBRow := FindBinRow( iRow );
+//
+//    if Objects[CoinCol, iBRow] <> nil then
+//    begin
+//      aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
+//      if aSymbol2.DayOpen <= 0 then  dTmp := 1
+//      else dTmp := aSymbol2.DayOpen;
+//
+//      case aSymbol.Spec.ExchangeType of
+//        ekBinance: dVal := (aSymbol2.DayHigh - aSymbol2.DayOpen) / dTmp * 100;
+//        ekUpbit:   dVal := (aSymbol2.Last   - aSymbol2.DayOpen) / dTmp * 100;
+//        ekBithumb: dVal := (aSymbol2.DayLow - aSymbol2.DayOpen) / dTmp * 100;
+//      end;
+//
+//      Cells[CurCol+1, iRow] := Format('%.1f%%', [ dVal ]);
+//
+//      // 당일고가 - 전일종가 / 전일종가
+//    end;
   end;
 end;
 
@@ -348,7 +395,18 @@ end;
 
 procedure TFrmPriceTable.QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;
   DataObj: TObject; EventID: TDistributorID);
+  var
+    iRow :  integer;
+    aSymbol : TSymbol;
 begin
+  if (Receiver <> Self) or (DataObj = nil) then Exit;
+
+  aSymbol := (DataObj as TQuote).Symbol;
+  iRow := sgKimp.Cols[CoinCol].IndexOfObject( aSymbol );
+
+  if iRow <= 0 then Exit;
+
+  UpdateSymbol( asymbol,  iRow );
 
 end;
 

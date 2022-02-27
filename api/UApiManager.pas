@@ -21,10 +21,14 @@ type
   public
     Constructor Create;
     Destructor  Destroy; override;
+
     function GetMaster : boolean;
     function PrepareMaster : boolean;
+    function InitMarketWebSocket : boolean;
+    function SubscribeAll : boolean;
 
     procedure RequestExRate;
+    procedure CheckCount;
 
     property ExManagers  : TExchangeArray read FExManagers;
     property ExManagerCount : integer read GetExManager;
@@ -42,6 +46,22 @@ uses
   UBinanceManager ,  UUpbitManager, UBithManager
   ;
 { TApiManager }
+procedure TApiManager.CheckCount;
+var
+  i, j : Integer;
+  sTmp : string;
+begin
+  if FExManagers[ekBinance].QuoteSock = nil then exit;
+  sTmp := '';
+  for i:=0 to High(FExManagers[ekBinance].QuoteSock) do
+  begin
+    sTmp := sTmp + Format(' [%d : %d] ', [ i, ExManagers[ekBinance].QuoteSock[i].FQueue.Count ]);
+  end;
+
+  if sTmp <> '' then
+    App.DebugLog('Queue Count : %s ', [ sTmp ]);
+end;
+
 constructor TApiManager.Create;
 var
   I: TExchangeKind;
@@ -154,6 +174,7 @@ begin
 
 end;
 
+
 function TApiManager.LoadMaster(sMasterFile: string): boolean;
 begin
 
@@ -175,8 +196,8 @@ begin
   end;
 
   Result := GetCodesIntersection;
-
 end;
+
 
 {
 TApiManager.RequestMaster
@@ -204,5 +225,37 @@ begin
 
   Result := true;
 end;
+
+function TApiManager.SubscribeAll: boolean;
+var
+  i :  TExchangeKind;
+begin
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].SubscribeAll then
+      Exit (false);
+    sleep(10);
+  end;
+
+  Result := true;
+
+end;
+
+function TApiManager.InitMarketWebSocket: boolean;
+var
+  i :  TExchangeKind;
+begin
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].InitMarketWebSockets then
+      Exit (false);
+  end;
+
+  Result := true;
+
+end;
+
 
 end.

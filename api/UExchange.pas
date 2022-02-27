@@ -34,6 +34,8 @@ type
 
     procedure SetBaseUrl(url : string); inline;
     procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; inline;
+    procedure Set406;
+
     procedure GetCodeList( var aList : TStringList ) ;
     function  GetExKind : TExchangeKind;
     function  GetCodeIndex( S : string ) : integer;
@@ -145,8 +147,6 @@ end;
 
 function TExchange.Request(AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
       var OutJson, OutRes : string ): boolean;
-var
-  aParam : TRESTRequestParameter;
 begin
 
   with FRestReq do
@@ -161,6 +161,7 @@ begin
 
   try
     try
+
       FRestReq.Execute;
 
       if FRestRes.StatusCode <> 200 then
@@ -185,6 +186,12 @@ begin
   end;
 
 
+end;
+
+procedure TExchange.Set406;
+begin
+  FRestReq.Accept := '*/*';
+  FRestReq.AcceptEncoding := 'gzip, deflate';
 end;
 
 procedure TExchange.SetBaseUrl(url: string);

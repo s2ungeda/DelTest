@@ -185,6 +185,10 @@
         <DCCReference Include="engine\symbol\UQuoteBroker.pas"/>
         <DCCReference Include="engine\utils\UDistributor.pas"/>
         <DCCReference Include="api\exrate\UExchangeRate.pas"/>
+        <DCCReference Include="api\UWebSockets.pas"/>
+        <DCCReference Include="api\Binance\UBinanceWebSockets.pas"/>
+        <DCCReference Include="api\bithumb\UBithWebSockets.pas"/>
+        <DCCReference Include="api\upbit\UUpbitWebSockets.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

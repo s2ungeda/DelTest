@@ -89,8 +89,12 @@ begin
         sTmp := sTmp + ','
     end;
 
+
+
     SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
     SetParam('markets', sTmp );
+
+
 
     if Request( rmGET, 'v1/ticker', '', sJson, sOut ) then
     begin
@@ -103,6 +107,16 @@ begin
         [ TExchangeKindDesc[GetExKind], sOut, sJson] );
       Exit( false );
     end;
+
+    sTmp := '';
+    for I := 0 to aList.Count-1 do
+    begin
+      sTmp := sTmp + Format('"KRW-%s"', [aList[i]]);
+      if i < aList.Count-1  then
+        sTmp := sTmp + ','
+    end;
+
+    App.DebugLog(sTmp);
 
     Result := App.Engine.SymbolCore.Symbols[ GetExKind].Count > 0 ;
 

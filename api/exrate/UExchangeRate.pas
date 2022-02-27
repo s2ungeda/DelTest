@@ -105,6 +105,9 @@ var
   sJson, sOut : string;
 begin
 
+  Value := 1900;
+  Exit;
+
   SetBaseUrl('https://koreaexim.go.kr');
   SetParam('authkey', 'mEN1OkANsoKalML5mAiPMn9h8aGUeCcZ' );
   SetParam('searchdate', FormatDateTime('yyyymmdd', now) );

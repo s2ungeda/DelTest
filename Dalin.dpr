@@ -46,7 +46,11 @@ uses
   UUpbitParse in 'api\upbit\UUpbitParse.pas',
   UQuoteBroker in 'engine\symbol\UQuoteBroker.pas',
   UDistributor in 'engine\utils\UDistributor.pas',
-  UExchangeRate in 'api\exrate\UExchangeRate.pas';
+  UExchangeRate in 'api\exrate\UExchangeRate.pas',
+  UWebSockets in 'api\UWebSockets.pas',
+  UBinanceWebSockets in 'api\Binance\UBinanceWebSockets.pas',
+  UBithWebSockets in 'api\bithumb\UBithWebSockets.pas',
+  UUpbitWebSockets in 'api\upbit\UUpbitWebSockets.pas';
 
 {$R *.res}
 begin

@@ -139,6 +139,9 @@ end;
 
 procedure TFrmDalinMain.SetValue;
 begin
+
+
+
   GetExRate;
   QryTimer.Enabled := true;
   App.AppStatus := asLoad;
@@ -159,6 +162,8 @@ begin
   end;
   inc(FExRate);
   inc(FDnw);
+
+//  App.Engine.ApiManager.CheckCount;
 
   stsBar.Panels[1].Text := FormatDateTime('hh:nn:ss', now) ;
 end;

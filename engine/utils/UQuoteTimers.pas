@@ -76,7 +76,7 @@ const
 
 procedure TQuoteTimer.SetEnabled(const Value: Boolean);
 begin
-  FEnabled := Value;
+   FEnabled := Value;
 end;
 
 procedure TQuoteTimer.SetInterval(const Value: Integer);

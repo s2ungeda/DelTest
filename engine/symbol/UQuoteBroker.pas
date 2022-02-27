@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
 
-  , UTypes
+  , UTypes , UApiTypes
 
   , UCollections   , UQuoteTimers    , UDistributor
 
@@ -17,26 +17,29 @@ type
   TQuote = class;
 
   TQuoteEvent = function(aQuote: TQuote) : boolean of object;
+  TQuoteType = (qtNone, qtMarketDepth, qtTimeNSale, qtCustom, qtUnknown);
 
   TQuote = class( TCollectionItem )
   private
     FSymbol: TSymbol;
     FDistributor: TDistributor;
+    FLastEvent: TQuoteType;
 
     procedure SetSymbol(const Value: TSymbol);
   public
     constructor Create(aColl: TCollection); override;
     destructor Destroy; override;
 
+    procedure Update( dtTime : TDateTime );
 
     property Distributor: TDistributor read FDistributor;
+    property LastEvent : TQuoteType read FLastEvent write FLastEvent;
     property Symbol: TSymbol read FSymbol write SetSymbol;
   end;
 
   TQuoteBroker = class(TCodedCollection)
   private
-      // utility objects
-    FQuoteTimers: TQuoteTimers;
+
 
       // events
     FOnSubscribe: TQuoteEvent;
@@ -48,6 +51,9 @@ type
     FLastQuoteTime: TDateTime;
     FSortList: TList;
      // data(server) time, near real-time or historical
+
+    FExKind : TExchangeKind;
+
     procedure QuoteUpdated(Sender: TObject);
 
   public
@@ -78,7 +84,7 @@ type
     property OnFind: TSymbolFindEvent read FOnFind write FOnFind;
 
       // quote timer related
-    property Timers: TQuoteTimers read FQuoteTimers;
+
     property LastQuoteTime: TDateTime read FLastQuoteTime;
     property LastEventTime: TDateTime read FLastEventTime;
       // log
@@ -87,17 +93,34 @@ type
     procedure DummyEventHandler(Sender, Receiver: TObject;
       DataID: Integer; DataObj: TObject; EventID: TDistributorID);
 
-
     function SubscribeTest(aSubscriber: TObject; aSymbol: TSymbol;
       aHandler: TDistributorEvent; iTrCode : integer): TQuote; overload;
 
     function GetSubscribeCount: integer;
     function GetQuoted(iPos: integer): TQuote;
+  end;
 
+  TBrokerArray  = array [TExchangeKind] of TQuoteBroker;
+
+  TQuoteBrokerManager = class
+  private
+    FBrokers: TBrokerArray;
+    FQuoteTimers: TQuoteTimers;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Cancel(aSubscriber: TObject);
+
+    property Brokers : TBrokerArray read FBrokers;
+    property Timers: TQuoteTimers read FQuoteTimers;
   end;
 
 implementation
 
+uses
+  UTicks
+  ;
 
 procedure TQuoteBroker.Cancel(aSubscriber: TObject; bSymbolCore: boolean);
 var
@@ -129,9 +152,6 @@ var
 begin
   inherited Create(TQuote);
 
-  FQuoteTimers := TQuoteTimers.Create;
-  FQuoteTimers.Realtime := true;// ( gEnv.RunMode <> rtSimulation );
-
   FLastEventTime := 0.0;
   FLastQuoteTime := 0.0;
 
@@ -144,7 +164,6 @@ destructor TQuoteBroker.Destroy;
 begin
 
   FSortList.Free;
-  FQuoteTimers.Free;
   //Quotes.Free;
 
   inherited;
@@ -464,5 +483,67 @@ end;
 
 
 
+procedure TQuote.Update(dtTime: TDateTime);
+var
+  aTick : TTickItem;
+begin
+
+  FSymbol.AddTerm := false;
+
+  if ( FSymbol.Sales <> nil ) and ( FLastEvent = qtTimeNSale ) then
+  begin
+    aTick   := TTickITem( FSymbol.Ticks.Add );
+    aTick.T := FSymbol.Sales.Last.LocalTime;
+    aTick.C := FSymbol.Last;
+    aTick.FillVol := FSymbol.Sales.Last.Volume;
+    aTick.AccVol  := FSymbol.DayVolume;
+    aTick.Side    := FSymbol.Side;
+    aTick.AskPrice:= FSymbol.Asks[0].Price;
+    aTick.BidPrice:= FSymbol.Bids[0].Price;
+
+    FSymbol.Terms.NewTick(aTick)
+
+  end else
+  if FLastEvent = qtMarketDepth then
+  begin
+
+  end;
+
+  FDistributor.Distribute(Self, 0, Self, 0);
+end;
+
+{ TQuoteBrokerCore }
+
+procedure TQuoteBrokerManager.Cancel(aSubscriber: TObject);
+var
+  I: TExchangeKind;
+begin
+  for I := ekBinance to High(TExchangeKind) do
+    FBrokers[i].Cancel(aSubscriber);
+end;
+
+constructor TQuoteBrokerManager.Create;
+var
+  I: TExchangeKind;
+begin
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    FBrokers[i] := TQuoteBroker.Create;
+    FBrokers[i].FExKind := i;
+  end;
+
+  FQuoteTimers:= TQuoteTimers.Create;
+  FQuoteTimers.Realtime := true;
+end;
+
+destructor TQuoteBrokerManager.Destroy;
+var
+  I: TExchangeKind;
+begin
+  for I := ekBinance to High(TExchangeKind) do
+    FBrokers[i].Free;
+  FQuoteTimers.Free;
+  inherited;
+end;
 
 end.

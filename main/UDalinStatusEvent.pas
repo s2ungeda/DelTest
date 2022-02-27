@@ -26,7 +26,20 @@ begin
           App.AppStatus := asSetValue;//asLoad;
 
     asSetValue :
-      FrmDalin.SetValue;
+      begin
+        if not App.Engine.ApiManager.InitMarketWebSocket then
+        begin
+          App.Log(llError, '', 'Failed InitMarketWebSocket') ;
+          Exit;
+        end;
+        FrmDalin.SetValue;
+
+        if not App.Engine.ApiManager.SubscribeAll then
+        begin
+          App.Log(llError, '', 'Failed SubscribeAll') ;
+          Exit;
+        end;
+      end;
 
     asLoad :
           App.Engine.FormBroker.Load(ComposeFilePath([App.DataDir, App.Config.DATA_FILE]))

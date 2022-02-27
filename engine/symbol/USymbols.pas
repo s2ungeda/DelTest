@@ -134,6 +134,11 @@ type
     FAsks: TMarketDepths;
     FSales: TTimeNSales;
     FTicks: TCollection;
+    FSubCode: string;
+    FTerms: TSTerms;
+    FMarkeTerm: boolean;
+    FAddTerm: boolean;
+    procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
@@ -141,6 +146,8 @@ type
 //    property  ExchangeCode : string read FExchangeCode;
     property  Code  : string read FCode write FCode;
     property  OrgCode : string read FOrgCode write FOrgCode;
+    // 거래소별, 마켓별, 코드 같은경우가 많아서..유니크한 종목코드를 만들기 위해.
+    property  SubCode : string read FSubCode write FSubCode;
     property  BaseCode  : string read FBaseCode write FQuoteCode;
     property  QuoteCode  : string read FQuoteCode write FQuoteCode;
     property  SettleCode : string read FSettleCode write FSettleCode;
@@ -174,6 +181,10 @@ type
     property TradeAble : boolean read FTradeAble write FTradeAble;
     property IsMargin  : boolean read FIsMargin write FIsMargin;
     property IsFuture  : boolean read FIsFuture write FIsFuture;
+
+    property Terms: TSTerms read FTerms write FTerms;
+    property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
+    property AddTerm: boolean read FAddTerm write FAddTerm;
   end;
 
   TSymbols = class(TCollection)
@@ -266,6 +277,11 @@ begin
   FSales:= TTimeNSales.Create;
   FTicks := TCollection.Create( TTickItem);
 
+  FTerms    := TSTerms.Create;
+  FTerms.OnAdd  := OnTermAddEvent;
+
+  FAddTerm  := false;
+
 end;
 
 destructor TSymbol.Destroy;
@@ -276,7 +292,14 @@ begin
   FAsks.Free;
   FSales.Free;
 
+  FTerms.Free;
+
   inherited;
+end;
+
+procedure TSymbol.OnTermAddEvent(Sender: TObject);
+begin
+  FAddTerm  := true;
 end;
 
 { TSymbolList }

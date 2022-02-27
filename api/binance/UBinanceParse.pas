@@ -7,31 +7,66 @@ uses
   ;
 type
   TBinanceParse = class
+  private
+    FExKind: TExchangeKind;
+    procedure ParseSpotBookTicker( aJson : TJsonObject );
+    procedure ParseSpotTrade( aJson : TJsonObject );
+    procedure ParseSpotMiniTickers( aJson : TJsonObject );
+
+    procedure ParseFutMarketDepth( aJson : TJsonObject );
+    procedure ParseFutaggTrade( aJson : TJsonObject );
+    procedure ParseFutBookTicker( aJson : TJsonObject );
+
   public
     constructor Create;
     destructor Destroy; override;
+
+
     procedure ParseMarginPair( aData : string );
     procedure ParseSpotTicker( aData : string );
 
     procedure ParseFuttMaster( aData : string );
     procedure ParseFuttTicker( aData : string );
+
+    procedure ParseSocketData( aMarket : TMarketType; aData : string);
+
+    property ExKind : TExchangeKind read FExKind;
+
   end;
 var
   gBinReceiver : TBinanceParse;
 implementation
 uses
   GApp   , UApiConsts
+  , GLibs
+  , UQuoteBroker
   , USymbols
   ;
 { TBinanceParse }
 constructor TBinanceParse.Create;
 begin
   gBinReceiver := self;
+  FExKind := ekBinance;
 end;
 destructor TBinanceParse.Destroy;
 begin
   gBinReceiver := nil;
   inherited;
+end;
+
+procedure TBinanceParse.ParseFutaggTrade(aJson: TJsonObject);
+begin
+
+end;
+
+procedure TBinanceParse.ParseFutBookTicker(aJson: TJsonObject);
+begin
+
+end;
+
+procedure TBinanceParse.ParseFutMarketDepth(aJson: TJsonObject);
+begin
+
 end;
 
 procedure TBinanceParse.ParseFuttMaster(aData: string);
@@ -73,7 +108,7 @@ begin
 
     with aSymbol do
     begin
-      OrgCode     := sCode;
+      OrgCode     := lowercase( sCode );
       Spec.BaseCode    := aObj.GetValue('baseAsset').Value;;
       Spec.QuoteCode   := aObj.GetValue('quoteAsset').Value;  // USTD
       Spec.SettleCode  := aObj.GetValue('symbol').Value;;
@@ -201,6 +236,106 @@ begin
 
 end;
 
+
+procedure TBinanceParse.ParseSpotTrade(aJson: TJsonObject);
+var
+  sCode : string;
+  aQuote : TQuote;
+  dtTime : TDateTime;
+  aSale  : TTimeNSale;
+  iTime  : int64;
+  bSide  : boolean;
+begin
+  sCode := aJson.GetValue('s').Value;
+
+  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
+
+  with aQuote do
+  begin
+
+    iTime := aJson.GetValue<int64>('T');
+    dtTime:= UnixToDateTime( iTime );
+
+//    App.DebugLog('time compare %s, %d', [ FormatDateTime('hh:nn:ss.zzz', dtTime), iTime ]   );
+
+    aSale := Symbol.Sales.New;
+    aSale.LocalTime := now;
+    aSale.Time      := dtTime;
+    aSale.Price     := StrToFloat( aJson.GetValue('p').Value );
+    aSale.Volume    := StrToFloat( aJson.GetValue('q').Value );
+
+    bSide := aJson.GetValue<boolean>('m');
+    	// true : 매도  ,  false : 매수
+    if bSide then aSale.Side := -1
+    else aSale.Side := 1;
+
+    Symbol.Last   := aSale.Price;
+    Symbol.Volume := aSale.Volume;
+    Symbol.Side   := aSale.Side;
+
+    LastEvent := qtTimeNSale;
+
+    Update( dtTime );
+  end;
+end;
+
+
+procedure TBinanceParse.ParseSpotBookTicker(aJson: TJsonObject);
+var
+  sCode : string;
+  aQuote : TQuote;
+//  dtTime : TDateTime;
+begin
+  sCode := aJson.GetValue('s').Value;
+
+  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
+
+  with aQuote do
+  begin
+
+    Symbol.Asks[0].Price := StrToFloat( aJson.GetValue('a').Value );
+    Symbol.Asks[0].Volume := StrToFloat( aJson.GetValue('A').Value );
+    Symbol.Bids[0].Price := StrToFloat( aJson.GetValue('b').Value );
+    Symbol.Bids[0].Volume := StrToFloat( aJson.GetValue('B').Value );
+
+    LastEvent := qtMarketDepth;
+
+    Update( now );
+  end;
+
+end;
+
+procedure TBinanceParse.ParseSpotMiniTickers(aJson: TJsonObject);
+var
+  sCode : string;
+  aQuote : TQuote;
+  dtTime : TDateTime;
+begin
+  sCode := aJson.GetValue('s').Value;
+
+  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
+
+  try
+
+    with aQuote do
+    begin
+      Symbol.DayOpen  := StrToFloat( aJson.GetValue('o').Value );
+      Symbol.DayHigh  := StrToFloat( aJson.GetValue('h').Value );
+      Symbol.DayLow   := StrToFloat( aJson.GetValue('l').Value );
+      Symbol.DayVolume:= StrToFloat( aJson.GetValue('v').Value );
+      Symbol.DayAmount:= StrToFloat( aJson.GetValue('q').Value );
+    end;
+
+
+  except
+  end;
+
+
+end;
+
 procedure TBinanceParse.ParseSpotTicker(aData: string);
 var
   aArr : TJsonArray;
@@ -246,6 +381,68 @@ begin
       aSymbol.Bids[0].Volume  := StrToFloatDef( aVal.GetValue<string>( 'bidQty' ), 0.0 );
 
     end;
+  end;
+
+end;
+
+
+procedure TBinanceParse.ParseSocketData(aMarket : TMarketType; aData: string);
+var
+  aObj : TJsonObject;
+  aVal  : TJsonValue;
+  aPair : TJsonPair;
+  sTmp : string;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance %s ParseSocketData data is empty', [ TMarketTypeDesc[aMarket] ] ) ;
+    Exit;
+  end;
+
+//  App.Log(llInfo, 'Test', aData);
+
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+    aPair := aObj.Get('e');
+
+    if aPair <> nil then
+    begin
+      sTmp  := aPair.JsonValue.Value;
+
+      case aMarket of
+        mtSpot:
+          if sTmp = 'trade' then
+            ParseSpotTrade( aObj )
+          else if sTmp = '24hrMiniTicker' then
+            ParseSpotMiniTickers( aObj )
+          else if sTmp = 'bookTicker' then
+            ParseSpotBookTicker( aObj )
+          else exit;
+        mtFutures:
+          if sTmp = 'aggTrade' then
+            ParseFutaggTrade( aObj )
+          else if sTmp = '24hrMiniTicker' then
+            ParseFutBookTicker( aObj )
+          else if sTmp = 'depthUpdate' then        // Partial Book Depth Streams
+            ParseFutMarketDepth( aObj )
+          else exit;
+      end;
+    end else
+    begin
+      if aMarket = mtSpot then
+      begin
+        // e 는 없구 s 는 있는건 best ask bid 뿐..
+        aPair := aObj.Get('s');
+        if aPair <> nil  then
+        begin
+//          sTmp  := aPair.JsonValue.Value;
+          ParseSpotBookTicker( aObj )
+        end;
+
+      end;
+    end;
+  finally
+    aObj.Free;
   end;
 
 end;
