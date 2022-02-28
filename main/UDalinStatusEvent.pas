@@ -32,15 +32,23 @@ begin
           App.Log(llError, '', 'Failed InitMarketWebSocket') ;
           Exit;
         end;
-        FrmDalin.SetValue;
 
-        if not App.Engine.ApiManager.SubscribeAll then
+        if not App.Engine.ApiManager.ConnectAll then
         begin
-          App.Log(llError, '', 'Failed SubscribeAll') ;
+          App.Log(llError, '', 'Failed ConnectAll') ;
           Exit;
         end;
+
+        FrmDalin.SetValue;
+
+        App.AppStatus := asRecovery;
       end;
 
+    asRecovery :
+      begin
+        App.Engine.SymbolCore.PreSubscribe;
+        App.AppStatus := asLoad;
+      end;
     asLoad :
           App.Engine.FormBroker.Load(ComposeFilePath([App.DataDir, App.Config.DATA_FILE]))
           ;

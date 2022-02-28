@@ -60,7 +60,8 @@ var
 implementation
 
 uses
-  GLibs
+  GLibs   ,
+  UConsts
   ;
 
 { TApp }
@@ -104,7 +105,9 @@ begin
     if FAppStatus <> Value then
     begin
 //      if Engine.AppStatus = asLoad then
+
 //        Exit;
+      Log(llInfo, 'App status is %s ', [ TAppStatusDesc[Value] ] );
       FAppStatus :=  Value;
       OnAppStatusEvent( Value );
     end;

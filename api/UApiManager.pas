@@ -1,8 +1,10 @@
 unit UApiManager;
+
 interface
+
 uses
   System.Classes, System.SysUtils, System.DateUtils,
-  UExchangeManager, UExchangeRate,
+  UExchangeManager, UExchangeRate, UQuoteBroker,
   UApiTypes
   ;
 type
@@ -26,9 +28,14 @@ type
     function PrepareMaster : boolean;
     function InitMarketWebSocket : boolean;
     function SubscribeAll : boolean;
+    function ConnectAll: boolean;
+    function DisConnectAll : boolean;
 
     procedure RequestExRate;
     procedure CheckCount;
+
+    function Sub(aQuote: TQuote) : boolean;
+    function UnSub(aQuote:TQuote): boolean;
 
     property ExManagers  : TExchangeArray read FExManagers;
     property ExManagerCount : integer read GetExManager;
@@ -62,6 +69,7 @@ begin
     App.DebugLog('Queue Count : %s ', [ sTmp ]);
 end;
 
+
 constructor TApiManager.Create;
 var
   I: TExchangeKind;
@@ -90,6 +98,7 @@ begin
 
   inherited;
 end;
+
 
 
 function TApiManager.GetCodesIntersection: boolean;
@@ -226,6 +235,18 @@ begin
   Result := true;
 end;
 
+function TApiManager.Sub(aQuote: TQuote): boolean;
+begin
+  if aQuote = nil then Exit (false);
+  Result := ExManagers[aQuote.Symbol.Spec.ExchangeType].Subscrib(aQuote.Symbol);
+end;
+
+function TApiManager.UnSub(aQuote: TQuote): boolean;
+begin
+  if aQuote = nil then Exit (false);
+  Result := ExManagers[aQuote.Symbol.Spec.ExchangeType].UnSubscrib(aQuote.Symbol);
+end;
+
 function TApiManager.SubscribeAll: boolean;
 var
   i :  TExchangeKind;
@@ -242,6 +263,8 @@ begin
 
 end;
 
+
+
 function TApiManager.InitMarketWebSocket: boolean;
 var
   i :  TExchangeKind;
@@ -255,6 +278,36 @@ begin
 
   Result := true;
 
+end;
+
+function TApiManager.ConnectAll: boolean;
+var
+  i :  TExchangeKind;
+begin
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].ConnectAll then
+      Exit (false);
+  end;
+
+  Result := true;
+
+end;
+
+
+function TApiManager.DisConnectAll: boolean;
+var
+  i :  TExchangeKind;
+begin
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].DissConnectAll then
+      Exit (false);
+  end;
+
+  Result := true;
 end;
 
 

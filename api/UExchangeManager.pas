@@ -2,7 +2,7 @@ unit UExchangeManager;
 interface
 uses
   system.Classes, system.SysUtils,
-  UExchange     , UWebSockets,
+  UExchange     , UWebSockets,   USymbols,
   UApiTypes
   ;
 type
@@ -27,13 +27,20 @@ type
     // 공통으로 같이 처리할수 있는것은 상속 처리 하지 않음..
     // 1. preparemaster
     // 2. requestmaster
+    // 3. all websocket connect;
+    // 4. all websocket close;
     function PrepareMaster : boolean; //virtual; abstract;
     function RequestMaster : boolean;
+    function ConnectAll : boolean;
+    function DissConnectAll : boolean;
 
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
     function SubscribeAll : boolean; virtual; abstract;
     procedure UnSubscribeAll ; virtual; abstract;
+
+    function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
+    function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
 
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
@@ -52,6 +59,8 @@ uses
   ;
 
 { TExchangeManaager }
+
+
 constructor TExchangeManager.Create(aExType: TExchangeKind);
 var
   i : TMarketType;
@@ -118,6 +127,36 @@ begin
   FCodes.Free;
 
   inherited;
+end;
+
+
+function TExchangeManager.ConnectAll: boolean;
+var
+  i : integer;
+begin
+  try
+    if QuoteSock <> nil then
+      for i := 0 to High(QuoteSock) do
+        QuoteSock[i].DoConnect;
+  except
+    on E : Exception do
+    begin
+      App.Log(llError, '%s %d.th connect error (%s)', [ TExchangeKindDesc[FExchangeType], i, E.Message ]  );
+      exit (false);
+    end;
+  end;
+
+  Result := true;
+end;
+
+function TExchangeManager.DissConnectAll: boolean;
+var
+  i : integer;
+begin
+  if QuoteSock <> nil then
+    for i := 0 to High(QuoteSock) do
+      QuoteSock[i].DoDissConnect;
+  Result := true;
 end;
 
 function TExchangeManager.GetMarketCount: integer;

@@ -116,7 +116,7 @@ begin
         sTmp := sTmp + ','
     end;
 
-    App.DebugLog(sTmp);
+//    App.DebugLog(sTmp);
 
     Result := App.Engine.SymbolCore.Symbols[ GetExKind].Count > 0 ;
 

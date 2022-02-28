@@ -10,9 +10,12 @@ uses
 
 type
 
+  TSendDoneNotify = procedure(  Sender : TObject ) of object;
+
   TBithParse = class
   private
     FExKind: TExchangeKind;
+    FOnSendDone: TSendDoneNotify;
     procedure ParseSpotOrderBook( aJson : TJsonObject ); overload;
     procedure ParseSpotTrade( aJson : TJsonObject );
     procedure ParseSpotMiniTickers( aJson : TJsonObject );
@@ -27,6 +30,7 @@ type
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
 
     property ExKind : TExchangeKind read FExKind;
+    property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
   end;
 
 var
@@ -148,6 +152,19 @@ begin
       else if sTmp.Compare(sTmp, 'transaction')= 0 then
         ParseSpotTrade( aObj )
       else Exit;
+    end else  begin
+      aPair := aObj.Get('status');
+
+      if aPair <> nil then
+      begin
+        sTmp := aPair.JsonValue.Value;
+        if sTmp = '0000' then begin
+          if Assigned(FOnSendDone) then
+            FOnSendDone( Self );
+        end
+        else
+          App.DebugLog(' %s, %s oops !! ....... %s ', [ TExchangeKindDesc[FExKind],  TMarketTypeDesc[aMarket], aData ]);
+      end;
     end;
   finally
     aObj.Free;

@@ -41,10 +41,13 @@ begin
 end;
 
 function FindBinRow( iRow : integer ) : integer;
+var
+  i : integer;
 begin
   // 1-> 1,  2->1, 3-> 1
   // 4-> 4   5->4  6->4
-  Result := iRow div 3 + 1;
+  Result := iRow div 3;
+  if iRow mod 3 > 0 then inc(Result );
 end;
 
 end.

@@ -84,10 +84,9 @@ begin
   end;
 
   QryTimer.Enabled := false;
-
-
   App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
+  App.Engine.ApiManager.DisConnectAll;
 
   Action := caFree;
 end;
@@ -139,12 +138,10 @@ end;
 
 procedure TFrmDalinMain.SetValue;
 begin
-
-
-
   GetExRate;
   QryTimer.Enabled := true;
-  App.AppStatus := asLoad;
+  // 구독/취소 이벤트 연결..
+  App.Engine.QuoteBroker.SetEvent;
 end;
 
 procedure TFrmDalinMain.Start;

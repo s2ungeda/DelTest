@@ -9,6 +9,8 @@ type
   TMarketType     = ( mtSpot, mtFutures );
   TAccountMarketType  = ( amSpot, amMargin, amFuture );
 
+  TMajorSymbolKind = (msBTC, msETH, msXRP );
+
   TApiInfo = record
     BaseUrl    : string;
     Prepare    : string;

@@ -111,6 +111,7 @@ type
     destructor Destroy; override;
 
     procedure Cancel(aSubscriber: TObject);
+    procedure SetEvent;
 
     property Brokers : TBrokerArray read FBrokers;
     property Timers: TQuoteTimers read FQuoteTimers;
@@ -119,7 +120,8 @@ type
 implementation
 
 uses
-  UTicks
+  GApp
+  , UTicks
   ;
 
 procedure TQuoteBroker.Cancel(aSubscriber: TObject; bSymbolCore: boolean);
@@ -544,6 +546,18 @@ begin
     FBrokers[i].Free;
   FQuoteTimers.Free;
   inherited;
+end;
+
+procedure TQuoteBrokerManager.SetEvent;
+var
+  I: TExchangeKind;
+begin
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    FBrokers[i].OnSubscribe := App.Engine.ApiManager.Sub;
+    FBrokers[i].FOnCancel   := App.Engine.ApiManager.UnSub;
+  end;
+
 end;
 
 end.

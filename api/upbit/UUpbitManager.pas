@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils,
 
-  UExchangeManager,
+  UExchangeManager,  USymbols, UUpbitParse,
 
   UApiTypes
 
@@ -15,6 +15,7 @@ type
 
   TUpbitManager = class( TExchangeManager )
   private
+    FParse: TUpbitParse;
 
   public
     Constructor  Create( aExType : TExchangeKind );
@@ -23,12 +24,20 @@ type
     function InitMarketWebSockets : boolean ; override;
     function SubscribeAll : boolean; override;
     procedure UnSubscribeAll ; override;
+
+    function Subscrib( aSymbol : TSymbol ) : boolean; override;
+    function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
+
+    property Parse : TUpbitParse read FParse;
   end;
 
 implementation
 
 uses
   GApp
+  , UApiConsts
+  , UUpbitSpot
+  , UUpbitWebSockets
   ;
 
 { TBinanceManager }
@@ -36,18 +45,33 @@ uses
 constructor TUpbitManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
-
+  FParse:= TUpbitParse.Create;
 end;
 
 destructor TUpbitManager.Destroy;
 begin
-
+  FParse.Free;
   inherited;
 end;
 
 
 
 function TUpbitManager.InitMarketWebSockets: boolean;
+var
+  i, iCount : integer;
+begin
+  iCount := 1;
+  SetLength( QuoteSock, iCount );
+
+  for I := 0 to iCount-1 do begin
+    QuoteSock[i]  := TUpbitWebSocket.Create(QOUTE_SOCK, mtSpot ) ;
+    QuoteSock[i].init(i, 'api.upbit.com/websocket/v1' );
+  end;
+
+  Result := true;
+end;
+
+function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;
 begin
   Result := true;
 end;
@@ -55,6 +79,17 @@ end;
 function TUpbitManager.SubscribeAll: boolean;
 begin
   Result := true;
+end;
+
+function TUpbitManager.UnSubscrib(aSymbol: TSymbol): boolean;
+begin
+  Result := false;
+  try
+    (QuoteSock[QOUTE_SOCK] as TUpbitWebSocket).SubScribe( aSymbol);
+    Result := true;
+  except
+
+  end;
 end;
 
 procedure TUpbitManager.UnSubscribeAll;

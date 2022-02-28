@@ -94,8 +94,9 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 implementation
 
  uses
-  ScCLRClasses,
-  Vcl.Forms
+  ScCLRClasses
+  ,Vcl.Forms
+  ,GApp
   ;
 
 
@@ -148,7 +149,6 @@ procedure TWebsocket.DoConnect;
 begin
   DoDissConnect;
   FWebSocket.Connect( 'wss://'+FEndPoint);
-
 end;
 
 procedure TWebsocket.DoDissConnect;
@@ -304,8 +304,17 @@ end;
 
 procedure TWebsocket.SendData(sData: string);
 begin
-  if sData <> '' then
-    FWebSocket.Send(sData);
+  try
+    if sData <> '' then begin
+      FWebSocket.Send(sData);
+      App.Log(llInfo, 'Send Data : %s', [ sData ] );
+    end;
+  except
+    on e : exception do
+    begin
+      App.Log(llError, 'Failed Send Data : %s, %s', [ e.Message, sData ] );
+    end;
+  end;
 end;
 
 procedure TWebsocket.SyncProc;

@@ -24,6 +24,8 @@ type
 
   TMarketGroupsArray  = array [ TExchangeKind ] of TMarketGroups;
 
+  TMajorSymbols    = array [TExchangeKind] of TSymbol;
+  TMainSymbols    = array [TMajorSymbolKind] of  TMajorSymbols;
 
   TSymbolCore = class
   private
@@ -40,6 +42,8 @@ type
 
     FExchanges  : TMarketGroupsArray;
     FUnderlyings: TMarketGroupsArray;
+    FMainSymbols: TMainSymbols;
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -50,6 +54,7 @@ type
     function  FindQuoteSymbol(aExKind : TExchangeKind; sBaseCode : string ): TSymbol;
 
     procedure Log;
+    procedure PreSubscribe;
 
     function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
 
@@ -65,6 +70,10 @@ type
 
     property Underlyings : TMarketGroupsArray read FUnderlyings;
     property Exchanges   : TMarketGroupsArray read FExchanges;
+    // symbolKind . ExchangeKind
+    property MainSymbols : TMainSymbols read FMainSymbols;
+
+
   end;
 
 function TicksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
@@ -95,10 +104,14 @@ begin
     1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
   end;
 
-//  if iType = -1 then
-//    App.DebugLog( 'ex : %f %f, %f,  ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last ] );
+  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
+    and ( aKSymbol.Spec.ExchangeType = ekBithumb )  then
+    App.DebugLog( 'ex : %f %f, %f, %f  ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value ] );
 
-//  Result := Result * 100;
+//  if iType = -1 then
+
+
+  Result := Result * 100;
 //  if Result < 0 then Result := 0.0;
 
 end;
@@ -232,6 +245,33 @@ begin
     end;
 
   end;
+end;
+
+procedure TSymbolCore.PreSubscribe;
+var
+  i : TMajorSymbolKind;
+  iRow : integer;
+  j : TExchangeKind;
+  aSymbol : TSymbol;
+begin
+  // 선구독 종목들...BTC, ETH, XRP
+  for I := msBTC to High(TMajorSymbolKind) do
+    for j := ekBinance to High(TExchangeKind) do
+    begin
+      aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, TMajorSymbolCode[i] );
+      if aSymbol <> nil then
+      begin
+        FMainSymbols[i][j] := aSymbol;
+        App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
+          App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
+          );
+      end;
+    end;
+
+  for I := msBTC to High(TMajorSymbolKind) do
+    for j := ekBinance to High(TExchangeKind) do
+      if FMainSymbols[i][j] <> nil then
+        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
 end;
 
 function TSymbolCore.RegisterSymbol(aExKind: TExchangeKind;

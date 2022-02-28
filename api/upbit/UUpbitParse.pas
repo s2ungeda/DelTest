@@ -16,6 +16,7 @@ type
     destructor Destroy; override;
 
     procedure ParseSpotTicker( aData : string );
+    procedure ParseSocketData( aMarket : TMarketType; aData : string);
   end;
 
 var
@@ -40,6 +41,11 @@ begin
 
   gUpReceiver := nil;
   inherited;
+end;
+
+procedure TUpbitParse.ParseSocketData(aMarket: TMarketType; aData: string);
+begin
+
 end;
 
 procedure TUpbitParse.ParseSpotTicker(aData: string);

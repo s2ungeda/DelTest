@@ -2,6 +2,10 @@ unit UConsts;
 
 interface
 
+uses
+  Utypes
+  ;
+
 const
 
   PRICE_EPSILON = 0.001;
@@ -23,6 +27,9 @@ const
 
   LONG_COLOR = $E4E2FC;
   SHORT_COLOR = $F5E2DA;
+
+  // asNone, asInit, asSetValue, asRecovery, asLoad
+  TAppStatusDesc : array [ TAppStatus ] of string = ('None', 'Init', 'SetValue', 'Recovery', 'Load');
 
 implementation
 

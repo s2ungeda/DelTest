@@ -93,18 +93,19 @@ end;
 
 procedure TFrmPriceTable.InitObject;
 var
-  i, iRow : integer;
+  i : TMajorSymbolKind;
+  iRow : integer;
   j : TExchangeKind;
   aSymbol : TSymbol;
 begin
-  for I := 0 to High(TMajorSymbol) do
+  for I := msBTC to High(TMajorSymbolKind) do
 
     for j := ekBinance to High(TExchangeKind) do
     begin
-      aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, TMajorSymbol[i] );
+      aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, TMajorSymbolCode[i] );
       if aSymbol <> nil then
       begin
-        iRow := GetMajorRow(i ) + integer(j) ;
+        iRow := GetMajorRow( integer(i) ) + integer(j) ;
         sgKimp.Objects[CoinCol, iRow ] := aSymbol;
 
         sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
@@ -112,7 +113,7 @@ begin
 
         if j = ekBinance then
         begin
-          sgKimp.Cells[CoinCol, iRow ] := TMajorSymbol[i];
+          sgKimp.Cells[CoinCol, iRow ] := TMajorSymbolCode[i];
         end;
       end;
 
@@ -179,8 +180,8 @@ begin
         dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
         dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+2] := Format('%.2f%s', [ dKip[0], '%' ]);
-        Cells[ 3, iRow+2] := Format('%.2f%s', [ dKip[1], '%' ]);
+        Cells[ 2, iRow+2] := Format('%.2f%%', [ dKip[0] ]);
+        Cells[ 3, iRow+2] := Format('%.2f%%', [ dKip[1] ]);
       end;
 
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '¡Û', 'X');
@@ -204,8 +205,8 @@ begin
         dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
         dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
 
-        Cells[ 2, iRow] := Format('%.2f%s', [ dKip[0], '%' ]);
-        Cells[ 3, iRow] := Format('%.2f%s', [ dKip[1], '%' ]);
+        Cells[ 2, iRow] := Format('%.2f%%', [ dKip[0] ]);
+        Cells[ 3, iRow] := Format('%.2f%%', [ dKip[1] ]);
       end;
 
       Cells[ CurCol - 4, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);

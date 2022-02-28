@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
 
-  , UWebSockets
+  , UWebSockets, USymbols
 
   , UApiTypes
 
@@ -25,15 +25,16 @@ type
     procedure SyncProc;  override;
     function GetDescript: string;
 
+    procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
+
   public
     Constructor Create( iSockDiv : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
 
     procedure CheckPingPong;
 
-    procedure SetSubList( aList : TStringList ) ;
-    procedure SubScribe( bSub : boolean ) ;
-
+    procedure SubScribe( aSymbol : TSymbol ) ; overload;
+    procedure UnSubScribe( aSymbol : TSymbol ) ;
 
     property MarketType  : TMarketType read FMarketType;
     property SubList  : TStrings  read FSubList;
@@ -91,71 +92,80 @@ end;
 //  @aggTrade    : Aggregate Trade , 100ms
 //  @miniTicker  : 24hour rolling OHLC, 500ms
 }
-// 1. 구독취소 함
-// 2. 구독취소 성공 후 구독 함..
-procedure TBinanceWebSocket.SetSubList(aList: TStringList);
+
+procedure TBinanceWebSocket.SubScribe(aSymbol: TSymbol);
 var
-  sData, sParam : string;
   i : integer;
+  aList : TStrings;
+  sParam, sData : string;
 begin
+  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
+    FSubList.Add(aSymbol.OrgCode);
 
-  if aList.Count <= 0 then Exit ;
-
-  // 구독 json pack
-  if FMarketType = mtSpot then
-  begin
-    for I := 0 to aList.Count-1 do
-    begin
-      FSubList.Add( aList[i]+'@bookTicker' );
-      FSubList.Add( aList[i]+'@trade' );
-      FSubList.Add( aList[i]+'@miniTicker' );
-    end;
-  end else
-  if FMarketType = mtFutures then
-  begin
-    for I := 0 to aList.Count-1 do
-    begin
-      FSubList.Add( aList[i]+'@depth5' );
-      FSubList.Add( aList[i]+'@aggTrade' );
-      FSubList.Add( aList[i]+'@miniTicker' );
-    end;
-  end;
-
-//  DoConnect;
-
-//  SubScribe( true );
+  SubScribe( aSymbol, true );
 end;
 
-procedure TBinanceWebSocket.SubScribe( bSub : boolean );
+procedure TBinanceWebSocket.UnSubScribe(aSymbol: TSymbol);
+var
+  i : integer;
+  aList : TStrings;
+  sParam, sData : string;
+begin
+  i := FSubList.IndexOf(aSymbol.OrgCode) ;
+  if i >= 0 then FSubList.Delete(i);
+
+  SubScribe( aSymbol, false );
+end;
+
+procedure TBinanceWebSocket.SubScribe( aSymbol : TSymbol; bSub : boolean );
 var
   I: Integer;
   sData, sParam, sTmp : string;
+  aList : TStrings;
 begin
 
-  sParam := '';
-  for I := 0 to FSubList.Count-1 do
-  begin
-    sParam := sParam + Format('"%s"', [FSubList[i]]);
-    if i < FSubList.Count-1  then
-      sParam := sParam + ','
+  aList := TStringList.Create;
+
+  try
+    if FMarketType = mtSpot then
+    begin
+        aList.Add( aSymbol.OrgCode +'@bookTicker' );
+        aList.Add( aSymbol.OrgCode +'@trade' );
+        aList.Add( aSymbol.OrgCode +'@miniTicker' );
+    end else
+    if FMarketType = mtFutures then
+    begin
+        aList.Add( aSymbol.OrgCode +'@depth5' );
+        aList.Add( aSymbol.OrgCode +'@aggTrade' );
+        aList.Add( aSymbol.OrgCode +'@miniTicker' );
+    end else
+      Exit;
+
+    sParam := '';
+    for I := 0 to aList.Count-1 do
+    begin
+      sParam := sParam + Format('"%s"', [aList[i]]);
+      if i < aList.Count-1  then
+        sParam := sParam + ','
+    end;
+
+    sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
+    inc(FSubIndex);
+    sData := Format('{"method": "%s","params":[%s],"id": %d}', [ sTmp, sParam, FSubIndex ] );
+
+    SendData(sData);
+
+  finally
+    aList.Free;
   end;
-
-  sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
-
-  inc(FSubIndex);
-  sData := Format('{"method": "%s","params":[%s],"id": %d}', [ sTmp, sParam, FSubIndex ] );
-
-  SendData(sData);
-  if not bSub then FSubList.Clear;
-
-  App.DebugLog(' %s %s :%s', [ Descript, sTmp, sData] ) ;
 
 end;
 
 procedure TBinanceWebSocket.OnAfterConnect(Sender: TObject);
 begin
-  if (FSubList.Count > 0 ) then
-    SubScribe( true );
+//  if (FSubList.Count > 0 ) then
+//    SubScribe( true );
+  App.Log(llInfo, ' %s Connected', [ Descript]);
 end;
 
 procedure TBinanceWebSocket.OnAfterDisconnect(Sender: TObject);
@@ -171,5 +181,7 @@ begin
   //
   gBinReceiver.ParseSocketData( FMarketType, string(Data.Packet));
 end;
+
+
 
 end.

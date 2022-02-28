@@ -26,8 +26,7 @@ const
   TRADE_SOCK = 1;
 
 
-  TMajorSymbol  : array [0..2] of string = ('BTC', 'ETH', 'XRP');
-
+  TMajorSymbolCode  : array [TMajorSymbolKind] of string = ('BTC', 'ETH', 'XRP');
 
   TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
   TExchangeKindShortDesc : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
