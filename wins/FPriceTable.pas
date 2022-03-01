@@ -37,7 +37,7 @@ type
     procedure EnableEdit( bAble : boolean ) ;
 
     procedure QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
-    procedure SetSymbolToGrid(sCode: string );
+    procedure SetSymbolToGrid(sCode: string; bLoad : boolean = false );
 
   public
     { Public declarations }
@@ -94,34 +94,19 @@ end;
 procedure TFrmPriceTable.InitObject;
 var
   i : TMajorSymbolKind;
-  iRow : integer;
-  j : TExchangeKind;
-  aSymbol : TSymbol;
+//  iRow : integer;
+//  j : TExchangeKind;
+//  aSymbol : TSymbol;
 begin
   for I := msBTC to High(TMajorSymbolKind) do
-
-    for j := ekBinance to High(TExchangeKind) do
-    begin
-      aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, TMajorSymbolCode[i] );
-      if aSymbol <> nil then
-      begin
-        iRow := GetMajorRow( integer(i) ) + integer(j) ;
-        sgKimp.Objects[CoinCol, iRow ] := aSymbol;
-
-        sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
-        UpdateSymbol( aSymbol, iRow );
-
-        if j = ekBinance then
-        begin
-          sgKimp.Cells[CoinCol, iRow ] := TMajorSymbolCode[i];
-        end;
-      end;
-
-      App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol, QuoteEvnet);
-    end;
+  begin
+    FSaveRow := GetMajorRow( integer(i) );
+    SetSymbolToGrid(TMajorSymbolCode[i], true );
+  end;
+  FSaveRow := -1;
 end;
 
-procedure TFrmPriceTable.SetSymbolToGrid( sCode: string );
+procedure TFrmPriceTable.SetSymbolToGrid( sCode: string ; bLoad : boolean);
 var
   j : TExchangeKind;
   iRow : integer;
@@ -140,8 +125,14 @@ begin
     sgKimp.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
     UpdateSymbol( aSymbol, iRow );
 
+    if j = ekBinance then
+      sgKimp.Objects[ExCol, iRow] := Pointer(100);
+
     App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol, QuoteEvnet);
   end;
+
+  if bLoad then
+    sgKimp.Cells[CoinCol, FSaveRow] := sCode;
 end;
 
 
@@ -170,8 +161,8 @@ begin
         dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
         dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+1] := Format('%*.n', [ aSymbol2.Spec.Precision, dKip[0] ]);
-        Cells[ 3, iRow+1] := Format('%*.n', [ aSymbol2.Spec.Precision, dKip[1] ]);
+        Cells[ 2, iRow+1] := Format('%.2f %%', [ dKip[0] ]);
+        Cells[ 3, iRow+1] := Format('%.2f %%', [ dKip[1] ]);
       end;
 
       if Objects[CoinCol, iRow+2] <> nil then
@@ -180,8 +171,8 @@ begin
         dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
         dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+2] := Format('%.2f%%', [ dKip[0] ]);
-        Cells[ 3, iRow+2] := Format('%.2f%%', [ dKip[1] ]);
+        Cells[ 2, iRow+2] := Format('%.2f %%', [ dKip[0] ]);
+        Cells[ 3, iRow+2] := Format('%.2f %%', [ dKip[1] ]);
       end;
 
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '¡Û', 'X');
@@ -190,9 +181,9 @@ begin
       if aSymbol.DayOpen <= 0 then  dTmp := 1
       else dTmp := aSymbol.DayOpen;
 
-      Cells[CurCol+1, iRow]   := Format('%.1f%%',[(aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ]);
-      Cells[CurCol+1, iRow+1] := Format('%.1f%%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
-      Cells[CurCol+1, iRow+2] := Format('%.1f%%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
+      Cells[CurCol+1, iRow]   := Format('%.1f %%',[(aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ]);
+      Cells[CurCol+1, iRow+1] := Format('%.1f %%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
+      Cells[CurCol+1, iRow+2] := Format('%.1f %%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
 
     end else
     begin
@@ -205,8 +196,8 @@ begin
         dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
         dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
 
-        Cells[ 2, iRow] := Format('%.2f%%', [ dKip[0] ]);
-        Cells[ 3, iRow] := Format('%.2f%%', [ dKip[1] ]);
+        Cells[ 2, iRow] := Format('%.2f %%', [ dKip[0] ]);
+        Cells[ 3, iRow] := Format('%.2f %%', [ dKip[1] ]);
       end;
 
       Cells[ CurCol - 4, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
@@ -240,13 +231,41 @@ begin
 end;
 
 procedure TFrmPriceTable.LoadEnv(aStorage: TStorage);
+var
+  i : integer;
+  sCode : string;
 begin
+  if aStorage = nil  then Exit;
 
+
+  for I := 10 to sgKimp.RowCount-1 do
+  begin
+    sCode := aStorage.FieldByName('Coin_'+inttostr(i) ).AsString;
+    if sCode <> '' then
+    begin
+      FSaveRow := i;
+      SetSymbolToGrid( sCode, true );
+    end;
+  end;
+
+  FSaveRow := -1;
 end;
 
 
 procedure TFrmPriceTable.SaveEnv(aStorage: TStorage);
+var
+  i : integer;
+  aSymbol : TSymbol;
 begin
+  if aStorage = nil  then Exit;
+
+  for I := 10 to sgKimp.RowCount-1 do
+  begin
+    if (i Mod 3) <> 1 then continue;
+    aSymbol := TSymbol( sgKimp.Objects[CoinCol, i ]);
+    if aSymbol <> nil then
+      aStorage.FieldByName('Coin_'+inttostr(i) ).AsString := aSymbol.Spec.BaseCode;
+  end;
 
 end;
 
@@ -286,11 +305,12 @@ begin
       if iMode mod 2 <> 0 then
         aBack := GRID_MOD_COLOR;
 
-      if ( ACol in [ CurCol-4..CurCol] ) then
+      if ( ACol in [ CurCol-6..CurCol] ) then
       begin
         dFormat := DT_RIGHT  ;
-        if Objects[CoinCol, ARow] <> nil then
-          dFormat := DT_CENTER;
+        if Objects[ExCol, ARow] <> nil then
+          if ACol <> CurCol then
+            dFormat := DT_CENTER;
       end;
 
       if ACol = DayAmtCol then

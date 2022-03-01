@@ -69,6 +69,7 @@ var
   aVal : TJsonValue;
   iVal, I: Integer;
   sTmp, sVal : string;
+  dEx : double;
 begin
   if sData = '' then
   begin
@@ -91,7 +92,11 @@ begin
       begin
         sTmp := trim( aVal.GetValue<string>('deal_bas_r') );
         sVal := sTmp.Replace(',', '');
-        Value  := StrToFloat( sVal );
+        dEx  := StrToFloat( sVal );
+        if dEx > 0 then begin
+          Value  := dEx;
+          App.SaveData(ldExRate, sVal );
+        end;
 //        :"1,194.7","bkpr":"1,194","yy_efee_r":"0","ten_dd_efee_r":"0","kftc_bkpr":"1,194","kftc_deal_bas_r":"1,194.7"
       end;
     end;

@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.DateUtils
-  , System.JSON , USymbols
+  , System.JSON , USymbols, UExchangeManager
   , UApiTypes
   ;
 
@@ -14,8 +14,9 @@ type
 
   TBithParse = class
   private
-    FExKind: TExchangeKind;
+
     FOnSendDone: TSendDoneNotify;
+    FParent: TExchangeManager;
     procedure ParseSpotOrderBook( aJson : TJsonObject ); overload;
     procedure ParseSpotTrade( aJson : TJsonObject );
     procedure ParseSpotMiniTickers( aJson : TJsonObject );
@@ -23,13 +24,13 @@ type
     function GetSymbolCode(sCode : string): string;
 
   public
-    constructor Create( aExKind : TExchangeKind );
+    constructor Create( aObj :TExchangeManager );
     destructor Destroy; override;
 
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
 
-    property ExKind : TExchangeKind read FExKind;
+    property Parent : TExchangeManager read FParent;
     property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
   end;
 
@@ -45,10 +46,10 @@ uses
 
 { TBithParse }
 
-constructor TBithParse.Create( aExKind : TExchangeKind );
+constructor TBithParse.Create( aObj :TExchangeManager );
 begin
   gBithReceiver := self;
-  FExKind := aExKind;
+  FParent := aObj;
 end;
 
 destructor TBithParse.Destroy;
@@ -91,7 +92,7 @@ begin
       if aPair.JsonValue.ClassType <> TJSONObject then continue;
       sCode := aPair.JsonString.Value;
 
-      aSymbol := App.Engine.SymbolCore.FindSymbol(FExKind, sCode );
+      aSymbol := App.Engine.SymbolCore.FindSymbol(FParent.ExchangeKind, sCode );
       if aSymbol <> nil then
       begin
         aSub  := aPair.JsonValue as TJsonObject;
@@ -134,7 +135,7 @@ begin
   if aData = '' then
   begin
     App.Log(llError, '%s %s ParseSocketData data is empty',
-       [ TExchangeKindDesc[FExKind],  TMarketTypeDesc[aMarket] ] ) ;
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[aMarket] ] ) ;
     Exit;
   end;
 
@@ -163,7 +164,7 @@ begin
             FOnSendDone( Self );
         end
         else
-          App.DebugLog(' %s, %s oops !! ....... %s ', [ TExchangeKindDesc[FExKind],  TMarketTypeDesc[aMarket], aData ]);
+          App.DebugLog(' %s, %s oops !! ....... %s ', [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[aMarket], aData ]);
       end;
     end;
   finally
@@ -206,7 +207,7 @@ begin
   if aVal = nil then Exit;
 
   sCode := GetSymbolCode( aVal.GetValue<string>('symbol') );
-  aQuote:= App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
   if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
   with aQuote do
@@ -248,7 +249,7 @@ begin
       sCode := GetSymbolCode( aVal.GetValue<string>('symbol') );
 
       if aQuote = nil then
-        aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+        aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
       if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
       with aQuote do

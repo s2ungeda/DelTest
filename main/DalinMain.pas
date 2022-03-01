@@ -29,6 +29,7 @@ type
     procedure SetEnv;
     procedure GetExRate;
     procedure DalinStatusEvent( asType : TAppStatus );
+    procedure ReadExRate;
 
   public
     { Public declarations }
@@ -84,10 +85,11 @@ begin
   end;
 
   QryTimer.Enabled := false;
+  App.Log(llInfo, '', '--- Form Save ---');
   App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
   App.Engine.ApiManager.DisConnectAll;
-
+  App.Log(llInfo, '', '--- DisConnectAll ---');
   Action := caFree;
 end;
 
@@ -103,6 +105,7 @@ end;
 procedure TFrmDalinMain.GetExRate;
 begin
   App.Engine.ApiManager.RequestExRate;
+
   stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
 end;
 
@@ -138,7 +141,8 @@ end;
 
 procedure TFrmDalinMain.SetValue;
 begin
-  GetExRate;
+
+  ReadExRate;
   QryTimer.Enabled := true;
   // 구독/취소 이벤트 연결..
   App.Engine.QuoteBroker.SetEvent;
@@ -187,5 +191,61 @@ begin
   Width := aStorage.FieldByName('width').AsInteger;
   Height:= aStorage.FieldByName('Height').AsInteger;
 
+end;
+
+
+procedure TFrmDalinMain.ReadExRate;
+var
+  f : TextFile;  bOK : boolean;
+  stData, FileName : string;
+  bExist : boolean;
+
+  function IsErrorOccur(iRes: integer; st: string): Boolean;
+  begin
+    Result := true;
+
+    if iRes <> 0 then begin
+      MessageDlg('Order No File IO Error ( '+ st + InttoStr( GetLastError ) +' ) ', mtInformation, [mbOK], 0 );
+      Result := false;
+    end;
+  end;
+
+begin
+  FileName := ExtractFilePath(ParamStr(0))+'Data\';
+  FileName := FileName + 'exchangeRate.log';
+
+  bExist  := FileExists(FileName);
+
+  if not bExist then
+    Exit;
+
+  AssignFile( f, FileName );
+  {$I-}
+  Reset( f );
+  bOK := IsErrorOccur(IOResult, 'Reset');    // 런타임시 IO 에러 체크..
+  {$I+}
+
+  if not bOK then
+  begin
+    CloseFile(f);
+    Exit;
+  end;
+
+  Try
+    While( not Eoln(f) ) do
+    Begin
+      {$I-}
+      ReadLn( f, stData );
+      bOK := IsErrorOccur(IOResult, 'ReadLn');    // 런타임시 IO 에러 체크..
+      {$I+}
+      If not bOK then ConTinue;
+
+      App.Engine.ApiManager.ExRate.Value := StrToFloat( stData);
+      //gEnv.ConConfig.LastOrderNo := StrToIntDef( stData, gEnv.ConConfig.LastOrderNo );
+    End;
+
+  finally
+    CloseFile(f);
+  end;
 end;
 end.

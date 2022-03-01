@@ -16,7 +16,7 @@ type
   TUpbitManager = class( TExchangeManager )
   private
     FParse: TUpbitParse;
-
+    procedure OnTimer( Sender : TObject );
   public
     Constructor  Create( aExType : TExchangeKind );
     Destructor  Destroy; override;
@@ -45,7 +45,8 @@ uses
 constructor TUpbitManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
-  FParse:= TUpbitParse.Create;
+  FParse:= TUpbitParse.Create( self );
+
 end;
 
 destructor TUpbitManager.Destroy;
@@ -64,24 +65,19 @@ begin
   SetLength( QuoteSock, iCount );
 
   for I := 0 to iCount-1 do begin
-    QuoteSock[i]  := TUpbitWebSocket.Create(QOUTE_SOCK, mtSpot ) ;
-    QuoteSock[i].init(i, 'api.upbit.com/websocket/v1' );
+    QuoteSock[i]  := TUpbitWebSocket.Create(QOUTE_SOCK,i, mtSpot ) ;
+    QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
   end;
 
   Result := true;
 end;
 
+procedure TUpbitManager.OnTimer(Sender: TObject);
+begin
+
+end;
+
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;
-begin
-  Result := true;
-end;
-
-function TUpbitManager.SubscribeAll: boolean;
-begin
-  Result := true;
-end;
-
-function TUpbitManager.UnSubscrib(aSymbol: TSymbol): boolean;
 begin
   Result := false;
   try
@@ -92,10 +88,20 @@ begin
   end;
 end;
 
+
+function TUpbitManager.UnSubscrib(aSymbol: TSymbol): boolean;
+begin
+
+end;
+
 procedure TUpbitManager.UnSubscribeAll;
 begin
   inherited;
 
+end;
+function TUpbitManager.SubscribeAll: boolean;
+begin
+  Result := true;
 end;
 
 //function TUpbitManager.RequestMaster: boolean;

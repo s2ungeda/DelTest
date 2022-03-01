@@ -50,8 +50,17 @@ begin
         App.AppStatus := asLoad;
       end;
     asLoad :
+      begin
           App.Engine.FormBroker.Load(ComposeFilePath([App.DataDir, App.Config.DATA_FILE]))
           ;
+          App.AppStatus := asShow;
+      end;
+    asShow :
+      begin
+        //
+        App.Engine.ApiManager.SubscribeAll;
+        FrmDalin.Show;
+      end;
   end;
 end;
 

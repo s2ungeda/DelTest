@@ -1,7 +1,7 @@
 unit UTypes;
 interface
 type
-  TAppStatus = ( asNone, asInit, asSetValue, asRecovery, asLoad );
+  TAppStatus = ( asNone, asInit, asSetValue, asRecovery, asLoad, asShow );
 
   TAppStatusEvent  = procedure( asType : TAppStatus ) of object;
   TQuoteType = (qtNone, qtMarketDepth, qtTimeNSale, qtCustom, qtUnknown);

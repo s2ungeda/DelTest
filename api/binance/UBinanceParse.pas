@@ -3,12 +3,13 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON  //, Rest.Json , Rest.Types
-  , UApiTypes
+  , UApiTypes    , UExchangeManager
   ;
 type
   TBinanceParse = class
   private
-    FExKind: TExchangeKind;
+    FParent: TExchangeManager;
+
     procedure ParseSpotBookTicker( aJson : TJsonObject );
     procedure ParseSpotTrade( aJson : TJsonObject );
     procedure ParseSpotMiniTickers( aJson : TJsonObject );
@@ -18,9 +19,8 @@ type
     procedure ParseFutBookTicker( aJson : TJsonObject );
 
   public
-    constructor Create;
+    constructor Create( aObj :TExchangeManager );
     destructor Destroy; override;
-
 
     procedure ParseMarginPair( aData : string );
     procedure ParseSpotTicker( aData : string );
@@ -30,7 +30,7 @@ type
 
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
 
-    property ExKind : TExchangeKind read FExKind;
+    property Parent : TExchangeManager read FParent;
 
   end;
 var
@@ -43,10 +43,10 @@ uses
   , USymbols
   ;
 { TBinanceParse }
-constructor TBinanceParse.Create;
+constructor TBinanceParse.Create( aObj :TExchangeManager );
 begin
   gBinReceiver := self;
-  FExKind := ekBinance;
+  FParent := aObj;
 end;
 destructor TBinanceParse.Destroy;
 begin
@@ -248,14 +248,14 @@ var
 begin
   sCode := aJson.GetValue('s').Value;
 
-  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
   if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
   with aQuote do
   begin
 
     iTime := aJson.GetValue<int64>('T');
-    dtTime:= UnixToDateTime( iTime );
+    dtTime:= UnixTimeToDateTime( iTime );
 
 //    App.DebugLog('time compare %s, %d', [ FormatDateTime('hh:nn:ss.zzz', dtTime), iTime ]   );
 
@@ -289,7 +289,7 @@ var
 begin
   sCode := aJson.GetValue('s').Value;
 
-  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
   if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
   with aQuote do
@@ -315,7 +315,7 @@ var
 begin
   sCode := aJson.GetValue('s').Value;
 
-  aQuote  := App.Engine.QuoteBroker.Brokers[FExKind].Find(sCode)    ;
+  aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
   if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
   try
@@ -400,49 +400,55 @@ begin
   end;
 
 //  App.Log(llInfo, 'Test', aData);
-
-  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
   try
-    aPair := aObj.Get('e');
 
-    if aPair <> nil then
-    begin
-      sTmp  := aPair.JsonValue.Value;
+    aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+    try
+      aPair := aObj.Get('e');
 
-      case aMarket of
-        mtSpot:
-          if sTmp = 'trade' then
-            ParseSpotTrade( aObj )
-          else if sTmp = '24hrMiniTicker' then
-            ParseSpotMiniTickers( aObj )
-          else if sTmp = 'bookTicker' then
-            ParseSpotBookTicker( aObj )
-          else exit;
-        mtFutures:
-          if sTmp = 'aggTrade' then
-            ParseFutaggTrade( aObj )
-          else if sTmp = '24hrMiniTicker' then
-            ParseFutBookTicker( aObj )
-          else if sTmp = 'depthUpdate' then        // Partial Book Depth Streams
-            ParseFutMarketDepth( aObj )
-          else exit;
-      end;
-    end else
-    begin
-      if aMarket = mtSpot then
+      if aPair <> nil then
       begin
-        // e 는 없구 s 는 있는건 best ask bid 뿐..
-        aPair := aObj.Get('s');
-        if aPair <> nil  then
-        begin
-//          sTmp  := aPair.JsonValue.Value;
-          ParseSpotBookTicker( aObj )
-        end;
+        sTmp  := aPair.JsonValue.Value;
 
-      end;
+        case aMarket of
+          mtSpot:
+            if sTmp = 'trade' then
+              ParseSpotTrade( aObj )
+            else if sTmp = '24hrMiniTicker' then
+              ParseSpotMiniTickers( aObj )
+            else if sTmp = 'bookTicker' then
+              ParseSpotBookTicker( aObj )
+            else exit;
+          mtFutures:
+            if sTmp = 'aggTrade' then
+              ParseFutaggTrade( aObj )
+            else if sTmp = '24hrMiniTicker' then
+              ParseFutBookTicker( aObj )
+            else if sTmp = 'depthUpdate' then        // Partial Book Depth Streams
+              ParseFutMarketDepth( aObj )
+            else exit;
+        end;
+      end else
+      begin
+        if aMarket = mtSpot then
+        begin
+          // e 는 없구 s 는 있는건 best ask bid 뿐..
+          aPair := aObj.Get('s');
+          if aPair <> nil  then
+          begin
+  //          sTmp  := aPair.JsonValue.Value;
+            ParseSpotBookTicker( aObj )
+          end
+            else App.DebugLog(' %s, %s oops !! ....... %s ', [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[aMarket], aData ]);
+        end;
+      end
+
+
+    finally
+      aObj.Free;
     end;
-  finally
-    aObj.Free;
+  except
+
   end;
 
 end;

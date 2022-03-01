@@ -16,7 +16,7 @@ type
   TBinanceManager = class( TExchangeManager )
   private
     FParse: TBinanceParse;
-
+    procedure OnTimer( Sender : TObject );
   public
 
     Constructor  Create( aExType : TExchangeKind );
@@ -46,7 +46,8 @@ constructor TBinanceManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
 
-  FParse:= TBinanceParse.Create;
+  FParse:= TBinanceParse.Create(self);
+
 end;
 
 destructor TBinanceManager.Destroy;
@@ -71,12 +72,13 @@ begin
   iCount := 2;
   SetLength( QuoteSock, iCount );
 
-  QuoteSock[0]  := TBinanceWebSocket.Create(QOUTE_SOCK, mtSpot ) ;
-  QuoteSock[0].init(i, 'stream.binance.com:9443/ws' );
+  QuoteSock[0]  := TBinanceWebSocket.Create(QOUTE_SOCK, 0,  mtSpot ) ;
+  QuoteSock[0].init( 'stream.binance.com:9443/ws' );
 
-  QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, mtFutures ) ;
-  QuoteSock[1].init(i, 'fstream.binance.com/ws' );
+  QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, 1, mtFutures ) ;
+  QuoteSock[1].init( 'fstream.binance.com/ws' );
 
+  Timer.OnTimer := OnTimer;
 
 //      QuoteSock[i]  := TBinanceWebSocket.Create(QOUTE_SOCK, mtFutures ) ;
 //      QuoteSock[i].init(i, 'fstream.binance.com/ws' );
@@ -150,6 +152,23 @@ end;
 
 
 
+procedure TBinanceManager.OnTimer(Sender: TObject);
+var
+  iState, i : integer;
+
+begin
+  for I := 0 to High(QuoteSock) do
+  begin
+    iState := integer( QuoteSock[i].WebSocket.State );
+    if  iState = 4 then
+    begin
+      QuoteSock[i].DoConnect;
+ //     QuoteSock[i].
+      App.DebugLog('%s, %d reconnect ', [ TExchangeKindDesc[ExchangeKind],i ] );
+    end;
+  end;
+end;
+
 function TBinanceManager.SubscribeAll: boolean;
 var
   i, j : integer;
@@ -157,7 +176,7 @@ begin
 //  Exit (true);
 //  QuoteSock[0].DoConnect;
   for I := 0 to High(QuoteSock) do
-    QuoteSock[i].DoConnect;
+    QuoteSock[i].SubscribeAll;
   result := true;
 end;
 

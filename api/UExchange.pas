@@ -120,7 +120,7 @@ end;
 
 function TExchange.GetExKind: TExchangeKind;
 begin
-  Result := ( FParent as TExchangeManager ).ExchangeType;
+  Result := ( FParent as TExchangeManager ).ExchangeKind;
 end;
 
 function TExchange.PrepareMaster: boolean;

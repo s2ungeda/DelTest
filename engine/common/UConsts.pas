@@ -29,7 +29,7 @@ const
   SHORT_COLOR = $F5E2DA;
 
   // asNone, asInit, asSetValue, asRecovery, asLoad
-  TAppStatusDesc : array [ TAppStatus ] of string = ('None', 'Init', 'SetValue', 'Recovery', 'Load');
+  TAppStatusDesc : array [ TAppStatus ] of string = ('None', 'Init', 'SetValue', 'Recovery', 'Load', 'Show');
 
 implementation
 

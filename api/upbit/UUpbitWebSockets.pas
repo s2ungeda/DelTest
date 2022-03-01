@@ -1,19 +1,11 @@
 unit UUpbitWebSockets;
-
 interface
-
 uses
-
   System.Classes, System.SysUtils, System.DateUtils
-
   , UWebSockets  , USymbols
-
   , UApiTypes
-
   ;
-
 type
-
   TUpbitWebSocket = class( TWebSocket )
   private
     FMarketType: TMarketType;
@@ -22,25 +14,23 @@ type
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
-
     procedure SyncProc;  override;
     procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
   public
 
-    Constructor Create( iSockDiv : Integer; aMtType : TMarketType ); overload;
+    Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
 
     procedure SubScribe( aSymbol : TSymbol ) ; overload;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
 
+    procedure SubscribeAll; override;
+
     property MarketType  : TMarketType read FMarketType;
     property SubList  : TStrings  read FSubList;
-
     property Descript : string    read GetDescript;
   end;
-
 implementation
-
 uses
   GApp , GLibs
   , UApiConsts
@@ -48,9 +38,9 @@ uses
   ;
 { TUpbitWebSocket }
 
-constructor TUpbitWebSocket.Create(iSockDiv: Integer; aMtType: TMarketType);
+constructor TUpbitWebSocket.Create(iSockDiv, iSeq: Integer; aMtType: TMarketType);
 begin
-  inherited Create( iSockDiv );
+  inherited Create( iSockDiv, iSeq, ekUpbit );
 
   FMarketType := aMtType;
   FSubList    := TStringList.Create;
@@ -79,11 +69,41 @@ begin
 end;
 
 procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol; bSub: boolean);
+
 begin
 
 end;
 
 procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol);
+var
+  sParam, sParam2, sData : string;
+  i : integer;
+begin
+
+  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
+    FSubList.Add(aSymbol.OrgCode);
+
+  sParam := '';   sParam2 := '';
+  for I := 0 to FSubList.Count-1 do
+  begin
+    sParam := sParam + Format('"%s"', [FSubList[i]]);
+    sParam2:= sParam2 + Format('"%s.5"', [FSubList[i]]);
+    if i < FSubList.Count-1  then begin
+      sParam  := sParam + ',' ;
+      sParam2 := sParam2 + ',';
+    end;
+  end;
+
+  sData := Format('[{"ticket":"real"},{"type":"trade","codes":[%s]} '
+    + ',{"type":"ticker","codes":[%s]}'
+    + ',{"type":"orderbook","codes":[%s]},{"format":"SIMPLE"}]'
+    , [ sParam, sParam, sParam2] );
+
+  SendData( sData );
+//  ws[0].SendData('[{"ticket":"test"},{"type":"orderbook","codes":['+sTmp+']},{"format":"SIMPLE"}]');
+end;
+
+procedure TUpbitWebSocket.SubscribeAll;
 begin
 
 end;

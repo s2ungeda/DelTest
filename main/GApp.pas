@@ -11,6 +11,7 @@ uses
 type
 
   TLogLevel = ( llFatal, llError, llWarning, llInfo, llDebug, llTrace );
+  TLogDataType  = ( ldExRate );
 
   TApp = class
   private
@@ -38,6 +39,8 @@ type
     procedure Log( lLevel : TLogLevel; stPrefix : string; const fmt: string; const Args: array of const ); overload;
     procedure DebugLog( const fmt: string; const Args: array of const ); overload;
     procedure DebugLog( const fmt: string ); overload;
+
+    procedure SaveData( aType : TLogDataType; sData : string);
 
     property Engine : TDalinEngine read FEngine;
 
@@ -82,6 +85,7 @@ destructor TApp.Destroy;
 begin
 
   FEngine.Free;
+  App.Log(llInfo, '', '--- Engine free ---');
   FLog.Terminate;
 
   inherited;
@@ -96,7 +100,10 @@ begin
   Result := SetDirInfo;
 
   FLog.LogDir := FLogDir;
+  FLog.DataDir:= FDataDir;
 end;
+
+
 
 procedure TApp.SetAppStatus(const Value: TAppStatus);
 begin
@@ -176,6 +183,11 @@ procedure TApp.DebugLog(const fmt: string);
 begin
   if IsLogLevel(llDebug) then
     FLog.Log(integer(llDebug), '', Format( '%s', [fmt] ) );
+end;
+
+procedure TApp.SaveData(aType: TLogDataType; sData: string);
+begin
+  FLog.SaveData( integer(aType), sData );
 end;
 
 end.

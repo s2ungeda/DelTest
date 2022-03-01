@@ -49,7 +49,7 @@ uses
 constructor TBithManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
-  FParse  := TBithParse.Create( aExtype );
+  FParse  := TBithParse.Create( self );
   FParse.OnSendDone := OnSendDoneEvent;
 end;
 
@@ -109,8 +109,8 @@ begin
   SetLength( QuoteSock, iCount );
 
   for I := 0 to iCount-1 do begin
-    QuoteSock[i]  := TBithWebSocket.Create(QOUTE_SOCK, mtSpot ) ;
-    QuoteSock[i].init(i, 'pubwss.bithumb.com/pub/ws' );
+    QuoteSock[i]  := TBithWebSocket.Create(QOUTE_SOCK, i, mtSpot ) ;
+    QuoteSock[i].init('pubwss.bithumb.com/pub/ws' );
   end;
 
   Result := true;
@@ -160,7 +160,7 @@ begin
   //Exit (true);
 
   for I := 0 to High(QuoteSock) do
-    QuoteSock[i].DoConnect;
+    QuoteSock[i].SubscribeAll;
   result := true;
 
   FTimer.Enabled := true;

@@ -138,6 +138,8 @@ type
     FTerms: TSTerms;
     FMarkeTerm: boolean;
     FAddTerm: boolean;
+    FLastEventTime: TDateTime;
+    FLastTime: TDateTime;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -185,6 +187,9 @@ type
     property Terms: TSTerms read FTerms write FTerms;
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
     property AddTerm: boolean read FAddTerm write FAddTerm;
+
+    property LastTime : TDateTime read FLastTime write FLastTime;
+    property LastEventTime  : TDateTime read FLastEventTime write FLastEventTime;
   end;
 
   TSymbols = class(TCollection)

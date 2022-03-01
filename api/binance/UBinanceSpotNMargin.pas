@@ -192,7 +192,7 @@ begin
 
   if Request( rmGET, '/api/v3/ticker/24hr', '', sJson, sOut ) then
   begin
-    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
     gBinReceiver.ParseSpotTicker( sJson );
   end else
   begin

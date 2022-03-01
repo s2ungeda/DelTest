@@ -2,7 +2,7 @@ unit UExchangeManager;
 interface
 uses
   system.Classes, system.SysUtils,
-  UExchange     , UWebSockets,   USymbols,
+  UExchange     , UWebSockets,   USymbols,   UQuoteTimers,
   UApiTypes
   ;
 type
@@ -11,9 +11,10 @@ type
   TExchangeManager = class
   private
     FExchanges: TMarketArray;
-    FExchangeType: TExchangeKind;
+    FExchangeKind: TExchangeKind;
     FExchangeIdx: integer;
     FCodes: TStrings;
+    FTimer: TQuoteTimer;
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
   public
@@ -33,6 +34,7 @@ type
     function RequestMaster : boolean;
     function ConnectAll : boolean;
     function DissConnectAll : boolean;
+    procedure init ;
 
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
@@ -45,10 +47,11 @@ type
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
     property MarketCount : integer read GetMarketCount;
-    property ExchangeType: TExchangeKind read FExchangeType;
+    property ExchangeKind: TExchangeKind read FExchangeKind;
     property ExchangeIdx : integer read FExchangeIdx;
     // 교집합 코드를 담을 리스트..
     property Codes       : TStrings read FCodes;
+    property Timer       : TQuoteTimer read FTimer write FTimer;
   end;
 
 implementation
@@ -65,7 +68,7 @@ constructor TExchangeManager.Create(aExType: TExchangeKind);
 var
   i : TMarketType;
 begin
-  FExchangeType := aExType;
+  FExchangeKind := aExType;
   FExchangeIdx  := integer( FExchangeIdx );
   
   for I := mtSpot to High(TMarketType) do
@@ -79,12 +82,14 @@ begin
   TradeSock[mtSpot] := nil;
   TradeSock[mtFutures] := nil;
 
+
+
 end;
 
 function TExchangeManager.CreateMarket(aMarket: TMarketType): TExchange;
 begin
   Result := nil;  
-  case FExchangeType of
+  case FExchangeKind of
     ekBinance:
       begin
         case aMarket of
@@ -114,6 +119,8 @@ var
   j : integer;
 begin
 
+  FTimer.Enabled := false;
+
   if QuoteSock <> nil then
     for j := 0 to High(QuoteSock) do
       QuoteSock[j].Free;
@@ -141,11 +148,13 @@ begin
   except
     on E : Exception do
     begin
-      App.Log(llError, '%s %d.th connect error (%s)', [ TExchangeKindDesc[FExchangeType], i, E.Message ]  );
+      App.Log(llError, '%s %d.th connect error (%s)', [ TExchangeKindDesc[FExchangeKind], i, E.Message ]  );
       exit (false);
     end;
   end;
 
+
+  FTimer.Enabled  := true;
   Result := true;
 end;
 
@@ -153,6 +162,7 @@ function TExchangeManager.DissConnectAll: boolean;
 var
   i : integer;
 begin
+  FTimer.Enabled  := false;
   if QuoteSock <> nil then
     for i := 0 to High(QuoteSock) do
       QuoteSock[i].DoDissConnect;
@@ -164,6 +174,14 @@ begin
   Result := Integer(High(TMarketType));
 end;
 
+procedure TExchangeManager.init;
+begin
+  FTimer  := App.Engine.QuoteBroker.Timers.New;
+  FTimer.Interval := 1000;
+  FTimer.OnTimer  := nil;
+  FTimer.Enabled  := false;
+end;
+
 function TExchangeManager.PrepareMaster: boolean;
 var
   I: Integer;
@@ -171,7 +189,7 @@ var
 begin
   Result := Exchanges[mtSpot].PrepareMaster;
   App.Log(llDebug, '', ' ---------- %s codes count %d -----------',
-    [ TExchangeKindDesc[FExchangeType], Exchanges[mtSpot].Codes.Count ] );
+    [ TExchangeKindDesc[FExchangeKind], Exchanges[mtSpot].Codes.Count ] );
 
 end;
 

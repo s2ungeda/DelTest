@@ -272,6 +272,7 @@ begin
 
   for I := ekBinance to High(TExchangeKind) do
   begin
+    FExManagers[i].init;
     if not FExManagers[i].InitMarketWebSockets then
       Exit (false);
   end;

@@ -29,10 +29,12 @@ type
   public
     LogQueue: TList;
     LogDir  : string;
+    DataDir : string;
     constructor Create;
     destructor Destroy; override;
     procedure Log( llType : integer; stPrefix, stData : string ); overload;
     procedure Log( llType : integer; stPrefix : string; const fmt: string; const Args: array of const ); overload;
+    procedure SaveData( aType : integer; stData : string ) ;
 
   end;
 implementation
@@ -101,6 +103,50 @@ procedure TLogThread.LogWriteFile(vLogData: PLogData);
 begin
   LogFileWrite(' ', vLogData.PreFix, vLogData.Data); //파일로 쓰기..
 end;
+
+
+procedure TLogThread.SaveData(aType: integer; stData: string);
+var
+  LogFileName : string;
+  OutFile: TextFile;
+
+  function IsFileUse(fName: String): Boolean;
+  var
+    HFile: THandle;
+  begin
+    Result := false;
+    if not FileExists(fName) then exit;
+    HFile := CreateFile(PChar(fName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    Result := (HFile = INVALID_HANDLE_VALUE);
+    if not Result then begin
+      try
+        //Memo_Log.Lines.Add('Value = ' + IntToStr(HFile));
+      finally
+        CloseHandle(HFile);
+      end;
+    end;
+  end;
+begin
+
+  case aType of
+    0 : LogFileName := DataDir +'\exchangeRate.log';
+  end;
+
+  try
+
+    if not IsFileUse(LogFileName) then begin
+      AssignFile(OutFile, LogFileName);
+      ReWrite(OutFile);
+      try
+        Writeln(OutFile,stData);
+      finally
+        CloseFile(OutFile);
+      end;
+    end;
+  Except
+  end;
+end;
+
 procedure TLogThread.LogFileWrite(cLevel: char; stPrefix, stData: string);
   function IsFileUse(fName: String): Boolean;
   var

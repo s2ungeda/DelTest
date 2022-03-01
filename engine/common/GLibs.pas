@@ -16,7 +16,8 @@ function GetPrecision( aText : string ) : integer;
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 //---------------------------------------- file
 
-function GetTimestamp(vlen: Integer = 13): string;
+function GetTimestamp(len: Integer = 13): string;
+function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
 
 
 implementation
@@ -86,19 +87,39 @@ begin
 end;
 
 
-function GetTimestamp(vlen: Integer): string;
+function GetTimestamp(len: Integer): string;
 var
   ss: string;
 begin
-  if vlen = 13 then
+  if len = 13 then
   begin
     ss := DateTimeToTimeStamp(now).time .ToString;
     Result := IntToStr(DateTimeToUnix(Now,false)) + Copy(ss,Length(ss) - 2,Length(ss) );
   end
-  else if vlen = 10 then
+  else if len = 10 then
   begin
     Result := IntToStr(DateTimeToUnix(Now,false));
   end
+end;
+
+function UnixTimeToDateTime( UnixTime : int64; len : integer ) : TDateTime;
+var
+  dtTime : TDateTime;
+  sTmp   : string;
+  iDiv, iMod : Integer;
+begin
+// 1645961186247
+  if len = 13 then iDiv := 1000
+  else iDiv := 1;
+
+  dtTime:= UnixToDateTime(UnixTime div iDiv , false);
+   sTmp := Format( '%s.%03d', [ FormatDateTime('yyyy-mm-dd hh:nn:ss', dtTime ),
+    UnixTime mod iDiv ]);
+  Result := EncodeDate(  StrToInt(copy(sTmp, 1, 4 ) ) , StrToInt( copy(sTmp, 6, 2 )) , StrToInt( copy(sTmp, 9,2)) )
+          + EnCodeTime(StrToInt(copy(sTmp, 12,2))
+                    ,StrToInt(copy(sTmp, 15,2))
+                    ,StrToInt(copy(sTmp, 18,2))
+                    ,StrToInt(copy(sTmp, 21,3)) )  ;
 end;
 
 end.

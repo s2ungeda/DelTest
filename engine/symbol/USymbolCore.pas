@@ -103,10 +103,11 @@ begin
     0 : Result := ( aKSymbol.Last - dEx) / dEx ;
     1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
   end;
-
-  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
-    and ( aKSymbol.Spec.ExchangeType = ekBithumb )  then
-    App.DebugLog( 'ex : %f %f, %f, %f  ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value ] );
+//
+//  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
+//    and ( aKSymbol.Spec.ExchangeType = ekUpbit )  then
+//    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value
+//    , aOSSymbol.Code, aKSymbol.Code ] );
 
 //  if iType = -1 then
 
@@ -268,10 +269,10 @@ begin
       end;
     end;
 
-  for I := msBTC to High(TMajorSymbolKind) do
-    for j := ekBinance to High(TExchangeKind) do
-      if FMainSymbols[i][j] <> nil then
-        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
+//  for I := msBTC to High(TMajorSymbolKind) do
+//    for j := ekBinance to High(TExchangeKind) do
+//      if FMainSymbols[i][j] <> nil then
+//        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
 end;
 
 function TSymbolCore.RegisterSymbol(aExKind: TExchangeKind;
