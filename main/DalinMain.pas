@@ -150,8 +150,9 @@ end;
 
 procedure TFrmDalinMain.Start;
 begin
+  Exit;
   App.AppStatus := asinit;
-  //App.AppStatus := asSetValue;
+//  App.AppStatus := asShow;
 end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);

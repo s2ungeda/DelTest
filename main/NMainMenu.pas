@@ -21,9 +21,11 @@ type
     N6: TMenuItem;
     N1: TMenuItem;
     nExchange: TMenuItem;
+    N2: TMenuItem;
     procedure Kimp1Click(Sender: TObject);
     procedure nExchangeClick(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
+
   private
     { Private declarations }
     procedure FormLoad(iFormID: Integer; aStorage: TStorage; var aForm: TForm);
@@ -42,7 +44,7 @@ implementation
 uses
   GApp, GAppForms ,
 
-  DalinMain, FPriceTable
+  DalinMain, FPriceTable, FJungKopi
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -80,6 +82,9 @@ begin
     ID_KIMP_TABLE :
       if aForm is TFrmPriceTable then
         (aForm as TFrmPriceTable).LoadEnv( aStorage );
+    ID_JUNG_KOPI :
+      if aForm is TFrmJungKopi then
+        (aForm as TFrmJungKopi).LoadEnv( aStorage );
 
 
   end;
@@ -98,6 +103,9 @@ begin
     ID_DALIN_MAIN :
       if FrmDalin <> nil then
         FrmDalin.SaveEnv(aStorage);
+    ID_JUNG_KOPI :
+      if aForm is TFrmJungKopi then
+        (aForm as TFrmJungKopi).SaveEnv( aStorage );
   end;
 end;
 
@@ -107,6 +115,7 @@ begin
 
   case iFormID of
     ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalin );
+    ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalin );
 
     ID_QUOTE_MONITOR :
       begin
@@ -131,6 +140,7 @@ begin
   case (Sender as TComponent).Tag of
     0 : App.Engine.FormBroker.Open(ID_KIMP_TABLE, 0);
    // 1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
+    2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
   end;
 
 
@@ -149,5 +159,7 @@ begin
   end;
 
 end;
+
+
 
 end.

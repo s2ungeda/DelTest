@@ -119,7 +119,8 @@ var
   j : integer;
 begin
 
-  FTimer.Enabled := false;
+  if FTimer <> nil then
+    FTimer.Enabled := false;
 
   if QuoteSock <> nil then
     for j := 0 to High(QuoteSock) do
@@ -162,7 +163,8 @@ function TExchangeManager.DissConnectAll: boolean;
 var
   i : integer;
 begin
-  FTimer.Enabled  := false;
+  if FTimer <> nil then
+    FTimer.Enabled  := false;
   if QuoteSock <> nil then
     for i := 0 to High(QuoteSock) do
       QuoteSock[i].DoDissConnect;

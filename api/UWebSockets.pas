@@ -21,10 +21,10 @@ sCloseReceived : Indicates that the client received a Close control message from
 sClosed : Indicates that the connection was closed normally.
 sAborted : Indicates that the connection was closed abnormally, e.g., without sending or receiving a Close control message.
 }
-  TWebsocket = class( TThread )
+  TWebsocket = class//( TThread )
   private
-    FEvent: TEvent;
-    FData : PReceiveData;
+    //FEvent: TEvent;
+    //FData : PReceiveData;
     FWebSocket: TScWebSocketClient;
     FEndPoint: string;
     FLiveTime: TDateTime;
@@ -34,12 +34,12 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FOnNotify: TGetStrProc;
     FPort: integer;
     FExchangeKind: TExchangeKind;
-    FDoClose: boolean;
+
 
     function Desc : string;
   protected
-    procedure Execute ; override;
-    procedure SyncProc; virtual ;
+//    procedure Execute ; override;
+//    procedure SyncProc; virtual ;
     procedure OnAfterConnect(Sender: TObject);  virtual;
     procedure OnAfterDisconnect(Sender: TObject);  virtual;
     procedure OnConnectFail(Sender: TObject); virtual;
@@ -51,9 +51,9 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 
 
   public
-    FReceiveMutex : HWND;
-    FSocketMute   : HWND;
-    FQueue        : TList;
+//    FReceiveMutex : HWND;
+//    FSocketMute   : HWND;
+//    FQueue        : TList;
     constructor Create( iSockDiv, iSeq : integer; aExKind : TExchangeKind );
     destructor Destroy; override;
 
@@ -63,20 +63,21 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     procedure DoConnect;
     procedure DoDissConnect( bStart : boolean = false );
     procedure SendData( sData : string );
-    procedure PushQueue(Size: Integer; msg: string);
+
+//    procedure PushQueue(Size: Integer; msg: string);
 //    procedure PushQueue(Size: Integer; Packet: PChar);
-    function  PopQueue :  PReceiveData;
+//    function  PopQueue :  PReceiveData;
     function  GetSockType : string;
     function  GetSockState : string;
+
     property WebSocket : TScWebSocketClient read FWebSocket;
     property EndPoint  : string read FEndPoint;
     property Port      : integer read FPort;
     property SockDiv  : integer read FSockDiv;
     property Seq      : integer read FSeq;
-    property Data : PReceiveData read FData;
+
     property LiveTime : TDateTime read FLiveTime;
     property ExchangeKind   : TExchangeKind read FExchangeKind;
-    property DoClose : boolean read FDoClose;
 
     property ConnectTry : integer read FConnectTry write FConnectTry;
     property OnNotify   : TGetStrProc read FOnNotify write FOnNotify;
@@ -97,23 +98,29 @@ begin
   FConnectTry := 0;
   FSockDiv    := iSockDiv;
 
-  FEvent  := TEvent.Create( nil, False, False, '');
-  FQueue  := TList.Create;
+//  FEvent  := TEvent.Create( nil, False, False, '');
+//  FQueue  := TList.Create;
   FSeq    := iSeq;
 
   FExchangeKind := aExKind;
-  FReceiveMutex := CreateMutex( nil, False, PChar( Format('Recv_%s_%d_%d'
-    , [ TExchangeKindDesc[FExchangeKind],iSockDiv, FSeq ]) ) );
-  inherited Create( true );
-  Priority  := tpHigher;
+//  FReceiveMutex := CreateMutex( nil, False, PChar( Format('Recv_%s_%d_%d'
+//    , [ TExchangeKindDesc[FExchangeKind],iSockDiv, FSeq ]) ) );
+//  inherited Create( true );
+//  Priority  := tpHigher;
   FWebSocket.AfterConnect     := OnAfterconnect;
   FWebSocket.AfterDisconnect  := OnAfterDisconnect;
   FWebSocket.OnConnectFail    := OnConnectFail;
   FWebSocket.OnControlMessage := OnControlMessage;
   FWebSocket.OnMessage        := OnMessage;
   FWebSocket.BeforeConnect    := OnBeforeConnect;
-  FEvent.SetEvent;
-  Resume;
+//  FEvent.SetEvent;
+//  Resume;
+
+//  WebSocketClient.HeartBeatOptions.Enabled := True;
+//  WebSocketClient.Options.Credentials.UserName := 'Peter';
+//  WebSocketClient.Options.Credentials.Password := '12345';
+//  WebSocketClient.Options.UserAgent := 'devart_chat_client';
+//  WebSocketClient.Options.RequestHeaders['Content-Language'] := 'en-US';
 end;
 function TWebsocket.Desc: string;
 begin
@@ -125,51 +132,30 @@ begin
 //  if FWebSocket.State = sOpen then
 //    FWebSocket.Close;
   FwebSocket.Free;
-  FQueue.Free;
-  CloseHandle(FReceiveMutex);
-  FEvent.Free;
-//  inherited;
+//  FQueue.Free;
+//  CloseHandle(FReceiveMutex);
+//  FEvent.Free;
+  inherited;
 end;
 
 procedure TWebsocket.DoConnect;
 begin
   DoDissConnect(true);
   FWebSocket.Connect( 'wss://'+FEndPoint);
-  FDoClose := false;
+
 end;
 procedure TWebsocket.DoDissConnect( bStart : boolean );
 begin
   try
-    FDoClose := true;
-    if not bStart then
-    begin
-      App.DebugLog('%s_%d sock close %d', [TExchangeKindDesc[FExchangeKind], Fseq, FQueue.Count]);
-      Terminate;
-    end;
+
     if FWebSocket.State = sOpen then
       FWebSocket.Close;
-  except on e : Exception do
-    App.Log(llError, '%s DisConnect Error : %s, %d:%s',[Desc, e.Message,
+  except on e : WebSocketException do
+    App.Log(llError, '%s DisConnect Error : %s, %s, %d:%s',[Desc, e.Message,  e.ToString,
       integer(FWebSocket.State),  FWebSocket.CloseStatusDescription ] );
   end;
 end;
-procedure TWebsocket.Execute;
-var
-  vSend: Boolean;
-  iSleep , iCount: integer;
-begin
-  while not Terminated do begin
-    if not(FEvent.WaitFor(INFINITE) in [wrSignaled]) then Continue;
-    while FQueue.Count > 0 do begin
-      FData := PopQueue;
-      if FData <> nil then begin
-        Synchronize(SyncProc);
-        Dispose(FData);
-      end;
-      Application.ProcessMessages;
-    end;
-  end;
-end;
+
 function TWebsocket.GetSockState: string;
 begin
   case FWebSocket.State of
@@ -230,7 +216,7 @@ procedure TWebsocket.OnMessage(Sender: TObject; const Data: TArray<System.Byte>;
 var
   sData: string;
 begin
-  if FDoClose then Exit;
+
 
   if MessageType = mtText then begin
     sData := Encoding.Default.GetString(Data);
@@ -243,37 +229,17 @@ begin
     sData := Encoding.ASCII.GetString(Data);
   end else
     sData := '' ;
-  FLiveTime := now;
-  if sData <> '' then
-    PushQueue( Length(sData), sData );
+
+  if ( sData <> '') and ( Assigned(FOnNotify)) then begin
+    FLiveTime := now;
+    FOnNotify( sData );
+  end;
+
+//    PushQueue( Length(sData), sData );
 //    PushQueue( Length(sData), PChar(sData) );
 end;
-function TWebsocket.PopQueue: PReceiveData;
-begin
-  if FQueue.Count < 1 then exit (nil);
-  WaitForSingleObject(FReceiveMutex, INFINITE);
-  Result := PReceiveData(FQueue.Items[0]);
-  FQueue.Delete(0);
-  ReleaseMutex(FReceiveMutex );
-end;
-procedure TWebsocket.PushQueue(Size: Integer; msg: string);
-//procedure TWebsocket.PushQueue(Size: Integer; Packet: PChar);
-var
-  vData: PReceiveData;
-  ivar: Integer;
-  tStr: String;
-  lwResult : LongWord;
-begin
-  New(vData);
-  vData.Size  := Size;
-//  SetLength(vData.Packet, Size);
-//  Move(Packet[0], (vData.Packet)[0], Size);
-  vData.Packet:= msg;
-  lwResult := WaitForSingleObject(FReceiveMutex, INFINITE);
-  FQueue.Add(vData);
-  ReleaseMutex(FReceiveMutex);
-  FEvent.SetEvent;
-end;
+
+
 procedure TWebsocket.SendData(sData: string);
 begin
   try
@@ -282,15 +248,12 @@ begin
       App.Log(llInfo, '%s Send Data : %s', [ TExchangeKindDesc[FExchangeKind], sData ] );
     end;
   except
-    on e : exception do
+    on e : WebSocketException do
     begin
       App.Log(llError, 'Failed Send Data : %s, %s', [ e.Message, sData ] );
     end;
   end;
 end;
-procedure TWebsocket.SyncProc;
-begin
-//  OnNotify( Format('recv[%s]', [  FData.Packet ]) );
-end;
+
 end.
 

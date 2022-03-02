@@ -60,13 +60,7 @@ var
 begin
   if FExManagers[ekBinance].QuoteSock = nil then exit;
   sTmp := '';
-  for i:=0 to High(FExManagers[ekBinance].QuoteSock) do
-  begin
-    sTmp := sTmp + Format(' [%d : %d] ', [ i, ExManagers[ekBinance].QuoteSock[i].FQueue.Count ]);
-  end;
 
-  if sTmp <> '' then
-    App.DebugLog('Queue Count : %s ', [ sTmp ]);
 end;
 
 
@@ -304,8 +298,9 @@ begin
 
   for I := ekBinance to High(TExchangeKind) do
   begin
-    if not FExManagers[i].DissConnectAll then
-      Exit (false);
+    if FExManagers[i] <> nil then
+      if not FExManagers[i].DissConnectAll then
+        Exit (false);
   end;
 
   Result := true;

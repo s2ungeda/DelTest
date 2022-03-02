@@ -50,7 +50,8 @@ uses
   UWebSockets in 'api\UWebSockets.pas',
   UBinanceWebSockets in 'api\Binance\UBinanceWebSockets.pas',
   UBithWebSockets in 'api\bithumb\UBithWebSockets.pas',
-  UUpbitWebSockets in 'api\upbit\UUpbitWebSockets.pas';
+  UUpbitWebSockets in 'api\upbit\UUpbitWebSockets.pas',
+  FJungKopi in 'wins\FJungKopi.pas' {FrmJungKopi};
 
 {$R *.res}
 begin

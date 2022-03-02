@@ -14,6 +14,7 @@ const
   // Quote    30000 ~ 39999
   ID_KIMP_TABLE     = 30000;
   ID_QUOTE_MONITOR  = 30001;
+  ID_JUNG_KOPI      = 30002;
 
 
   ID_DALIN_SUMUL  = 99999;

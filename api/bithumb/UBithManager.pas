@@ -55,7 +55,8 @@ end;
 
 destructor TBithManager.Destroy;
 begin
-  FTimer.Enabled := false;
+  if FTimer <> nil then
+    FTimer.Enabled := false;
   FParse.Free;
   inherited;
 end;

@@ -13,9 +13,11 @@ type
     FSubIndex: integer;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
-    procedure SyncProc;  override;
+
     function GetDescript: string;
     procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
+
+    procedure OnMessage( const S : string );
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
@@ -47,6 +49,7 @@ begin
   FMarketType := aMtType;
   FSubList    := TStringList.Create;
   FSubIndex   := 0;
+  OnNotify    := OnMessage;
 end;
 destructor TBinanceWebSocket.Destroy;
 begin
@@ -193,11 +196,12 @@ begin
 
 end;
 
-procedure TBinanceWebSocket.SyncProc;
+procedure TBinanceWebSocket.OnMessage(const S: string);
 begin
-  //
-  gBinReceiver.ParseSocketData( FMarketType, string(Data.Packet));
+  gBinReceiver.ParseSocketData( FMarketType, S);
 end;
+
+
 
 
 end.

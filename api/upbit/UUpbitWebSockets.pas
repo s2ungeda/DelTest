@@ -14,8 +14,10 @@ type
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
-    procedure SyncProc;  override;
+
     procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
+
+    procedure OnMessage( const S : string );
   public
 
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
@@ -44,7 +46,10 @@ begin
 
   FMarketType := aMtType;
   FSubList    := TStringList.Create;
+  OnNotify    := OnMessage;
 
+  WebSocket.HeartBeatOptions.Enabled := true;
+  WebSocket.HeartBeatOptions.Interval := 110;
 end;
 
 destructor TUpbitWebSocket.Destroy;
@@ -66,6 +71,11 @@ end;
 procedure TUpbitWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
+end;
+
+procedure TUpbitWebSocket.OnMessage(const S: string);
+begin
+  gUpReceiver.ParseSocketData(FMarketType, S);
 end;
 
 procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol; bSub: boolean);
@@ -113,10 +123,7 @@ begin
 
 end;
 
-procedure TUpbitWebSocket.SyncProc;
-begin
-  gUpReceiver.ParseSocketData( FMarketType, Data.Packet );
-end;
+
 
 
 

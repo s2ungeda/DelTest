@@ -15,8 +15,8 @@ type
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
-    procedure SyncProc;  override;
 
+    procedure OnMessage( const S : string );
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
@@ -47,6 +47,7 @@ begin
   FSubList    := TStringList.Create;
   FSubIndex   := 0;
   FSendQueue  := TStringList.Create;
+  OnNotify    := OnMessage;
 end;
 destructor TBithWebSocket.Destroy;
 begin
@@ -68,6 +69,12 @@ procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
 end;
+
+procedure TBithWebSocket.OnMessage(const S: string);
+begin
+  gBithReceiver.ParseSocketData( FMarketType, S);
+end;
+
 procedure TBithWebSocket.Send;
 var
   I: Integer;
@@ -149,8 +156,5 @@ begin
 ////    App.DebugLog(' %d : %s , %s', [i, Descript, FSubList[i]] ) ;
 //  end;
 end;
-procedure TBithWebSocket.SyncProc;
-begin
-  gBithReceiver.ParseSocketData( mtSpot, Data.Packet );
-end;
+
 end.
