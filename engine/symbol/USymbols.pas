@@ -140,6 +140,9 @@ type
     FAddTerm: boolean;
     FLastEventTime: TDateTime;
     FLastTime: TDateTime;
+    FKimpPrice: double;
+    FKimpAskPrice: double;
+    FKimpBidPrice: double;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -165,6 +168,10 @@ type
     property PrevHigh : Double read FPrevHigh write FPrevHigh;
     property PrevLow : Double read FPrevLow write FPrevLow;
     property PrevOpen: double read FPrevOpen write FPrevOpen;
+
+    property KimpPrice : double read FKimpPrice write FKimpPrice;
+    property KimpAskPrice : double read FKimpAskPrice write FKimpAskPrice;
+    property KimpBidPrice : double read FKimpBidPrice write FKimpBidPrice;
 
     property DayVolume: double read FDailyVolume write FDailyVolume;
     property DayAmount: Currency read FDailyAmount write FDailyAmount;

@@ -3,7 +3,7 @@ object FrmJungKopi: TFrmJungKopi
   Top = 0
   Caption = #51473#53076#54588
   ClientHeight = 141
-  ClientWidth = 897
+  ClientWidth = 943
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object FrmJungKopi: TFrmJungKopi
   object sgVal: TStringGrid
     Left = 0
     Top = 0
-    Width = 897
+    Width = 943
     Height = 141
     Align = alClient
     ColCount = 25
@@ -27,6 +27,6 @@ object FrmJungKopi: TFrmJungKopi
     DefaultRowHeight = 19
     RowCount = 6
     TabOrder = 0
-    ExplicitHeight = 123
+    ExplicitWidth = 897
   end
 end

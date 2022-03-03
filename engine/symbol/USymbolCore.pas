@@ -55,6 +55,7 @@ type
 
     procedure Log;
     procedure PreSubscribe;
+    procedure RepresentCoin;
 
     function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
 
@@ -320,6 +321,12 @@ begin
   end
   else
     Result := nil;
+end;
+
+procedure TSymbolCore.RepresentCoin;
+begin
+  //
+//  FMainSymbols[msBTC][ekUpbit].DayAmount;
 end;
 
 procedure TSymbolCore.RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol);

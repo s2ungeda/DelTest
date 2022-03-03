@@ -26,6 +26,10 @@ type
     FLastEvent: TQuoteType;
 
     procedure SetSymbol(const Value: TSymbol);
+
+    procedure CalcKimp(aKSymbol, aOsSymbol : TSymbol; iType : integer); overload;
+    procedure CalcKimp( iType : integer ) ; overload;
+
   public
     constructor Create(aColl: TCollection); override;
     destructor Destroy; override;
@@ -120,7 +124,7 @@ type
 implementation
 
 uses
-  GApp
+  GApp  , UApiConsts, Math
   , UTicks
   ;
 
@@ -461,7 +465,57 @@ begin
   end;
 end;
 
+procedure TQuote.CalcKimp(aKSymbol, aOsSymbol : TSymbol; iType : integer);
+var
+  dEx : double;
+begin
 
+  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
+
+  if iType = 0 then
+    aKSymbol.KimpPrice  := ( aKSymbol.Last - dEx) / dEx * 100
+  else begin
+    aKSymbol.KimpAskPrice  := ( aKSymbol.Asks[0].Price - dEx) / dEx * 100;
+    aKSymbol.KimpBidPrice  := ( aKSymbol.Bids[0].Price - dEx) / dEx * 100;
+  end;
+end;
+
+procedure TQuote.CalcKimp(iType: integer);
+var
+  dPrice : double;
+  aKsymbol, aOsSymbol : TSymbol;
+begin
+
+  aKsymbol := nil; aOsSymbol := nil;
+
+  if (FSymbol.Spec.BaseCode = TMajorSymbolCode[msBTC] ) then
+  begin
+    case FSymbol.Spec.ExchangeType of
+      ekBinance: begin
+        aOsSymbol := App.Engine.SymbolCore.MainSymbols[msBTC][ekBinance] ;
+      end;
+      ekUpbit:   aKsymbol  := App.Engine.SymbolCore.MainSymbols[msBTC][ekUpbit] ;
+      ekBithumb: aKsymbol  := App.Engine.SymbolCore.MainSymbols[msBTC][ekBithumb] ;
+    end;
+  end
+  else if (FSymbol.Spec.BaseCode = TMajorSymbolCode[msETH] ) then
+  begin
+    case FSymbol.Spec.ExchangeType of
+      ekBinance:  ;
+      ekUpbit:    ;
+      ekBithumb:  ;
+    end;
+  end;
+
+
+//  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
+//
+//  case iType of
+//    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
+//    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
+//    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
+//  end;
+end;
 
 constructor TQuote.Create(aColl: TCollection);
 begin

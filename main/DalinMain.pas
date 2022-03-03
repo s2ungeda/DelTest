@@ -10,11 +10,14 @@ uses
   NMainMenu,
 
   UTypes, Vcl.ExtCtrls, Vcl.ComCtrls
+
+
   ;
 type
   TFrmDalinMain = class(TForm)
     QryTimer: TTimer;
     stsBar: TStatusBar;
+    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
