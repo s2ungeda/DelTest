@@ -38,6 +38,7 @@ type
 
     procedure QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
     procedure SetSymbolToGrid(sCode: string; bLoad : boolean = false );
+    procedure ClearGrid;
 
   public
     { Public declarations }
@@ -106,12 +107,34 @@ begin
   FSaveRow := -1;
 end;
 
+procedure TFrmPriceTable.ClearGrid;
+var
+  j : TExchangeKind;
+  iRow : integer;
+  aSymbol : TSymbol;
+begin
+  for j := ekBinance to High(TExchangeKind) do
+  begin
+    iRow := FSaveRow + integer(j) ;
+    if sgKimp.Objects[CoinCol, iRow ] <> nil then
+    begin
+      aSymbol := TSymbol(sgKimp.Objects[CoinCol, iRow ]);
+      App.Engine.QuoteBroker.Brokers[j].Cancel(Self, aSymbol);
+    end;
+    sgKimp.Objects[CoinCol, iRow ] := nil;
+    sgKimp.Objects[ExCol, iRow]    := nil;
+    sgKimp.Rows[iRow].Clear;
+  end;
+end;
+
 procedure TFrmPriceTable.SetSymbolToGrid( sCode: string ; bLoad : boolean);
 var
   j : TExchangeKind;
   iRow : integer;
   aSymbol : TSymbol;
 begin
+
+  ClearGrid;
 
   for j := ekBinance to High(TExchangeKind) do
   begin
@@ -206,8 +229,11 @@ begin
       Cells[ CurCol - 1, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
     end;
 
+    Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '¡Û', 'X');
+    Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, '¡Û', 'X');
+
     Cells[ CurCol , iRow]   := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
-    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount / 100000000  ]);
+    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount ]);
 
 //    iBRow := FindBinRow( iRow );
 //
@@ -356,7 +382,7 @@ begin
 
     sText := sgKimp.Cells[FSaveCol, FSaveRow];
     if sText <> '' then
-      SetSymbolToGrid( sText );
+      SetSymbolToGrid( sText, true );
 
     EnableEdit(false );
   end;

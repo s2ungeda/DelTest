@@ -179,7 +179,7 @@ begin
       aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'lowPrice' ), 0.0 );
       aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'lastPrice' ), 0.0 );
       aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'quoteVolume' ), 0.0 )
-        * App.Engine.ApiManager.ExRate.Value;
+        * App.Engine.ApiManager.ExRate.Value / 100000000;
 
       aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'volume' ), 0.0 );
 
@@ -326,7 +326,7 @@ begin
       Symbol.DayHigh  := StrToFloat( aJson.GetValue('h').Value );
       Symbol.DayLow   := StrToFloat( aJson.GetValue('l').Value );
       Symbol.DayVolume:= StrToFloat( aJson.GetValue('v').Value );
-      Symbol.DayAmount:= StrToFloat( aJson.GetValue('q').Value );
+      Symbol.DayAmount:= StrToFloat( aJson.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
     end;
 
 
@@ -367,7 +367,7 @@ begin
       aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'highPrice' ), 0.0 );
       aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'lowPrice' ), 0.0 );
       aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'lastPrice' ), 0.0 );
-      aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'quoteVolume' ), 0.0 );
+      aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'quoteVolume' ), 0.0 )* App.Engine.ApiManager.ExRate.Value / 100000000;
       aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'volume' ), 0.0 );
       aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prevClosePrice' ), 0.0 );
 

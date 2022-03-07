@@ -16,6 +16,8 @@ type
     DATA_FILE : string;
     VERBOSE  : boolean;
 
+    AppName : string;
+    ClassName : string;
     function LoadConfig : boolean;
   end;
 
@@ -45,6 +47,9 @@ begin
       DATA_DIR  := pIniFile.ReadString('Dir', 'DataDir', 'Sauri');
 
       DATA_FILE := pIniFile.ReadString('File', 'DataFile', 'Sauri');
+
+      AppName := pIniFile.ReadString('App', 'ExFile', 'Sauri');
+      ClassName := pIniFile.ReadString('App', 'ClassName', 'Sauri');
       /////////////////////////////////////////////////////////////
 
     except

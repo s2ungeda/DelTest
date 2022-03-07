@@ -143,6 +143,8 @@ type
     FKimpPrice: double;
     FKimpAskPrice: double;
     FKimpBidPrice: double;
+    FWithdrawlState: boolean;
+    FDepositState: boolean;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -190,6 +192,9 @@ type
     property TradeAble : boolean read FTradeAble write FTradeAble;
     property IsMargin  : boolean read FIsMargin write FIsMargin;
     property IsFuture  : boolean read FIsFuture write FIsFuture;
+    //
+    property WithDrawlState : boolean read FWithdrawlState write FWithdrawlState;
+    property DepositState   : boolean read FDepositState   write FDepositState;
 
     property Terms: TSTerms read FTerms write FTerms;
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
@@ -293,6 +298,9 @@ begin
   FTerms.OnAdd  := OnTermAddEvent;
 
   FAddTerm  := false;
+
+  FWithdrawlState := true;
+  FDepositState   := true;
 
 end;
 

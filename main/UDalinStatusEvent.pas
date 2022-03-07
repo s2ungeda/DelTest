@@ -11,7 +11,7 @@ procedure AppStatusEvent( asType : TAppStatus );
 implementation
 
 uses
-  GApp, GLibs
+  GApp, GLibs  , shellapi
   , DalinMain
   ;
 

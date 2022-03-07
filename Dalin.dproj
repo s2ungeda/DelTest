@@ -108,7 +108,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ExeOutput>C:\Dalin\</DCC_ExeOutput>
-        <DCC_DcpOutput>C:\Dalin\Tmp</DCC_DcpOutput>
+        <DCC_DcpOutput>C:\Dalin\Tmp\Dalin</DCC_DcpOutput>
         <Icon_MainIcon>Dalin_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">

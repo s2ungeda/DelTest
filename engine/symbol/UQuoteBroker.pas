@@ -27,8 +27,9 @@ type
 
     procedure SetSymbol(const Value: TSymbol);
 
-    procedure CalcKimp(aKSymbol, aOsSymbol : TSymbol; iType : integer); overload;
-    procedure CalcKimp( iType : integer ) ; overload;
+    procedure CalcKimp(aKSymbol, aOsSymbol : TSymbol);
+    procedure CalcMainKimp;  overload;
+    procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
 
   public
     constructor Create(aColl: TCollection); override;
@@ -304,7 +305,7 @@ begin
       FOnSubscribe(Result);
   end;
 
-  //Result.FDistributor.Subscribe(aSubscriber, 0, Result, TICK_EVENTS, aHandler, spType);
+  Result.FDistributor.Subscribe(aSubscriber, 0, Result, EvnetID, aHandler);
 
 end;
 
@@ -465,56 +466,81 @@ begin
   end;
 end;
 
-procedure TQuote.CalcKimp(aKSymbol, aOsSymbol : TSymbol; iType : integer);
+procedure TQuote.CalcKimp(aKSymbol, aOsSymbol : TSymbol );
 var
   dEx : double;
 begin
+  if ( aKSymbol = nil ) or ( aOsSymbol = nil ) then Exit;
 
   dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
 
-  if iType = 0 then
-    aKSymbol.KimpPrice  := ( aKSymbol.Last - dEx) / dEx * 100
+  if FLastEvent = qtTimeNSale then begin
+    aKSymbol.KimpPrice  := ( aKSymbol.Last - dEx) / dEx * 100;
+    if aKSymbol.KimpPrice < 0 then
+      App.Log(llDebug, 'test', '%s %s %.2f, %.3f, %s: %.3f', [ TExchangeKindDesc[ aKSymbol.Spec.ExchangeType],
+           aKSymbol.Code, aKSymbol.KimpPrice, aKSymbol.Last, aOSSymbol.Code, aOSSymbol.Last ] );
+  end
   else begin
     aKSymbol.KimpAskPrice  := ( aKSymbol.Asks[0].Price - dEx) / dEx * 100;
     aKSymbol.KimpBidPrice  := ( aKSymbol.Bids[0].Price - dEx) / dEx * 100;
   end;
 end;
 
-procedure TQuote.CalcKimp(iType: integer);
+procedure TQuote.CalcMainKimp;
 var
   dPrice : double;
-  aKsymbol, aOsSymbol : TSymbol;
+  //aBith, aUp, aBin: TSymbol;
+  aKind : TMajorSymbolKind;
+  aExKind : TExchangeKind;
 begin
 
-  aKsymbol := nil; aOsSymbol := nil;
-
   if (FSymbol.Spec.BaseCode = TMajorSymbolCode[msBTC] ) then
-  begin
-    case FSymbol.Spec.ExchangeType of
-      ekBinance: begin
-        aOsSymbol := App.Engine.SymbolCore.MainSymbols[msBTC][ekBinance] ;
-      end;
-      ekUpbit:   aKsymbol  := App.Engine.SymbolCore.MainSymbols[msBTC][ekUpbit] ;
-      ekBithumb: aKsymbol  := App.Engine.SymbolCore.MainSymbols[msBTC][ekBithumb] ;
-    end;
-  end
+    aKind := msBTC
   else if (FSymbol.Spec.BaseCode = TMajorSymbolCode[msETH] ) then
+    aKind := msETH
+  else Exit;
+
+  if FSymbol.Spec.ExchangeType = ekBinance then
   begin
-    case FSymbol.Spec.ExchangeType of
-      ekBinance:  ;
-      ekUpbit:    ;
-      ekBithumb:  ;
+    CalcKimp( App.Engine.SymbolCore.MainSymbols[aKind][ekBithumb], FSymbol ) ;
+    CalcKimp( App.Engine.SymbolCore.MainSymbols[aKind][ekUpbit], FSymbol ) ;
+
+    if FLastEvent = qtTimeNSale then begin
+      CalcMainKimp( ekBithumb );
+      CalcMainKimp( ekUpbit );
     end;
+
+  end
+  else begin
+    CalcKimp( FSymbol, App.Engine.SymbolCore.MainSymbols[aKind][ekBinance]  );
+    if FLastEvent = qtTimeNSale then CalcMainKimp( FSymbol.Spec.ExchangeType );
   end;
 
+end;
 
-//  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
-//
-//  case iType of
-//    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
-//    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
-//    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
-//  end;
+procedure TQuote.CalcMainKimp(aExKind: TExchangeKind);
+var
+  aBTC, aETH : TSymbol;
+  dMo, dVal : double;
+begin
+  with App.Engine.SymbolCore do
+  begin
+    aBTC := MainSymbols[msBTC][aExKind];
+    aETH := MainSymbols[msETH][aExKind];
+  end;
+
+  if ( aBTC = nil ) or ( aETH = nil ) then Exit;
+
+  dMo := Max( aBTC.DayAmount + aETH.DayAmount, 1);
+  dVal:= (aBTC.DayAmount * aBTC.KimpPrice + aETH.DayAmount * aETH.KimpPrice) / dMo ;
+
+  if dVal <  0  then
+  begin
+   // App.DebugLog( '%s, %.2f = %f, %f, %f, %f', [ TExchangeKindDesc[aExKind],dVal, aBTC.KimpPrice, aBTC.DayAmount , aETH.KimpPrice, aETH.DayAmount]   );
+  end;
+
+  App.Engine.SymbolCore.SetMainKimp( aExKind , dVal );
+
 end;
 
 constructor TQuote.Create(aColl: TCollection);
@@ -559,11 +585,14 @@ begin
 
     FSymbol.Terms.NewTick(aTick)
 
+
   end else
   if FLastEvent = qtMarketDepth then
   begin
 
   end;
+
+  CalcMainKimp;
 
   FSymbol.LastEventTime := dtTime;
   FSymbol.LastTime      := now;

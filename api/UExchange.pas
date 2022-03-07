@@ -44,6 +44,7 @@ type
 //----------------------------------------------------------- common request
     function ParsePrepareMaster : integer ; virtual; abstract;
     function RequestMaster : boolean ; virtual; abstract;
+    procedure RequestDNWState; virtual; abstract;
 
 //--------------------------------------------------------------
     function PrepareMaster : boolean;

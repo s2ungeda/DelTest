@@ -27,6 +27,7 @@ type
     constructor Create( aObj :TExchangeManager );
     destructor Destroy; override;
 
+    procedure ParseDnwState( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
 
@@ -99,7 +100,7 @@ begin
         aArr  := aSub.Get('bids').JsonValue as TJsonArray;
 
         if aArr.Count > 0 then begin
-          aVal  := aArr.Get(aArr.Count-1);
+          aVal  := aArr.Get(0);
           aSymbol.Bids[0].Price   := StrToFloatDef( aVal.GetValue<string>( 'price' ), 0.0 );
           aSymbol.Bids[0].Volume  := StrToFloatDef( aVal.GetValue<string>( 'quantity' ), 0.0 );
         end;
@@ -108,7 +109,7 @@ begin
 
         if aArr.Count > 0 then
         begin
-          aVal  := aArr.Get(aArr.Count-1);
+          aVal  := aArr.Get(0);
           aSymbol.Asks[0].Price   := StrToFloatDef( aVal.GetValue<string>( 'price' ), 0.0 );
           aSymbol.Asks[0].Volume  := StrToFloatDef( aVal.GetValue<string>( 'quantity' ), 0.0 );
         end;
@@ -124,7 +125,48 @@ begin
 end;
 
 
+procedure TBithParse.ParseDnwState(aData: string);
+var
+  aSub, aObj : TJsonObject;
+  aPair : TJsonPair;
+  sTmp : string;
+  I, iw, id: Integer;
+  aSymbol : TSymbol;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseDnwState data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
 
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+    sTmp := aObj.GetValue('status').Value;
+    if ( sTmp = '' ) or ( sTmp <> '0000' ) then Exit;
+
+    aSub  := aObj.GetValue('data') as TJsonObject;
+
+    for I := 0 to aSub.Size-1 do
+    begin
+      aPair := aSub.Get(i);
+      sTmp := aPair.JsonString.Value;
+      if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
+      aSymbol := App.Engine.SymbolCore.FindSymbol(FParent.ExchangeKind, sTmp);
+
+      iw := aPair.JsonValue.GetValue<integer>('withdrawal_status');
+      id := aPair.JsonValue.GetValue<integer>('deposit_status');
+
+      aSymbol.WithDrawlState := iw = 1;
+      aSymbol.DepositState   := id = 1;
+
+    end;
+
+
+  finally
+    if aObj <> nil then aObj.free;
+  end;
+
+end;
 
 procedure TBithParse.ParseSocketData(aMarket: TMarketType; aData: string);
 var
@@ -217,7 +259,7 @@ begin
     Symbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'lowPrice' ), 0.0 );
 
     Symbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prevClosePrice' ), 0.0 );
-    Symbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'value' ), 0.0 );
+    Symbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'value' ), 0.0 ) / 100000000;
     Symbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'volume' ), 0.0 );
   end;
 end;

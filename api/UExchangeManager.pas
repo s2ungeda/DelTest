@@ -43,6 +43,7 @@ type
 
     function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
+    procedure RequestDNWState; virtual; abstract;
 
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;

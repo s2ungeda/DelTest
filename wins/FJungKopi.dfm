@@ -25,8 +25,14 @@ object FrmJungKopi: TFrmJungKopi
     ColCount = 25
     DefaultColWidth = 40
     DefaultRowHeight = 19
+    DefaultDrawing = False
     RowCount = 6
     TabOrder = 0
-    ExplicitWidth = 897
+    OnDrawCell = sgValDrawCell
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 448
+    Top = 64
   end
 end

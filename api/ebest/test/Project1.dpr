@@ -10,7 +10,8 @@ uses
 
 begin
   Application.Initialize;
-  Application.MainFormOnTaskbar := True;
+//  Application.MainFormOnTaskbar := true;
+//  Application.ShowMainForm      := false;
   Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.

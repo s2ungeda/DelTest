@@ -1,9 +1,10 @@
-object Form1: TForm1
+object FrmExRate: TFrmExRate
   Left = 0
   Top = 0
-  Caption = 'Form1'
-  ClientHeight = 336
-  ClientWidth = 569
+  BorderStyle = bsDialog
+  Caption = 'ExRate'
+  ClientHeight = 116
+  ClientWidth = 334
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,8 +12,39 @@ object Form1: TForm1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object sbTimer: TSpeedButton
+    Left = 89
+    Top = 39
+    Width = 48
+    Height = 22
+    AllowAllUp = True
+    GroupIndex = 3
+    Down = True
+    Caption = 'Start'
+    Flat = True
+    OnClick = sbTimerClick
+  end
+  object lbPrice: TLabel
+    Left = 8
+    Top = 72
+    Width = 3
+    Height = 13
+  end
+  object lbLog: TLabel
+    Left = 8
+    Top = 92
+    Width = 3
+    Height = 13
+  end
+  object lbTimer: TLabel
+    Left = 152
+    Top = 42
+    Width = 3
+    Height = 13
+  end
   object xas: TXASession
     Left = 416
     Top = 168
@@ -23,50 +55,40 @@ object Form1: TForm1
     OnDisconnect = xasDisconnect
     ControlData = {000A0000D8130000D8130000}
   end
-  object Memo1: TMemo
-    Left = 8
-    Top = 8
-    Width = 441
-    Height = 320
-    Lines.Strings = (
-      'Memo1')
-    ScrollBars = ssBoth
-    TabOrder = 1
-  end
   object Button1: TButton
-    Left = 464
+    Left = 89
     Top = 8
     Width = 75
     Height = 25
     Caption = #51217#49549
-    TabOrder = 2
+    TabOrder = 1
     OnClick = Button1Click
   end
   object Button2: TButton
-    Left = 464
-    Top = 303
+    Left = 251
+    Top = 8
     Width = 75
     Height = 25
     Caption = #51217#49549#51333#47308
-    TabOrder = 3
+    TabOrder = 2
     OnClick = Button2Click
   end
   object Button3: TButton
-    Left = 464
-    Top = 70
+    Left = 8
+    Top = 8
     Width = 75
     Height = 25
     Caption = #47196#44536#51064
-    TabOrder = 4
+    TabOrder = 3
     OnClick = Button3Click
   end
   object Button4: TButton
-    Left = 464
-    Top = 101
+    Left = 170
+    Top = 8
     Width = 75
     Height = 25
     Caption = #51312#54924
-    TabOrder = 5
+    TabOrder = 4
     OnClick = Button4Click
   end
   object xaq: TXAQuery
@@ -86,10 +108,59 @@ object Form1: TForm1
     Top = 248
     Width = 0
     Height = 0
-    OnReceiveRealData = xarReceiveRealData
-    OnRecieveLinkData = xarRecieveLinkData
     ControlData = {
       000A0000D8130000D813000008001C0000005200650073005C00740033003500
       310038002E007200650073000000}
+  end
+  object Edit1: TEdit
+    Left = 8
+    Top = 39
+    Width = 41
+    Height = 21
+    NumbersOnly = True
+    TabOrder = 7
+    Text = '5'
+  end
+  object Button5: TButton
+    Left = 251
+    Top = 39
+    Width = 75
+    Height = 25
+    Caption = #49704#44592#44592
+    TabOrder = 8
+    OnClick = Button5Click
+  end
+  object TrayIcon1: TTrayIcon
+    PopupMenu = PopupMenu1
+    Visible = True
+    Left = 248
+    Top = 64
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 288
+    Top = 64
+    object N2: TMenuItem
+      Caption = 'Show'
+      OnClick = N2Click
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object N4: TMenuItem
+      Caption = #51333#47308
+      OnClick = N4Click
+    end
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = Timer1Timer
+    Left = 192
+    Top = 72
+  end
+  object Timer2: TTimer
+    Enabled = False
+    Left = 216
+    Top = 64
   end
 end

@@ -3,8 +3,9 @@ unit GLibs;
 interface
 
 uses
-  system.SysUtils, system.Math, system.DateUtils,
-  Vcl.Forms
+  Windows, system.SysUtils, system.Math, system.DateUtils, Winapi.messages,
+  Vcl.Forms ,
+  ShellApi
 
   ;
 function AppDir : String;
@@ -14,10 +15,13 @@ function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): Strin
 function GetPrecision( aText : string ) : integer;
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
+function IfThenFloat(AValue: Boolean; const ATrue: double): string;
 //---------------------------------------- file
 
 function GetTimestamp(len: Integer = 13): string;
 function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
+procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
+procedure CloseApp( sClassName : string );
 
 
 implementation
@@ -66,6 +70,14 @@ begin
     Result := ATrue
   else
     Result := AFalse;
+end;
+
+function IfThenFloat(AValue: Boolean; const ATrue: double ): string;
+begin
+  if AValue then
+    Result := Format('%.2f', [ ATrue ])
+  else
+    Result := ''
 end;
 
 
@@ -120,6 +132,25 @@ begin
                     ,StrToInt(copy(sTmp, 15,2))
                     ,StrToInt(copy(sTmp, 18,2))
                     ,StrToInt(copy(sTmp, 21,3)) )  ;
+end;
+
+
+procedure ExcuteApp( aHandle : HWND; sClassName, sAppName : string );
+var
+  aH : THandle;
+begin
+  aH := FindWindow( PChar(sClassName), nil );
+  if aH <= 0 then
+    ShellExecute(aHandle, nil, PChar(sAppName), nil, nil, SW_NORMAL);
+end;
+
+procedure CloseApp( sClassName : string );
+var
+  aH : THandle;
+begin
+  aH := FindWindow( PChar(sClassName), nil );
+  if aH > 0 then
+    SendMessage( aH, WM_CLOSE, 0, 0 )
 end;
 
 end.

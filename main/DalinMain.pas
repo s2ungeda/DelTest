@@ -17,7 +17,6 @@ type
   TFrmDalinMain = class(TForm)
     QryTimer: TTimer;
     stsBar: TStatusBar;
-    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
@@ -88,11 +87,14 @@ begin
   end;
 
   QryTimer.Enabled := false;
-  App.Log(llInfo, '', '--- Form Save ---');
-  App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
+  App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
+  App.Log(llInfo, '', '--- Form Saved ---');
   App.Engine.ApiManager.DisConnectAll;
   App.Log(llInfo, '', '--- DisConnectAll ---');
+
+  CloseApp( App.Config.ClassName );
+
   Action := caFree;
 end;
 
@@ -153,17 +155,21 @@ end;
 
 procedure TFrmDalinMain.Start;
 begin
-  Exit;
+
+ // Exit;
   App.AppStatus := asinit;
 //  App.AppStatus := asShow;
+  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);
 begin
-  if FExRate >= ( 60 * 2 ) then
+  if FExRate >= 6 then
   begin
     FExRate := 0;
-    GetExRate;
+    ReadExRate;
+    stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
+//    GetExRate;
   end;
   inc(FExRate);
   inc(FDnw);

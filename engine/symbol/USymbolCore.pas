@@ -3,7 +3,7 @@ unit USymbolCore;
 interface
 
 uses
-  system.Classes, system.SysUtils ,
+  system.Classes, system.SysUtils , system.DateUtils,
 
   UFQN, UMarketSpecs, USymbols, UMarkets,
 
@@ -27,6 +27,8 @@ type
   TMajorSymbols    = array [TExchangeKind] of TSymbol;
   TMainSymbols    = array [TMajorSymbolKind] of  TMajorSymbols;
 
+  TMainKimpArray  = array [TExchangeKind] of double;
+
   TSymbolCore = class
   private
 
@@ -43,8 +45,12 @@ type
     FExchanges  : TMarketGroupsArray;
     FUnderlyings: TMarketGroupsArray;
     FMainSymbols: TMainSymbols;
+    FMainKimp: TMainKimpArray;
 
   public
+
+    JungKopi  : array [TExchangeKind, 0..47] of double;
+
     constructor Create;
     destructor Destroy; override;
 
@@ -58,6 +64,8 @@ type
     procedure RepresentCoin;
 
     function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
+    procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
+
 
     property Specs: TMarketSpecs read FSpecs;
 
@@ -74,7 +82,7 @@ type
     // symbolKind . ExchangeKind
     property MainSymbols : TMainSymbols read FMainSymbols;
 
-
+    property MainKimp : TMainKimpArray read FMainKimp ;//write FMainKimp;
   end;
 
 function TicksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
@@ -138,6 +146,7 @@ begin
     FExchanges[i]   := TMarketGroups.Create;
     FUnderlyings[i] := TMarketGroups.Create;
 
+    FMainKimp[i] := 0.0;
   end;
 
 end;
@@ -327,6 +336,19 @@ procedure TSymbolCore.RepresentCoin;
 begin
   //
 //  FMainSymbols[msBTC][ekUpbit].DayAmount;
+end;
+
+procedure TSymbolCore.SetMainKimp(aExKind: TExchangeKind; Value: double);
+var
+  yy, mm, dd, hh, nn, ss, zz : word;
+  idx : Integer;
+begin
+  FMainKimp[aExKind] := Value;
+  DecodeDateTime( now, yy, mm, dd, hh, nn, ss, zz );
+
+  idx  := ( hh mod 24 * 2 ) + ( nn div 30 );
+
+  JungKopi[aExKind][idx] := Value;
 end;
 
 procedure TSymbolCore.RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol);

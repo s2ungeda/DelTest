@@ -36,6 +36,7 @@ type
 implementation
 uses
   GApp , GLibs
+  , UTypes
   , UApiConsts
   , UBithParse
   ;
@@ -108,6 +109,7 @@ begin
   FSubList.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam] ));
   FSubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam] ));
 end;
+
 procedure TBithWebSocket.SubScribe(aSymbol: TSymbol);
 var
   i : integer;
@@ -117,6 +119,20 @@ begin
   if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
     FSubList.Add(aSymbol.OrgCode);
 
+  if App.AppStatus <> asShow then Exit;
+
+  SubscribeAll;
+
+end;
+
+procedure TBithWebSocket.SubscribeAll;
+var
+  sParam : string;
+  i : Integer;
+begin
+
+  if FSubList.Count < 0 then Exit;
+
   sParam := '';
   for I := 0 to FSubList.Count-1 do
   begin
@@ -125,24 +141,9 @@ begin
       sParam := sParam + ','
   end;
 
-
 //    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
-    SendData( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
-    SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
-
-//  FSendQueue.Add( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
-//  FSendQueue.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
-//  FSendQueue.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
-
-  Send;
-
-
-
-end;
-
-procedure TBithWebSocket.SubscribeAll;
-begin
-
+  SendData( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
+  SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
 end;
 
 procedure TBithWebSocket.SubScribe(bSub: boolean);

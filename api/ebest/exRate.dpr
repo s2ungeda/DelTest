@@ -13,11 +13,14 @@ library exRate;
 uses
   System.SysUtils,
   System.Classes,
+  UExchangeRate in 'UExchangeRate.pas',
   XA_DATASETLib_TLB in 'XA_DATASETLib_TLB.pas',
-  XA_SESSIONLib_TLB in 'XA_SESSIONLib_TLB.pas',
-  UExchangeRate in 'UExchangeRate.pas';
+  XA_SESSIONLib_TLB in 'XA_SESSIONLib_TLB.pas';
 
 {$R *.res}
+
+var
+  ExRate : TExchangeRate;
 
 function GetExchangeRate: double; export;
 begin

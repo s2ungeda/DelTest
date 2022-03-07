@@ -117,32 +117,6 @@ begin
   end;
 end;
 
-procedure TBinanceWebSocket.SubScribe(aSymbol: TSymbol);
-var
-  i : integer;
-  aList : TStrings;
-  sParam, sData : string;
-begin
-  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
-    FSubList.Add(aSymbol.OrgCode);
-
-  if App.AppStatus <> asShow then Exit;
-
-  SubScribe( aSymbol, true );
-end;
-
-procedure TBinanceWebSocket.UnSubScribe(aSymbol: TSymbol);
-var
-  i : integer;
-  aList : TStrings;
-  sParam, sData : string;
-begin
-  i := FSubList.IndexOf(aSymbol.OrgCode) ;
-  if i >= 0 then FSubList.Delete(i);
-
-  SubScribe( aSymbol, false );
-end;
-
 procedure TBinanceWebSocket.SubScribe( aSymbol : TSymbol; bSub : boolean );
 var
   I: Integer;
@@ -182,6 +156,34 @@ begin
     aList.Free;
   end;
 end;
+
+procedure TBinanceWebSocket.SubScribe(aSymbol: TSymbol);
+var
+  i : integer;
+  aList : TStrings;
+  sParam, sData : string;
+begin
+  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
+    FSubList.Add(aSymbol.OrgCode);
+
+  if App.AppStatus <> asShow then Exit;
+
+  SubScribe( aSymbol, true );
+end;
+
+procedure TBinanceWebSocket.UnSubScribe(aSymbol: TSymbol);
+var
+  i : integer;
+  aList : TStrings;
+  sParam, sData : string;
+begin
+  i := FSubList.IndexOf(aSymbol.OrgCode) ;
+  if i >= 0 then FSubList.Delete(i);
+
+  SubScribe( aSymbol, false );
+end;
+
+
 procedure TBinanceWebSocket.OnAfterConnect(Sender: TObject);
 begin
 //  if (FSubList.Count > 0 ) then

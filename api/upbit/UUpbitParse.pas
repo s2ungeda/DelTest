@@ -112,7 +112,7 @@ begin
     Symbol.DayHigh :=  aJson.GetValue<double>( 'hp' );
     Symbol.DayLow  :=  aJson.GetValue<double>( 'lp' );
 
-    Symbol.DayAmount   := aJson.GetValue<double>( 'atp24h' );
+    Symbol.DayAmount   := aJson.GetValue<double>( 'atp24h' ) / 100000000;
     Symbol.DayVolume   := aJson.GetValue<double>( 'atv24h' );
   end;
 end;
@@ -203,7 +203,7 @@ begin
     aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
     aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
     aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
-    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 );
+    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
     aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
 
 //    aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'date' ) );

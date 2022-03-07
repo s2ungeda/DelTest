@@ -23,6 +23,7 @@ type
     Destructor  Destroy; override;
 
     procedure RequestOrderBook( c : char ) ; overload;
+    procedure RequestDNWState; override;
 
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
@@ -64,17 +65,23 @@ begin
   if master = nil then Exit;
   aObj := master.GetValue('data') as TJsonObject;
 
-  for I := 0 to aObj.Size-1 do
-  begin
-    aPair := aObj.Get(i);
-    if aPair.JsonValue.ClassType = TJSONObject then
+  try
+    for I := 0 to aObj.Size-1 do
     begin
-      aVal  := aPair.JsonValue;
-//      DoLog( Format('%d. %s : %s ', [ i, aPair.JsonString.Value, aPair.JsonValue.Value]));
-      Codes.Add( aPair.JsonString.Value );
+      aPair := aObj.Get(i);
+      if aPair.JsonValue.ClassType = TJSONObject then
+      begin
+        aVal  := aPair.JsonValue;
+  //      DoLog( Format('%d. %s : %s ', [ i, aPair.JsonString.Value, aPair.JsonValue.Value]));
+        Codes.Add( aPair.JsonString.Value );
+      end;
     end;
+  finally
+    if aObj <> nil then aObj.Free
   end;
 end;
+
+
 
 
 function TBithSpot.RequestMaster: boolean;
@@ -104,49 +111,54 @@ begin
   master := TJsonObject.ParseJSONValue( MasterData ) as TJsonObject;
   aObj := master.GetValue('data') as TJsonObject;
 
-  for I := 0 to aObj.Size-1 do
-  begin
-    aPair := aObj.Get(i);
-    if aPair.JsonValue.ClassType <> TJSONObject then continue;
-    sCode := aPair.JsonString.Value;
-    if ( GetCodeIndex( sCode ) < 0 ) then Continue;
+  try
 
-    aSymbol := App.Engine.SymbolCore.Symbols[GetExKind].FindCode(sCode);
-    if aSymbol = nil then
+    for I := 0 to aObj.Size-1 do
     begin
-      bNew := true;
-      aSymbol := App.Engine.SymbolCore.RegisterSymbol(GetExKind, mtSpot, sCode );
-      if aSymbol = nil then Exit (false);
-    end else
-      bNew := false;
+      aPair := aObj.Get(i);
+      if aPair.JsonValue.ClassType <> TJSONObject then continue;
+      sCode := aPair.JsonString.Value;
+      if ( GetCodeIndex( sCode ) < 0 ) then Continue;
 
-    with aSymbol do
-    begin
-      OrgCode     := sCode+'_KRW';
-      Spec.BaseCode    := sCode;
-      Spec.QuoteCode   := 'KRW';
-      Spec.SettleCode  := 'KRW';
+      aSymbol := App.Engine.SymbolCore.Symbols[GetExKind].FindCode(sCode);
+      if aSymbol = nil then
+      begin
+        bNew := true;
+        aSymbol := App.Engine.SymbolCore.RegisterSymbol(GetExKind, mtSpot, sCode );
+        if aSymbol = nil then Exit (false);
+      end else
+        bNew := false;
+
+      with aSymbol do
+      begin
+        OrgCode     := sCode+'_KRW';
+        Spec.BaseCode    := sCode;
+        Spec.QuoteCode   := 'KRW';
+        Spec.SettleCode  := 'KRW';
+      end;
+
+      aVal  := aPair.JsonValue;
+
+      aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+      aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'max_price' ), 0.0 );
+      aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'min_price' ), 0.0 );
+      aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
+      aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
+      aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_value_24H' ), 0.0 ) / 100000000;
+      aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
+
+  //    aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'date' ) );
+      aSymbol.LocalTime := now;
+
+      if bNew then
+        App.Engine.SymbolCore.RegisterSymbol( GetExKind, aSymbol );
+
     end;
-
-    aVal  := aPair.JsonValue;
-
-    aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
-    aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'max_price' ), 0.0 );
-    aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'min_price' ), 0.0 );
-    aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
-    aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
-    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_value_24H' ), 0.0 );
-    aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
-
-//    aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'date' ) );
-    aSymbol.LocalTime := now;
-
-    if bNew then
-      App.Engine.SymbolCore.RegisterSymbol( GetExKind, aSymbol );
-
+    Result := App.Engine.SymbolCore.Spots[GetExKind].Count > 0 ;
+  finally
+    if aObj <> nil then
+      aObj.Free;
   end;
-
-  Result := App.Engine.SymbolCore.Spots[GetExKind].Count > 0 ;
 end;
 
 
@@ -172,4 +184,23 @@ begin
   Result := true;
 end;
 
+procedure TBithSpot.RequestDNWState;
+var
+  sOut, sJson : string;
+begin
+  SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+
+  // 406 에러 때문에 아래 와 같이 헤더 추가
+  Set406;
+
+  if Request( rmGET, '/public/assetsstatus/ALL', '', sJson, sOut ) then
+  begin
+    gBithReceiver.ParseDnwState(sJson)    ;
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+  end;
+
+end;
 end.

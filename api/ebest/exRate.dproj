@@ -88,9 +88,9 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="UExchangeRate.pas"/>
         <DCCReference Include="XA_DATASETLib_TLB.pas"/>
         <DCCReference Include="XA_SESSIONLib_TLB.pas"/>
-        <DCCReference Include="UExchangeRate.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

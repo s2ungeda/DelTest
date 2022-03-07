@@ -184,21 +184,24 @@ procedure TWebsocket.OnAfterConnect(Sender: TObject);
 begin
   FLiveTime := now;
   inc( FConnectTry );
-  //OnNotify( Format(' ------ %s, %d Connected --------', [ GetsockType, FSeq]) );
+
 end;
 procedure TWebsocket.OnAfterDisconnect(Sender: TObject);
 begin
-  //OnNotify( Format(' ------ %s, %d DissConnected --------', [ GetSockType, FSeq]) );
+  if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
+    App.Log(llError, '%s was closed with error %s ',
+      [ TExchangeKindDesc[FExchangeKind], TScWebSocketClient(Sender).CloseStatusDescription ] );
+
 end;
 procedure TWebsocket.OnBeforeConnect(Sender: TObject);
 begin
-//  OnNotify(' ------ OnBeforeConnect --------' );
+
 end;
 procedure TWebsocket.OnConnectFail(Sender: TObject);
 begin
    App.Log(llError, '%s OnConnectFail  %s', [ TExchangeKindDesc[FExchangeKind],
     FWebsocket.CloseStatusDescription ] );
-//  OnNotify(' ------ OnConnectFail --------' );
+
 end;
 procedure TWebsocket.OnControlMessage(Sender: TObject;
   ControlMessageType: TScWebSocketControlMessageType);
@@ -209,7 +212,8 @@ begin
     cmtPing: begin sTmp := 'ping'; FWebSocket.Pong;   end;
     cmtPong: sTmp := 'pong';
   end;
-//  OnNotify( Format(' OnControlMessage : %s ', [ sTmp ] ) );
+
+  App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
 end;
 procedure TWebsocket.OnMessage(Sender: TObject; const Data: TArray<System.Byte>;
   MessageType: TScWebSocketMessageType; EndOfMessage: Boolean);
