@@ -23,6 +23,7 @@ type
     destructor Destroy; override;
 
     procedure ParseMarginPair( aData : string );
+    procedure ParseDNWState( aData : string );
     procedure ParseSpotTicker( aData : string );
 
     procedure ParseFuttMaster( aData : string );
@@ -53,6 +54,8 @@ begin
   gBinReceiver := nil;
   inherited;
 end;
+
+
 
 procedure TBinanceParse.ParseFutaggTrade(aJson: TJsonObject);
 begin
@@ -234,6 +237,42 @@ begin
 
   end;
 
+end;
+
+procedure TBinanceParse.ParseDNWState(aData: string);
+var
+  aObj : TJsonObject;
+  aPair: TJsonPair;
+  I: Integer;
+  sTmp : string;
+  aSymbol : TSymbol;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseDNWState data is empty') ;
+    Exit;
+  end;
+
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+    for I := 0 to aObj.Size-1 do
+    begin
+      aPair := aObj.Get(i);
+
+      sTmp  := aPair.JsonString.Value;
+      if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
+
+      aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
+      if aSymbol <> nil then
+      begin
+        aSymbol.WithDrawlState := aPair.JsonValue.GetValue<boolean>('withdrawStatus');
+        aSymbol.DepositState   := aPair.JsonValue.GetValue<boolean>('depositStatus');
+      end;
+
+    end;
+  finally
+    aObj.Free;
+  end;
 end;
 
 

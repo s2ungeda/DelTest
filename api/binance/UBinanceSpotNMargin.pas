@@ -26,6 +26,8 @@ type
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
+
+    procedure RequestDNWState; override;
     
   end;
 
@@ -202,6 +204,31 @@ begin
   end;
 
   Result := true;
+end;
+
+procedure TBinanceSpotNMargin.RequestDNWState;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+begin
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
+  begin
+    //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseDNWState( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestMarginMaster (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit;
+  end;
 end;
 
 function TBinanceSpotNMargin.RequestMarginMaster: boolean;

@@ -25,6 +25,7 @@ type
 
     procedure ParseSpotTicker( aData : string );
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
+    procedure ParseDNWSate( aData : string );
 
     property Parent : TExchangeManager read FParent;
   end;
@@ -53,6 +54,7 @@ begin
   gUpReceiver := nil;
   inherited;
 end;
+
 
 procedure TUpbitParse.ParseSocketData(aMarket: TMarketType; aData: string);
 var
@@ -212,6 +214,65 @@ begin
     if bNew then
       App.Engine.SymbolCore.RegisterSymbol( ekUpbit, aSymbol );
 
+  end;
+end;
+
+
+procedure TUpbitParse.ParseDNWSate(aData: string);
+var
+  aArr : TJsonArray;
+  aVal : TJsonValue;
+  I: Integer;
+  sTmp : string;
+  aSymbol : TSymbol;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseDNWSate data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  try
+
+    for I := 0 to aArr.Size-1 do
+    begin
+      aVal := aArr.Get(i);
+      sTmp := aVal.GetValue<string>('currency');
+      if FParent.Codes.IndexOf(sTmp) < 0 then continue;
+
+      aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp );
+      if aSymbol <> nil then
+      begin
+        sTmp := aVal.GetValue<string>('wallet_state');
+        if sTmp = 'working' then
+        begin
+          aSymbol.DepositState  := true;
+          aSymbol.WithDrawlState  := true;
+        end else
+        if sTmp = 'withdraw_only' then
+        begin
+          aSymbol.DepositState  := false;
+          aSymbol.WithDrawlState  := true;
+        end else
+        if sTmp = 'deposit_only' then
+        begin
+          aSymbol.DepositState  := true;
+          aSymbol.WithDrawlState  := false;
+        end else
+        if (sTmp = 'paused') or (sTmp = 'unsupported' ) then
+        begin
+          aSymbol.DepositState  := false;
+          aSymbol.WithDrawlState  := false;
+        end ;
+
+      end;
+
+    end;
+
+  finally
+    if aArr <> nil then aArr.Free;
   end;
 end;
 

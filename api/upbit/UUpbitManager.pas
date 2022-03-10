@@ -69,12 +69,13 @@ begin
     QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
   end;
 
+  Timer.OnTimer := OnTimer;
   Result := true;
 end;
 
 procedure TUpbitManager.OnTimer(Sender: TObject);
 begin
-
+  Exchanges[mtSpot].RequestDNWState;
 end;
 
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;
@@ -101,6 +102,7 @@ begin
 end;
 function TUpbitManager.SubscribeAll: boolean;
 begin
+  Timer.Enabled := true;
   Result := true;
 end;
 
