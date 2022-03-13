@@ -252,47 +252,53 @@ end;
 procedure TBithSpot.ReceiveAsyncData;
 var
   sTmp, sJson : string;
-  sts  : TArray<string>;
-  I: Integer;
+//  sts  : TArray<string>;
+//  I: Integer;
 begin
-
   try
-    try
       sJson:= RestReq.Response.Content;
       if sJson = '' then Exit;
-
-      sTmp := RestReq.Response.FullRequestURI;
-      sts  := sTmp.Split(['/']);
-
-      for I := High(sts) downto 0 do
-      begin
-        if sts[i] = 'orderbook' then
-        begin
-          gBithReceiver.ParseSpotOrderBook( sJson );
-          break;
-        end else
-        if sts[i] = 'assetsstatus' then
-        begin
-          gBithReceiver.ParseDnwState( sJson );
-          break;
-        end;
-      end;
-    except
-      on e : Exception do
-        App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
-          TExchangeKindDesc[ GetExKind], e.Message, sJson ]
-          );
-    end;
-  finally
-  //  LeaveCriticalSection(CriticalSection);
+      gBithReceiver.ParseSpotOrderBook( sJson );
+  except
+    on e : Exception do
+      App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
+        TExchangeKindDesc[ GetExKind], e.Message, sJson ]
+        );
   end;
+
+//  try
+//    try
+//      sJson:= RestReq.Response.Content;
+//      if sJson = '' then Exit;
+//      gBithReceiver.ParseSpotOrderBook( sJson );
+//
+//      sTmp := RestReq.Response.FullRequestURI;
+//      sts  := sTmp.Split(['/']);
+//
+//      for I := High(sts) downto 0 do
+//      begin
+//        if sts[i] = 'orderbook' then
+//        begin
+//          gBithReceiver.ParseSpotOrderBook( sJson );
+//          break;
+//        end else
+//        if sts[i] = 'assetsstatus' then
+//        begin
+//          gBithReceiver.ParseDnwState( sJson );
+//          break;
+//        end;
+//      end;
+//    except
+//      on e : Exception do
+//        App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
+//          TExchangeKindDesc[ GetExKind], e.Message, sJson ]
+//          );
+//    end;
+//  finally
+//  //  LeaveCriticalSection(CriticalSection);
+//  end;
 end;
 
-//initialization
-//  InitializeCriticalSection(CriticalSection);
-//
-//finalization
-//  DeleteCriticalSection(CriticalSection);
 
 
 end.
