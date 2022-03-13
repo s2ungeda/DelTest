@@ -15,6 +15,7 @@ type
     FExchangeIdx: integer;
     FCodes: TStrings;
     FTimer: TQuoteTimer;
+    FDone: boolean;
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
   public
@@ -53,6 +54,7 @@ type
     // 교집합 코드를 담을 리스트..
     property Codes       : TStrings read FCodes;
     property Timer       : TQuoteTimer read FTimer write FTimer;
+    property Done       : boolean read FDone write FDone;
   end;
 
 implementation
@@ -83,7 +85,7 @@ begin
   TradeSock[mtSpot] := nil;
   TradeSock[mtFutures] := nil;
 
-
+  FDone := false;
 
 end;
 
@@ -164,8 +166,10 @@ function TExchangeManager.DissConnectAll: boolean;
 var
   i : integer;
 begin
+
   if FTimer <> nil then
     FTimer.Enabled  := false;
+  FDone := true;
   if QuoteSock <> nil then
     for i := 0 to High(QuoteSock) do
       QuoteSock[i].DoDissConnect;

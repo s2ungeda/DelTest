@@ -119,7 +119,7 @@ object FrmExRate: TFrmExRate
     Height = 21
     NumbersOnly = True
     TabOrder = 7
-    Text = '5'
+    Text = '10'
   end
   object Button5: TButton
     Left = 251

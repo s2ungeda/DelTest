@@ -223,17 +223,17 @@ begin
         Cells[ 3, iRow] := Format('%.2f %%', [ dKip[1] ]);
       end;
 
-      Cells[ CurCol - 4, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
-      Cells[ CurCol - 3, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
-      Cells[ CurCol - 2, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
-      Cells[ CurCol - 1, iRow] := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
+      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
+      Cells[ CurCol - 3, iRow] := aSymbol.PriceToStr( aSymbol.Asks[0].Price ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
+      Cells[ CurCol - 2, iRow] := aSymbol.PriceToStr( aSymbol.Bids[0].Price ); //Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
+      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
     end;
 
     Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '¡Û', 'X');
     Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, '¡Û', 'X');
 
-    Cells[ CurCol , iRow]   := Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
-    Cells[ DAyAmtCol, iRow] := Format('%*.n', [ 0, aSymbol.DayAmount ]);
+    Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
+    Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
 
 //    iBRow := FindBinRow( iRow );
 //

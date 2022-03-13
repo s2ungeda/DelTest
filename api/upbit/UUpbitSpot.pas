@@ -15,6 +15,8 @@ uses
 
 type
   TUpbitSpot = class( TExchange )
+  private
+    procedure ReceiveDNWState ;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -136,6 +138,11 @@ begin
 
 end;
 
+procedure TUpbitSpot.ReceiveDNWState;
+begin
+  gUpReceiver.ParseDNWSate( RestReq.Response.Content );
+end;
+
 procedure TUpbitSpot.RequestDNWState;
 var
   LToken: TJWT;
@@ -160,16 +167,19 @@ begin
 
     RestReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 
-    if Request( rmGET, '/v1/status/wallet', '', sJson, sOut ) then
-    begin         //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    if not RequestAsync( ReceiveDNWState , rmGET, '/v1/status/wallet') then
+      App.Log( llError, 'Failed %s RequestDNWStte ', [ TExchangeKindDesc[GetExKind]] );
 
-      gUpReceiver.ParseDNWSate( sJson );
-    end else
-    begin
-      App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
-        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-      Exit;
-    end;
+//    if Request( rmGET, '/v1/status/wallet', '', sJson, sOut ) then
+//    begin         //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+//
+//      gUpReceiver.ParseDNWSate( sJson );
+//    end else
+//    begin
+//      App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+//        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+//      Exit;
+//    end;
 
   finally
     LToken.Free;

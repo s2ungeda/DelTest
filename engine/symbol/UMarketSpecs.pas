@@ -39,6 +39,8 @@ type
     FBaseCode: string;
     FSubMarket: string;
     FExchangeType: TExchangeKind;
+    FQtyPrecision: integer;
+
 
   public
     constructor Create(aColl: TCollection); override;
@@ -66,6 +68,7 @@ type
     property TickSize: Double read FTickSize;
     property TickValue: Double read FTickValue;
     property Precision: Integer read FPrecision;
+    property QtyPrecision : integer read FQtyPrecision;
 
     property Market : TMarketType read FMarket;
     property ExchangeType : TExchangeKind read FExchangeType write FExchangeType;
@@ -95,6 +98,10 @@ type
 
 implementation
 
+uses
+  USymbolCore
+  ;
+
 { TMarketSpec }
 
 constructor TMarketSpec.Create(aColl: TCollection);
@@ -108,6 +115,7 @@ begin
   FTickSize:= 1.0;
   FTickValue:= 1.0;
   FPrecision:= 2;
+  FQtyPrecision := 3;
 
   FSubMarket  := '*';
 
@@ -118,6 +126,7 @@ begin
 
   inherited;
 end;
+
 
 procedure TMarketSpec.SetSpec(iPre: integer; dTickSize, dQtySize: double);
 begin

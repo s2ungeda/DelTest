@@ -3,9 +3,9 @@ unit UBithSpot;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.DateUtils,
+  System.Classes, System.SysUtils, System.DateUtils, //Windows,
 
-  System.JSON,  Rest.Json , Rest.Types ,
+  System.JSON,  Rest.Json , Rest.Types ,  REST.Client,
 
   UExchange, USymbols ,  UMarketSpecs,
 
@@ -18,6 +18,9 @@ type
   private
     function RequestTicker : boolean;
     function RequestOrderBook : boolean;  overload;
+
+    procedure ReceiveAsyncData;
+    procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); override;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -29,6 +32,9 @@ type
     function RequestMaster : boolean ; override;
 
   end;
+
+//var
+//  CriticalSection: TRTLCriticalSection;
 
 implementation
 
@@ -50,6 +56,7 @@ begin
 
   inherited;
 end;
+
 
 
 
@@ -91,12 +98,6 @@ begin
     ;
 end;
 
-
-
-procedure TBithSpot.RequestOrderBook( c : char );
-begin
-  RequestOrderBook;
-end;
 
 function TBithSpot.RequestTicker: boolean;
 var
@@ -171,6 +172,11 @@ begin
   // 406 에러 때문에 아래 와 같이 헤더 추가
   Set406;
 
+//  if not RequestAsync(
+//     ReceiveAsyncData
+//   , rmGET, '/public/orderbook/ALL_KRW') then
+//     App.Log( llError, 'Failed %s RequestOrderBook ', [ TExchangeKindDesc[GetExKind]] );
+
   if Request( rmGET, '/public/orderbook/ALL_KRW', '', sJson, sOut ) then
   begin
     gBithReceiver.ParseSpotOrderBook( sJson );
@@ -184,23 +190,109 @@ begin
   Result := true;
 end;
 
+procedure TBithSpot.RequestOrderBook( c : char );
+var
+  sOut, sJson : string;
+begin
+
+  //EnterCriticalSection(CriticalSection);
+  try
+
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    // 406 에러 때문에 아래 와 같이 헤더 추가
+    Set406;
+
+    if not RequestAsync(
+       ReceiveAsyncData
+     , rmGET, '/public/orderbook/ALL_KRW') then
+       App.Log( llError, 'Failed %s RequestOrderBook ', [ TExchangeKindDesc[GetExKind]] );
+  except
+  //  LeaveCriticalSection(CriticalSection);
+  end;
+end;
+
 procedure TBithSpot.RequestDNWState;
 var
   sOut, sJson : string;
 begin
-  SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
 
-  // 406 에러 때문에 아래 와 같이 헤더 추가
-  Set406;
+ // EnterCriticalSection(CriticalSection);
+  try
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
 
-  if Request( rmGET, '/public/assetsstatus/ALL', '', sJson, sOut ) then
-  begin
-    gBithReceiver.ParseDnwState(sJson)    ;
-  end else
-  begin
-    App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
-      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Set406;
+
+    if Request( rmGET, '/public/assetsstatus/ALL', '', sJson, sOut ) then
+    begin
+      gBithReceiver.ParseDnwState( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit;
+    end;
+
+//    if not RequestAsync(
+//      ReceiveAsyncData
+//     , rmGET, '/public/assetsstatus/ALL') then
+//       App.Log( llError, 'Failed %s RequestDNWStte ', [ TExchangeKindDesc[GetExKind]] );
+  except
+   // LeaveCriticalSection(CriticalSection);
   end;
 
 end;
+
+procedure TBithSpot.OnHTTPProtocolError(Sender: TCustomRESTRequest);
+begin
+  inherited;
+//  LeaveCriticalSection(CriticalSection);
+end;
+
+
+procedure TBithSpot.ReceiveAsyncData;
+var
+  sTmp, sJson : string;
+  sts  : TArray<string>;
+  I: Integer;
+begin
+
+  try
+    try
+      sJson:= RestReq.Response.Content;
+      if sJson = '' then Exit;
+
+      sTmp := RestReq.Response.FullRequestURI;
+      sts  := sTmp.Split(['/']);
+
+      for I := High(sts) downto 0 do
+      begin
+        if sts[i] = 'orderbook' then
+        begin
+          gBithReceiver.ParseSpotOrderBook( sJson );
+          break;
+        end else
+        if sts[i] = 'assetsstatus' then
+        begin
+          gBithReceiver.ParseDnwState( sJson );
+          break;
+        end;
+      end;
+    except
+      on e : Exception do
+        App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
+          TExchangeKindDesc[ GetExKind], e.Message, sJson ]
+          );
+    end;
+  finally
+  //  LeaveCriticalSection(CriticalSection);
+  end;
+end;
+
+//initialization
+//  InitializeCriticalSection(CriticalSection);
+//
+//finalization
+//  DeleteCriticalSection(CriticalSection);
+
+
 end.

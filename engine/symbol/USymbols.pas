@@ -150,6 +150,8 @@ type
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
 
+    function  PriceToStr( Value : double ) : string;
+    function  QtyToStr( Value : double ) : string;
 //    property  ExchangeCode : string read FExchangeCode;
     property  Code  : string read FCode write FCode;
     property  OrgCode : string read FOrgCode write FOrgCode;
@@ -280,6 +282,11 @@ type
 
 implementation
 
+uses
+  USymbolCore
+  ;
+
+
 { TSymbol }
 
 constructor TSymbol.Create(aColl: TCollection);
@@ -320,6 +327,19 @@ end;
 procedure TSymbol.OnTermAddEvent(Sender: TObject);
 begin
   FAddTerm  := true;
+end;
+
+function TSymbol.PriceToStr(Value: double): string;
+var
+  iPre : integer;
+begin
+  iPre   := GetPrecision(Self, Value );
+  Result := Format('%.*n', [ iPre , Value + 0.0] );
+end;
+
+function TSymbol.QtyToStr(Value: double): string;
+begin
+  Result := Format('%.*n', [ Spec.QtyPrecision, Value + 0.0 ] );
 end;
 
 { TSymbolList }

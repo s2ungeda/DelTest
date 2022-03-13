@@ -10,15 +10,17 @@ uses
   ;
 type
 
+
   TExchange = class
   private
     FRESTClient: TRESTClient;
+    FRestRes: TRESTResponse;
+    FRestReq: TRESTRequest;
 
     FExCode: string;
     FLastTime: TDateTime;
     FInfo: TExchangeInfo;
-    FRestRes: TRESTResponse;
-    FRestReq: TRESTRequest;
+
     FParent: TObject;
     FMarketType: TMarketType;
     FMarketIdx: integer;
@@ -31,6 +33,7 @@ type
 
     function Request( AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
       var OutJson, OutRes  : string  ) : boolean;
+    function RequestAsync( aHandler: TCompletionHandler; AMethod : TRESTRequestMethod;  AResource : string  ) : boolean;
 
     procedure SetBaseUrl(url : string); inline;
     procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; inline;
@@ -45,8 +48,8 @@ type
     function ParsePrepareMaster : integer ; virtual; abstract;
     function RequestMaster : boolean ; virtual; abstract;
     procedure RequestDNWState; virtual; abstract;
-
 //--------------------------------------------------------------
+    procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;
 //--------------------------------------------------------------
     property Parent : TObject read FParent;
@@ -54,6 +57,8 @@ type
     property RESTClient: TRESTClient read FRESTClient;
     property RestReq: TRESTRequest read FRestReq;
     property RestRes: TRESTResponse read FRestRes;
+
+
 
     property Info : TExchangeInfo read FInfo;
     property LastTime : TDateTime read FLastTime write FLastTime;
@@ -91,6 +96,9 @@ begin
   FMarketIdx  := integer(FMarketType);
 
   FCodes := TStringList.Create;
+
+  FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;
+
 end;
 
 destructor TExchange.Destroy;
@@ -98,9 +106,12 @@ begin
 
   FCodes.Free;
 
-  FRestRes.Free;
+//  if FRestRes <> nil then
+    FRestRes.Free;
   FRestReq.Free;
-  FRESTClient.Free;
+//  if FRestClient <> nil then
+    FRESTClient.Free;
+
   inherited;
 end;
 
@@ -122,6 +133,15 @@ end;
 function TExchange.GetExKind: TExchangeKind;
 begin
   Result := ( FParent as TExchangeManager ).ExchangeKind;
+end;
+
+procedure TExchange.OnHTTPProtocolError(Sender: TCustomRESTRequest);
+begin
+  if Sender <> nil  then
+  begin
+    App.Log( llError,  '%s Request Error : %s ( status : %d, %s)' , [ TExchangeKindDesc[GetExKind]
+    ,  Sender.Response.Content ,  Sender.Response.StatusCode, Sender.Response.StatusText ]  );
+  end;
 end;
 
 function TExchange.PrepareMaster: boolean;
@@ -189,15 +209,31 @@ begin
 
 end;
 
+function TExchange.RequestAsync(aHandler: TCompletionHandler; AMethod : TRESTRequestMethod;  AResource : string ): boolean;
+begin
+
+  with FRestReq do
+  begin
+    OnHTTPProtocolError :=  OnHTTPProtocolError;
+    Method   := AMethod;
+    Resource := AResource;
+    Result   := ExecuteAsync(aHandler) <> nil;
+  end;
+
+end;
+
 procedure TExchange.Set406;
 begin
   FRestReq.Accept := '*/*';
   FRestReq.AcceptEncoding := 'gzip, deflate';
+
+
 end;
 
 procedure TExchange.SetBaseUrl(url: string);
 begin
   FRESTClient.BaseURL := url;
+
 end;
 
 

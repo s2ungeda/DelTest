@@ -87,6 +87,7 @@ type
 
 function TicksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
 function LocksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
+function GetPrecision(aSymbol: TSymbol; dPrice: Double): integer;
 
 implementation
 
@@ -408,13 +409,65 @@ begin
      or (aSymbol = nil)
      or (aSymbol.Spec = nil) then Exit;
 
+  iSign := iTicks div Abs(iTicks);
+
   case aSymbol.Spec.ExchangeType of
     ekBinance: ;
-    ekUpbit: ;
+    ekUpbit:
+      begin
+        for i:=1 to Abs(iTicks) do
+        if iSign > 0 then
+        begin
+          if Result > 2000000.0 - EPSILON then
+            Result := Result + 1000
+          else if Result > 1000000 - EPSILON then
+            Result := Result + 500
+          else if Result > 500000 - EPSILON then
+            Result := Result + 100
+          else if Result > 100000 - EPSILON then
+            Result := Result + 50
+          else if Result > 10000 - EPSILON then
+            Result := Result + 10
+          else if Result > 1000 - EPSILON then
+            Result := Result + 5
+          else if Result > 100 - EPSILON then
+            Result := Result + 1
+          else if Result > 10 - EPSILON then
+            Result := Result + 0.1
+          else if Result > 1 - EPSILON then
+            Result := Result + 0.01
+          else if Result > 0.1 - EPSILON then
+            Result := Result + 0.001
+          else
+            Result := Result + 0.0001;
+        end else
+        begin
+          if Result < 0.1 + EPSILON then
+            Result := Result - 0.0001
+          else if Result < 1 + EPSILON then
+            Result := Result - 0.001
+          else if Result < 10 + EPSILON then
+            Result := Result - 0.01
+          else if Result < 100 + EPSILON then
+            Result := Result - 0.1
+          else if Result < 1000 + EPSILON then
+            Result := Result - 1
+          else if Result < 10000 + EPSILON then
+            Result := Result - 5
+          else if Result < 100000 + EPSILON then
+            Result := Result - 10
+          else if Result < 500000 + EPSILON then
+            Result := Result - 50
+          else if Result < 1000000 + EPSILON then
+            Result := Result - 100
+          else if Result < 2000000 + EPSILON then
+            Result := Result - 500
+          else
+            Result := Result - 1000;
+        end;
+      end;
     ekBithumb:
       begin
-        iSign := iTicks div Abs(iTicks);
-
         for i:=1 to Abs(iTicks) do
         if iSign > 0 then
         begin
@@ -471,8 +524,87 @@ begin
 end;
 
 function LocksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
+var
+  i, iSign : Integer;
 begin
+  Result := dPrice;
 
+  if (iTicks = 0)
+     or (aSymbol = nil)
+     or (aSymbol.Spec = nil) then Exit;
+
+  iSign := iTicks div Abs(iTicks);
+
+  case aSymbol.Spec.ExchangeType of
+    ekBinance: ;
+    ekUpbit: ;
+    ekBithumb:
+      begin
+        for i:=1 to Abs(iTicks) do
+        if iSign > 0 then
+        begin
+          if Result > 1000000 - EPSILON then
+            Result := Result + 0.0001
+          else if Result > 100000 - EPSILON then
+            Result := Result + 0.001
+          else if Result > 10000 - EPSILON then
+            Result := Result + 0.01
+          else if Result > 1000 - EPSILON then
+            Result := Result + 0.1
+          else if Result > 100 - EPSILON then
+            Result := Result + 1
+          else
+            Result := Result + 10;
+        end else
+        begin
+          if Result < 100 + EPSILON then
+            Result := Result - 10
+          else if Result < 1000 + EPSILON then
+            Result := Result - 1
+          else if Result < 10000 + EPSILON then
+            Result := Result - 0.1
+          else if Result < 100000 + EPSILON then
+            Result := Result - 0.01
+          else if Result < 1000000 + EPSILON then
+            Result := Result - 0.001
+          else
+            Result := Result - 0.0001;
+        end;
+      end;
+  end;
+end;
+
+function GetPrecision(aSymbol: TSymbol; dPrice: Double): integer;
+begin
+   case aSymbol.Spec.ExchangeType of
+    ekBinance: Result := aSymbol.Spec.Precision ;
+    ekUpbit:
+      begin
+        if dPrice > 100 - EPSILON then
+          Result := 0
+        else if dPrice > 1 - EPSILON then
+          Result := 1
+        else if dPrice > 1 - EPSILON then
+          Result := 2
+        else if dPrice > 0.1 - EPSILON then
+          Result := 3
+        else
+          REsult := 4;
+      end;
+    ekBithumb:
+      begin
+        if dPrice > 1000 - EPSILON then
+          Result := 0
+        else if dPrice > 100 - EPSILON then
+          Result := 1
+        else if dPrice > 10 - EPSILON then
+          Result := 2
+        else if dPrice > 1 - EPSILON then
+          Result := 3
+        else
+          Result := 4;
+      end;
+   end;
 end;
 
 end.

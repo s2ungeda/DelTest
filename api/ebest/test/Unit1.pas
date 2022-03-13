@@ -87,6 +87,7 @@ begin
     Exit;
   end;
   DoLog(' ------ Connect --------' );
+  sleep(200);
   Button3Click( nil );
 end;
 
@@ -147,6 +148,8 @@ end;
 procedure TFrmExRate.FormCreate(Sender: TObject);
 begin
   FReady  := false;
+
+//  xaq.ResFileName := 'Bin/
 
   if not LoadConfig then begin
     ShowMessage('Failed LoadConfig');

@@ -125,6 +125,12 @@ begin
 
     end;
 
+    Canvas.Font.Name    := '³ª´®°íµñ';
+    Canvas.Font.Size    := 9;
+    Canvas.Font.Color   := aFont;
+    Canvas.Brush.Color  := aBack;
+
+    aRect.Top := Rect.Top + 4;
     Canvas.FillRect( Rect);
     DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
 

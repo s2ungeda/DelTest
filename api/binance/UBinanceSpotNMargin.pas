@@ -20,15 +20,15 @@ type
     function RequestSpotMaster : boolean ;
     function RequestSpotTicker : boolean ;
     function RequestMarginMaster : boolean;
+    procedure ReceiveDNWState;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
-
     procedure RequestDNWState; override;
-    
+
   end;
 
 implementation
@@ -206,6 +206,12 @@ begin
   Result := true;
 end;
 
+
+procedure TBinanceSpotNMargin.ReceiveDNWState;
+begin
+  gBinReceiver.ParseDNWState( RestReq.Response.Content );
+end;
+
 procedure TBinanceSpotNMargin.RequestDNWState;
 var
   data, sig, sTime: string;
@@ -219,16 +225,9 @@ begin
   SetParam('signature', sig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
 
-  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
-  begin
-    //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    gBinReceiver.ParseDNWState( sJson );
-  end else
-  begin
-    App.Log( llError, '', 'Failed %s RequestMarginMaster (%s, %s)',
-      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    Exit;
-  end;
+  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
+     App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
+
 end;
 
 function TBinanceSpotNMargin.RequestMarginMaster: boolean;
