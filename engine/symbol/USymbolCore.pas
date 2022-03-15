@@ -63,6 +63,8 @@ type
     procedure PreSubscribe;
     procedure RepresentCoin;
 
+    procedure GetSymbolList( aExKind : TExchangeKind; var aList : TList );
+
     function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
     procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
 
@@ -195,6 +197,17 @@ end;
 function TSymbolCore.FindSymbol(aExKind: TExchangeKind; aCode: string): TSymbol;
 begin
   Result := FSymbols[aExKind].FindCode( aCode );
+end;
+
+procedure TSymbolCore.GetSymbolList(aExKind: TExchangeKind; var aList: TList);
+var
+  I: Integer;
+begin
+  aList.Clear;
+
+  for I := 0 to FSpots[aExKind].Count-1 do
+    aList.Add( FSpots[aExKind].Spots[i] as TSymbol );
+
 end;
 
 procedure TSymbolCore.Log;

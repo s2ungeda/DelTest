@@ -44,7 +44,7 @@ implementation
 uses
   GApp, GAppForms ,
 
-  DalinMain, FPriceTable, FJungKopi
+  DalinMain, FPriceTable, FJungKopi , FDnwStates
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -68,8 +68,8 @@ begin
 
   if iFormID = ID_DALIN_MAIN then
   begin
-    if FrmDalin <> nil then
-      FrmDalin.LoadEnv( aStorage );
+    if FrmDalinMain <> nil then
+      FrmDalinMain.LoadEnv( aStorage );
     Exit;
   end;
 
@@ -85,6 +85,9 @@ begin
     ID_JUNG_KOPI :
       if aForm is TFrmJungKopi then
         (aForm as TFrmJungKopi).LoadEnv( aStorage );
+    ID_DNW_STATE :
+      if aForm is TFrmDnwStates then
+        (aForm as TFrmDnwStates).LoadEnv( aStorage );
 
 
   end;
@@ -101,11 +104,14 @@ begin
       if aForm is TFrmPriceTable then
         (aForm as TFrmPriceTable).SaveEnv( aStorage );
     ID_DALIN_MAIN :
-      if FrmDalin <> nil then
-        FrmDalin.SaveEnv(aStorage);
+      if FrmDalinMain <> nil then
+        FrmDalinMain.SaveEnv(aStorage);
     ID_JUNG_KOPI :
       if aForm is TFrmJungKopi then
         (aForm as TFrmJungKopi).SaveEnv( aStorage );
+    ID_DNW_STATE :
+      if aForm is TFrmDnwStates then
+        (aForm as TFrmDnwStates).SaveEnv( aStorage );
   end;
 end;
 
@@ -114,8 +120,9 @@ begin
   aForm := nil;
 
   case iFormID of
-    ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalin );
-    ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalin );
+    ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalinMain );
+    ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalinMain );
+    ID_DNW_STATE :  aForm := TFrmDnwStates.Create( FrmDalinMain );
 
     ID_QUOTE_MONITOR :
       begin
@@ -153,7 +160,7 @@ begin
 
 
   case (Sender as TComponent).Tag of
-    0 : ;
+    0 :App.Engine.FormBroker.Open(ID_DNW_STATE, 0);
     1 : ;
     2 : ;
   end;

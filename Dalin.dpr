@@ -77,16 +77,17 @@ uses
   JOSE.Core.JWK in 'libs\jwt\Source\JOSE\JOSE.Core.JWK.pas',
   JOSE.Core.JWS in 'libs\jwt\Source\JOSE\JOSE.Core.JWS.pas',
   JOSE.Core.JWT in 'libs\jwt\Source\JOSE\JOSE.Core.JWT.pas',
-  JOSE.Core.Parts in 'libs\jwt\Source\JOSE\JOSE.Core.Parts.pas';
+  JOSE.Core.Parts in 'libs\jwt\Source\JOSE\JOSE.Core.Parts.pas',
+  FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates};
 
 {$R *.res}
 begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TFrmDalinMain, FrmDalin);
+  Application.CreateForm(TFrmDalinMain, FrmDalinMain);
   Application.CreateForm(TDataModule1, DataModule1);
-  FrmDalin.Start;
+  FrmDalinMain.Start;
   Application.Run;
 
 end.

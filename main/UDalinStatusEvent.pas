@@ -39,7 +39,7 @@ begin
           Exit;
         end;
 
-        FrmDalin.SetValue;
+        FrmDalinMain.SetValue;
 
         App.AppStatus := asRecovery;
       end;
@@ -59,7 +59,7 @@ begin
       begin
         //
         App.Engine.ApiManager.SubscribeAll;
-        FrmDalin.Show;
+        FrmDalinMain.Show;
       end;
   end;
 end;

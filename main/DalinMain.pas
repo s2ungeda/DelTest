@@ -42,7 +42,7 @@ type
   end;
 
 var
-  FrmDalin : TFrmDalinMain;
+  FrmDalinMain : TFrmDalinMain;
 
 implementation
 {$R *.dfm}

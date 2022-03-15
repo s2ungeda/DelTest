@@ -476,9 +476,9 @@ begin
 
   if FLastEvent = qtTimeNSale then begin
     aKSymbol.KimpPrice  := ( aKSymbol.Last - dEx) / dEx * 100;
-    if aKSymbol.KimpPrice < 0 then
-      App.Log(llDebug, 'test', '%s %s %.2f, %.3f, %s: %.3f', [ TExchangeKindDesc[ aKSymbol.Spec.ExchangeType],
-           aKSymbol.Code, aKSymbol.KimpPrice, aKSymbol.Last, aOSSymbol.Code, aOSSymbol.Last ] );
+//    if aKSymbol.KimpPrice < 0 then
+//      App.Log(llDebug, 'test', '%s %s %.2f, %.3f, %s: %.3f', [ TExchangeKindDesc[ aKSymbol.Spec.ExchangeType],
+//           aKSymbol.Code, aKSymbol.KimpPrice, aKSymbol.Last, aOSSymbol.Code, aOSSymbol.Last ] );
   end
   else begin
     aKSymbol.KimpAskPrice  := ( aKSymbol.Asks[0].Price - dEx) / dEx * 100;
