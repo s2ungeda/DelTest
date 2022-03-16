@@ -202,10 +202,20 @@ begin
     // 406 에러 때문에 아래 와 같이 헤더 추가
     Set406;
 
-    if not RequestAsync(
-       ReceiveAsyncData
-     , rmGET, '/public/orderbook/ALL_KRW') then
-       App.Log( llError, 'Failed %s RequestOrderBook ', [ TExchangeKindDesc[GetExKind]] );
+    if Request( rmGET, '/public/orderbook/ALL_KRW', '', sJson, sOut ) then
+    begin
+      gBithReceiver.ParseSpotOrderBook( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestOrderBook (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit;
+    end;
+
+//    if not RequestAsync(
+//       ReceiveAsyncData
+//     , rmGET, '/public/orderbook/ALL_KRW') then
+//       App.Log( llError, 'Failed %s RequestOrderBook ', [ TExchangeKindDesc[GetExKind]] );
   except
   //  LeaveCriticalSection(CriticalSection);
   end;

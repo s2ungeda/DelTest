@@ -16,7 +16,7 @@ type
   TBithManager = class( TExchangeManager )
   private
     FParse: TBithParse;
-    FTimer: TQuoteTimer;
+    FDepTimer: TQuoteTimer;
 
     procedure OnTimer( Sender : TObject );
   public
@@ -35,7 +35,7 @@ type
     procedure OnSendDoneEvent(  Sender : TObject );
 
     property Parse : TBithParse read FParse;
-    property Timer : TQuoteTimer read FTimer;
+    property DepTimer : TQuoteTimer read FDepTimer;
   end;
 
 implementation
@@ -58,8 +58,8 @@ end;
 
 destructor TBithManager.Destroy;
 begin
-  if FTimer <> nil then
-    FTimer.Enabled := false;
+  if FDepTimer <> nil then
+    FDepTimer.Enabled := false;
   FParse.Free;
   inherited;
 end;
@@ -84,10 +84,10 @@ begin
   Result := true;
 
   // orderbook 을 위한 조회 타이머.
-  FTimer  := App.Engine.QuoteBroker.Timers.New;
-  FTimer.Enabled  := false;
-  FTimer.Interval := 500;
-  FTimer.OnTimer  := OnDepthTimer;
+  FDepTimer  := App.Engine.QuoteBroker.Timers.New;
+  FDepTimer.Enabled  := false;
+  FDepTimer.Interval := 500;
+  FDepTimer.OnTimer  := OnDepthTimer;
 
   Timer.OnTimer   := OnTimer;
 end;
@@ -97,7 +97,7 @@ begin
 
   if Done then
   begin
-    FTimer.Enabled := false;
+    FDepTimer.Enabled := false;
     Exit;
   end;
 
@@ -147,7 +147,7 @@ begin
     QuoteSock[i].SubscribeAll;
   result := true;
 
-  FTimer.Enabled := true;
+  FDepTimer.Enabled := true;
 end;
 
 
