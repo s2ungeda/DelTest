@@ -337,10 +337,18 @@ begin
         if Objects[ExCol, ARow] <> nil then
           if ACol <> CurCol then
             dFormat := DT_CENTER;
-      end;
+      end else
+      begin
 
-      if ACol = DayAmtCol then
-        dFormat := DT_RIGHT  ;
+       if ACol = CurCol+1 then begin
+          if Objects[ExCol, ARow] <> nil then
+            dFormat := DT_LEFT
+          else  if Objects[ExCol, ARow-2] <> nil then
+            dFormat := DT_RIGHT;
+        end
+        else if ACol = DayAmtCol then
+          dFormat := DT_RIGHT  ;
+      end;
 
     end;
 

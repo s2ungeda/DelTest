@@ -5,9 +5,13 @@ interface
 uses
   Windows, system.SysUtils, system.Math, system.DateUtils, Winapi.messages,
   Vcl.Forms ,
-  ShellApi
+  ShellApi ,
+  vcl.Grids
 
   ;
+type
+  TmpGrid = class( TCustomGrid );
+
 function AppDir : String;
 function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): String;
 
@@ -22,6 +26,12 @@ function GetTimestamp(len: Integer = 13): string;
 function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
 procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
 procedure CloseApp( sClassName : string );
+
+
+//--------------------------------------- controls
+
+procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
+procedure InsertLine( aGrid : TStringGrid; iline: Integer);
 
 
 implementation
@@ -151,6 +161,23 @@ begin
   aH := FindWindow( PChar(sClassName), nil );
   if aH > 0 then
     SendMessage( aH, WM_CLOSE, 0, 0 )
+end;
+
+procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
+begin
+  with aGrid do begin
+    TmpGrid(aGrid).DeleteRow(iline);
+    Rows[rowcount].Clear;
+  end;
+end;
+
+procedure InsertLine( aGrid : TStringGrid; iline: Integer);
+begin
+  with aGrid do begin
+    RowCount := Succ( RowCount );
+    TmpGrid( aGrid ).MoveRow( ( RowCount - 1 ), iline );
+    Rows[iline].Clear;
+  end;
 end;
 
 end.

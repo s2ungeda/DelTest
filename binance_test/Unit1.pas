@@ -21,6 +21,8 @@ const
   Cnt = 4;
 
 type
+  TTestType = ( tt1, tt2, tt3 );
+
   TForm1 = class(TForm)
     Memo1: TMemo;
     btnMaster: TButton;
@@ -135,7 +137,10 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 var
   I: Integer;
+  tt : TTestType;
 begin
+  tt := tt1;
+  caption := intTostr( integer( tt ) );
   for I := 0 to Cnt-1 do
   begin
     Symbols[i] := TSTringList.Create;

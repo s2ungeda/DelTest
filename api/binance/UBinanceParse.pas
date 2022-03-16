@@ -38,7 +38,7 @@ var
   gBinReceiver : TBinanceParse;
 implementation
 uses
-  GApp   , UApiConsts
+  GApp   , UApiConsts,  UConsts
   , GLibs
   , UQuoteBroker
   , USymbols
@@ -246,6 +246,7 @@ var
   I: Integer;
   sTmp : string;
   aSymbol : TSymbol;
+
 begin
   if aData = '' then
   begin
@@ -265,8 +266,12 @@ begin
       aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
       if aSymbol <> nil then
       begin
-        aSymbol.WithDrawlState := aPair.JsonValue.GetValue<boolean>('withdrawStatus');
-        aSymbol.DepositState   := aPair.JsonValue.GetValue<boolean>('depositStatus');
+
+        var iRes : integer;
+        iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
+                                      , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
+          if iRes > 0 then
+            App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
       end;
 
     end;

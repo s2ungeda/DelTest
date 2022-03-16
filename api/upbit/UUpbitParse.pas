@@ -245,6 +245,8 @@ begin
       aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp );
       if aSymbol <> nil then
       begin
+        var iRes : integer ;        iRes := 0;
+
         sTmp := aVal.GetValue<string>('wallet_state');
         if sTmp = 'working' then
         begin
@@ -252,20 +254,14 @@ begin
           aSymbol.WithDrawlState  := true;
         end else
         if sTmp = 'withdraw_only' then
-        begin
-          aSymbol.DepositState  := false;
-          aSymbol.WithDrawlState  := true;
-        end else
-        if sTmp = 'deposit_only' then
-        begin
-          aSymbol.DepositState  := true;
-          aSymbol.WithDrawlState  := false;
-        end else
-        if (sTmp = 'paused') or (sTmp = 'unsupported' ) then
-        begin
-          aSymbol.DepositState  := false;
-          aSymbol.WithDrawlState  := false;
-        end ;
+          iRes := aSymbol.CheckDnwState( false,  true )
+        else if sTmp = 'deposit_only' then
+          iRes := aSymbol.CheckDnwState( true,  false )
+        else if (sTmp = 'paused') or (sTmp = 'unsupported' ) then
+          iRes := aSymbol.CheckDnwState( false,  false );
+
+        if iRes > 0 then
+          App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
 
       end;
 

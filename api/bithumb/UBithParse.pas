@@ -156,8 +156,11 @@ begin
       iw := aPair.JsonValue.GetValue<integer>('withdrawal_status');
       id := aPair.JsonValue.GetValue<integer>('deposit_status');
 
-      aSymbol.WithDrawlState := iw = 1;
-      aSymbol.DepositState   := id = 1;
+      var iRes : integer;
+      iRes := aSymbol.CheckDnwState( iw = 1, id = 1 ) ;
+      if iRes > 0 then
+        App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+
 
     end;
 

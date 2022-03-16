@@ -145,6 +145,7 @@ type
     FKimpBidPrice: double;
     FWithdrawlState: boolean;
     FDepositState: boolean;
+    FDnwCount: integer;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -152,6 +153,7 @@ type
 
     function  PriceToStr( Value : double ) : string;
     function  QtyToStr( Value : double ) : string;
+    function CheckDnwState( depoit, withdraw : boolean ) : integer;
 //    property  ExchangeCode : string read FExchangeCode;
     property  Code  : string read FCode write FCode;
     property  OrgCode : string read FOrgCode write FOrgCode;
@@ -201,6 +203,8 @@ type
     property Terms: TSTerms read FTerms write FTerms;
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
     property AddTerm: boolean read FAddTerm write FAddTerm;
+
+    property DnwCount : integer read FDnwCount;
 
     property LastTime : TDateTime read FLastTime write FLastTime;
     property LastEventTime  : TDateTime read FLastEventTime write FLastEventTime;
@@ -284,10 +288,42 @@ implementation
 
 uses
   USymbolCore
+  , UConsts
   ;
 
 
 { TSymbol }
+
+function TSymbol.CheckDnwState(depoit, withdraw: boolean): integer;
+var
+  b1 , b2 : boolean;
+begin
+
+  b1 := true; b2 := true;
+  Result := 0;
+  if FWithdrawlState then
+    if not withdraw then
+      b1 := false;           
+  FWithdrawlState := withdraw;       
+
+  if FDepositState then
+    if not depoit then
+      b2 := false;            
+  FDepositState := depoit;
+
+  if (not b1) and ( not b2 ) then
+    Result := DNW_BOTH_FALE
+  else if not b1 then
+    Result := DWN_WITHDRAW_FALSE
+  else if not b2 then
+    Result := DWN_DEPOSIT_FALSE;       
+
+  if FDnwCount = 0 then   
+    Result := 0;
+
+  inc( FDnwCount );
+      
+end;
 
 constructor TSymbol.Create(aColl: TCollection);
 begin
@@ -308,6 +344,8 @@ begin
 
   FWithdrawlState := true;
   FDepositState   := true;
+
+  FDnwCount := 0;
 
 end;
 

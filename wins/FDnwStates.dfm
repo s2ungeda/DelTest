@@ -23,8 +23,6 @@ object FrmDnwStates: TFrmDnwStates
     Width = 1030
     Height = 19
     Panels = <>
-    ExplicitLeft = -157
-    ExplicitWidth = 1009
   end
   object plLeft: TPanel
     Left = 0
@@ -35,10 +33,6 @@ object FrmDnwStates: TFrmDnwStates
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitLeft = -157
-    ExplicitTop = -127
-    ExplicitWidth = 1009
-    ExplicitHeight = 538
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -48,7 +42,6 @@ object FrmDnwStates: TFrmDnwStates
       BevelOuter = bvLowered
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 1009
       DesignSize = (
         1030
         32)
@@ -61,7 +54,6 @@ object FrmDnwStates: TFrmDnwStates
         Caption = 'Refresh'
         TabOrder = 0
         OnClick = RefreshClick
-        ExplicitLeft = 792
       end
       object cbAuto: TCheckBox
         Left = 791
@@ -74,7 +66,6 @@ object FrmDnwStates: TFrmDnwStates
         State = cbChecked
         TabOrder = 1
         OnClick = cbAutoClick
-        ExplicitLeft = 643
       end
       object edtSec: TLabeledEdit
         Left = 838
@@ -90,7 +81,6 @@ object FrmDnwStates: TFrmDnwStates
         NumbersOnly = True
         TabOrder = 2
         Text = '10'
-        ExplicitLeft = 682
       end
     end
     object plLeftClient: TPanel
@@ -101,8 +91,6 @@ object FrmDnwStates: TFrmDnwStates
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 1009
-      ExplicitHeight = 506
       object sgDnw: TStringGrid
         Left = 0
         Top = 0
@@ -117,8 +105,6 @@ object FrmDnwStates: TFrmDnwStates
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         TabOrder = 0
         OnDrawCell = sgDnwDrawCell
-        ExplicitWidth = 1009
-        ExplicitHeight = 506
       end
     end
   end

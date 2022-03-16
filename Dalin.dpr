@@ -78,7 +78,8 @@ uses
   JOSE.Core.JWS in 'libs\jwt\Source\JOSE\JOSE.Core.JWS.pas',
   JOSE.Core.JWT in 'libs\jwt\Source\JOSE\JOSE.Core.JWT.pas',
   JOSE.Core.Parts in 'libs\jwt\Source\JOSE\JOSE.Core.Parts.pas',
-  FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates};
+  FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates},
+  USymbolBroker in 'engine\symbol\USymbolBroker.pas';
 
 {$R *.res}
 begin

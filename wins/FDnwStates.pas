@@ -47,6 +47,9 @@ type
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
     property FontSize : integer read FFontSize  write SetFontSize;
+
+    procedure SymbolProc(Sender, Receiver: TObject; DataID: Integer;
+        DataObj: TObject; EventID: TDistributorID);
   end;
 
 var
@@ -77,11 +80,14 @@ procedure TFrmDnwStates.FormCreate(Sender: TObject);
 begin
   initControls;
   InitObject;
+
+  App.Engine.SymbolBroker.Subscribe( Self, DNW_EVENT, SymbolProc );
 end;
 
 procedure TFrmDnwStates.FormDestroy(Sender: TObject);
 begin
   //
+  App.Engine.SymbolBroker.UnSubscribe( Self );
   FSymbols.Free;
 end;
 
@@ -145,7 +151,8 @@ begin
       FSaveRow := sgDnw.RowCount -3;
       SetSymbolToGrid( aSymbol.Spec.BaseCode , true );
 
-      sgDnw.RowCount := sgDnw.RowCount + 3;
+      if i <  FSymbols.Count-1 then
+        sgDnw.RowCount := sgDnw.RowCount + 3;
     end;
   end;
 end;
@@ -312,10 +319,17 @@ begin
         if Objects[ExCol, ARow] <> nil then
           if ACol <> CurCol then
             dFormat := DT_CENTER;
+      end else
+      begin
+        if ACol = CurCol+1 then begin
+          if Objects[ExCol, ARow] <> nil then
+            dFormat := DT_LEFT
+          else  if Objects[ExCol, ARow-2] <> nil then
+            dFormat := DT_RIGHT;
+        end
+        else if ACol = DayAmtCol then
+          dFormat := DT_RIGHT  ;
       end;
-
-      if ACol = DayAmtCol then
-        dFormat := DT_RIGHT  ;
 
     end;
 
@@ -344,6 +358,54 @@ begin
                        Point(Rect.Left,  Rect.Top),
                        Point(Rect.Right, Rect.Top)]);
     end;
+  end;
+
+end;
+
+procedure TFrmDnwStates.SymbolProc(Sender, Receiver: TObject; DataID: Integer;
+  DataObj: TObject; EventID: TDistributorID);
+  var
+    aSymbol, pSymbol : TSymbol;
+    iRow , i, j: integer;
+begin
+
+  if ( Receiver <> Self ) or ( DataObj = nil ) then Exit;
+
+  aSymbol := DataObj as TSymbol;
+
+  iRow  := sgDnw.Cols[CoinCol].IndexOfObject( aSymbol );
+  if iRow < 0 then Exit;
+
+  try
+
+    if cbAuto.Checked then
+      refreshTimer.Enabled := false;
+
+    j := iRow - integer( aSymbol.Spec.ExchangeType );
+
+//    for I := j to J+2 do begin
+//      pSymbol := TSymbol( sgDnw.Objects[ i, CoinCol] );
+//      if pSymbol <> nil then
+//        App.DebugLog( 'delete   %d :  %s %s ,  %d', [i, TExchangeKindDesc[ pSymbol.Spec.ExchangeType],
+//             pSymbol.Code, iRow] )
+//      else
+//        App.DebugLog('delete    %d :  %d', [ i, iRow]);
+//      DeleteLine( sgDnw, i );
+//    end;
+
+    DeleteLine( sgDnw, j );
+    DeleteLine( sgDnw, j );
+    DeleteLine( sgDnw, j );
+
+    InsertLine( sgDnw, 1 );
+    InsertLine( sgDnw, 1 );
+    InsertLine( sgDnw, 1 );
+
+    FSaveRow := 1;
+    SetSymbolToGrid(  aSymbol.Spec.BaseCode, true );
+  finally
+    if cbAuto.Checked then
+      refreshTimer.Enabled := true;
   end;
 
 end;

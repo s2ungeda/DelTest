@@ -28,6 +28,23 @@ const
   LONG_COLOR = $E4E2FC;
   SHORT_COLOR = $F5E2DA;
 
+    // data ID
+  DNW_EVENT = 100;
+
+    // event ID
+  DNW_BOTH_TRUE = 101;
+  DNW_BOTH_FALE = 102;
+  DWN_DEPOSIT_TRUE  = 103;
+  DWN_DEPOSIT_FALSE = 104;
+  DWN_WITHDRAW_TRUE = 105;
+  DWN_WITHDRAW_FALSE= 106;
+
+//  QTE_DATA = 200;
+//  CHART_DATA = 210;
+//  FPOS_DATA = 300;   // fund _ pos
+//  ACNT_DATA = 400;
+//  FUND_DATA = 500;
+
   // asNone, asInit, asSetValue, asRecovery, asLoad
   TAppStatusDesc : array [ TAppStatus ] of string = ('None', 'Init', 'SetValue', 'Recovery', 'Load', 'Show');
 
