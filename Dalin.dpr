@@ -80,7 +80,8 @@ uses
   JOSE.Core.Parts in 'libs\jwt\Source\JOSE\JOSE.Core.Parts.pas',
   FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates},
   USymbolBroker in 'engine\symbol\USymbolBroker.pas',
-  FServerMessage in 'wins\FServerMessage.pas' {FrmServerMessage};
+  FServerMessage in 'wins\FServerMessage.pas' {FrmServerMessage},
+  FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors};
 
 {$R *.res}
 begin

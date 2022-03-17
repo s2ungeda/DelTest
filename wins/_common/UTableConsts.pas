@@ -22,6 +22,14 @@ const
     100 );
 
 
+  quoteMon_TitleCnt = 12;
+  quoteMon_Title : array [0..quoteMon_TitleCnt-1] of string = ('코인', '거래소'
+    ,'김프', '매도가','매수가','현재가','등락'
+    ,'고','저', '일거래약', '선물', '마진');
+  quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (40, 40
+    , 80, 100, 100, 100, 80
+    , 80, 80, 80, 35, 35  );
+
   CoinCol = 0;
   ExCol   = 1;
   AskKipCol = 2;

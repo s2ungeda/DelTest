@@ -44,7 +44,7 @@ implementation
 uses
   GApp, GAppForms ,
 
-  DalinMain, FPriceTable, FJungKopi , FDnwStates
+  DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -89,6 +89,10 @@ begin
       if aForm is TFrmDnwStates then
         (aForm as TFrmDnwStates).LoadEnv( aStorage );
 
+    ID_QUOTE_MONITOR :
+      if aForm is TFrmQuoteMonitors then
+        (aForm as TFrmQuoteMonitors).LoadEnv( aStorage );
+
 
   end;
 
@@ -112,6 +116,9 @@ begin
     ID_DNW_STATE :
       if aForm is TFrmDnwStates then
         (aForm as TFrmDnwStates).SaveEnv( aStorage );
+    ID_QUOTE_MONITOR :
+      if aForm is TFrmQuoteMonitors then
+        (aForm as TFrmQuoteMonitors).SaveEnv( aStorage );
   end;
 end;
 
@@ -123,11 +130,7 @@ begin
     ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalinMain );
     ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalinMain );
     ID_DNW_STATE :  aForm := TFrmDnwStates.Create( FrmDalinMain );
-
-    ID_QUOTE_MONITOR :
-      begin
-
-      end;
+    ID_QUOTE_MONITOR :  aForm := TFrmQuoteMonitors.Create( FrmDalinMain );
   end;
 end;
 
@@ -146,7 +149,7 @@ begin
 
   case (Sender as TComponent).Tag of
     0 : App.Engine.FormBroker.Open(ID_KIMP_TABLE, 0);
-   // 1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
+    1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
     2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
   end;
 
