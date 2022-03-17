@@ -24,6 +24,7 @@ type
     FDataDir: string;
     FAppStatus: TAppStatus;
     FOnAppStatusEvent: TAppStatusEvent;
+    FErrorString: string;
     function  IsLogLevel(lLevel: TLogLevel): boolean;
     procedure SetAppStatus(const Value: TAppStatus);
   public
@@ -50,6 +51,7 @@ type
     property  QuoteDir  : string read FQuoteDir write FQuoteDir;
     property  DataDir  : string read FDataDir write FDataDir;
 
+    property  ErrorString : string read FErrorString write FErrorString;
       // type
     property  AppStatus : TAppStatus read FAppStatus write SetAppStatus;
 
@@ -114,8 +116,10 @@ begin
 //      if Engine.AppStatus = asLoad then
 
 //        Exit;
-      Log(llInfo, 'App status is %s ', [ TAppStatusDesc[Value] ] );
+
+
       FAppStatus :=  Value;
+      Log(llInfo, 'App status is %s ', [ TAppStatusDesc[Value] ] );
       OnAppStatusEvent( Value );
     end;
 

@@ -79,7 +79,8 @@ uses
   JOSE.Core.JWT in 'libs\jwt\Source\JOSE\JOSE.Core.JWT.pas',
   JOSE.Core.Parts in 'libs\jwt\Source\JOSE\JOSE.Core.Parts.pas',
   FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates},
-  USymbolBroker in 'engine\symbol\USymbolBroker.pas';
+  USymbolBroker in 'engine\symbol\USymbolBroker.pas',
+  FServerMessage in 'wins\FServerMessage.pas' {FrmServerMessage};
 
 {$R *.res}
 begin

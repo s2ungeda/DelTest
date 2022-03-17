@@ -32,6 +32,7 @@ type
     procedure GetExRate;
     procedure DalinStatusEvent( asType : TAppStatus );
     procedure ReadExRate;
+    procedure AppException(Sender: TObject; E: Exception);
 
   public
     { Public declarations }
@@ -52,9 +53,16 @@ uses
 ;
 
 
+procedure TFrmDalinMain.AppException(Sender: TObject; E: Exception);
+begin
+  //App.log( llError, 'Application Error : ' + E.Message );
+  //gEnv.AppMsg( WIN_ERR, 'Application Error : ' + E.Message );
+end;
 procedure TFrmDalinMain.FormCreate(Sender: TObject);
 begin
   //
+  Application.OnException := AppException;
+
   init;
 
   if not App.LoadConfig then

@@ -82,6 +82,15 @@ object FrmDnwStates: TFrmDnwStates
         TabOrder = 2
         Text = '10'
       end
+      object btnSort: TButton
+        Left = 7
+        Top = 4
+        Width = 42
+        Height = 25
+        Caption = 'Sort'
+        TabOrder = 3
+        OnClick = btnSortClick
+      end
     end
     object plLeftClient: TPanel
       Left = 0

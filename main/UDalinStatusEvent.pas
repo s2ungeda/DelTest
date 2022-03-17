@@ -11,17 +11,25 @@ procedure AppStatusEvent( asType : TAppStatus );
 implementation
 
 uses
-  GApp, GLibs  , shellapi
+  GApp, GLibs  , shellapi, Dialogs
   , DalinMain
   ;
 
 procedure AppStatusEvent( asType : TAppStatus );
 begin
   case asType of
+//    asError :
+//      begin
+//        ShowMessage( App.ErrorString);
+//        App.ErrorString := '';
+//      end;
     asNone: ;
     asInit:
-        if not App.Engine.ApiManager.GetMaster then
-          App.Log(llError, '', 'Failed PrepareMaster')
+        if not App.Engine.ApiManager.GetMaster then begin
+          App.Log(llError, '', 'Failed PrepareMaster');
+          ShowMessage('Failed PrepareMaster');
+          //AppStatusEvent( asError);
+        end
         else
           App.AppStatus := asSetValue;//asLoad;
 
@@ -30,12 +38,14 @@ begin
         if not App.Engine.ApiManager.InitMarketWebSocket then
         begin
           App.Log(llError, '', 'Failed InitMarketWebSocket') ;
+          ShowMessage('Failed InitMarketWebSocket');
           Exit;
         end;
 
         if not App.Engine.ApiManager.ConnectAll then
         begin
           App.Log(llError, '', 'Failed ConnectAll') ;
+          ShowMessage('Failed ConnectAll');
           Exit;
         end;
 

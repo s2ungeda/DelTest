@@ -22,6 +22,7 @@ type
     cbAuto: TCheckBox;
     edtSec: TLabeledEdit;
     refreshTimer: TTimer;
+    btnSort: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
@@ -31,6 +32,7 @@ type
     procedure refreshTimerTimer(Sender: TObject);
     procedure cbAutoClick(Sender: TObject);
     procedure RefreshClick(Sender: TObject);
+    procedure btnSortClick(Sender: TObject);
   private
     FFontSize: integer;
     FRow , FSaveRow , FTerm, FCount   : integer;
@@ -282,6 +284,7 @@ begin
   end;
 end;
 
+
 procedure TFrmDnwStates.sgDnwDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
   var
@@ -408,6 +411,19 @@ begin
       refreshTimer.Enabled := true;
   end;
 
+end;
+
+
+
+procedure TFrmDnwStates.btnSortClick(Sender: TObject);
+begin
+  if cbAuto.Checked then
+    refreshTimer.Enabled := false;
+
+  FSymbols.Sort( CompareDailyAmount );
+  RefreshClick( nil );
+
+  refreshTimer.Enabled := cbAuto.Checked;
 end;
 
 procedure TFrmDnwStates.cbAutoClick(Sender: TObject);
