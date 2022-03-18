@@ -20,6 +20,7 @@ type
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
+    function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
   end;
 
@@ -45,6 +46,11 @@ begin
   inherited;
 end;
 
+function TBinanceFutures.ParsePrepareMaster: integer;
+begin
+  gBinReceiver.ParsePrepareFuttMaster(MasterData);
+end;
+
 function TBinanceFutures.RequestFutTicker: boolean;
 var
   sOut, sJson : string;
@@ -66,25 +72,31 @@ begin
 end;
 
 function TBinanceFutures.RequestFuttMaster: boolean;
-var
-  sTmp, sOut, sJson : string;
 begin
-  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures );
-  SetBaseUrl( sTmp );
-
-  if Request( rmGET, '/fapi/v1/exchangeInfo' , '', sJson, sOut ) then
-  begin
-    gBinReceiver.ParseFuttMaster(sJson);
-  end else
-  begin
-    App.Log( llError, '', 'Failed %s Fut PreparMaster (%s, %s)',
-      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    Exit( false );
-  end;
-
+  gBinReceiver.ParseFuttMaster(MasterData);
   Result := App.Engine.SymbolCore.Futures[ GetExKind].Count > 0;
-
 end;
+
+//function TBinanceFutures.RequestFuttMaster: boolean;
+//var
+//  sTmp, sOut, sJson : string;
+//begin
+//  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures );
+//  SetBaseUrl( sTmp );
+//
+//  if Request( rmGET, '/fapi/v1/exchangeInfo' , '', sJson, sOut ) then
+//  begin
+//    gBinReceiver.ParseFuttMaster(sJson);
+//  end else
+//  begin
+//    App.Log( llError, '', 'Failed %s Fut PreparMaster (%s, %s)',
+//      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+//    Exit( false );
+//  end;
+//
+//  Result := App.Engine.SymbolCore.Futures[ GetExKind].Count > 0;
+//
+//end;
 
 function TBinanceFutures.RequestMaster: boolean;
 begin

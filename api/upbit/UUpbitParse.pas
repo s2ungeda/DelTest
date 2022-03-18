@@ -233,42 +233,48 @@ begin
     Exit;
   end;
 
-  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
   try
 
-    for I := 0 to aArr.Size-1 do
-    begin
-      aVal := aArr.Get(i);
-      sTmp := aVal.GetValue<string>('currency');
-      if FParent.Codes.IndexOf(sTmp) < 0 then continue;
+    aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+    try
+      if aArr = nil then Exit;
 
-      aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp );
-      if aSymbol <> nil then
+      for I := 0 to aArr.Size-1 do
       begin
-        var iRes : integer ;        iRes := 0;
+        aVal := aArr.Get(i);
+        sTmp := aVal.GetValue<string>('currency');
+        if FParent.Codes.IndexOf(sTmp) < 0 then continue;
 
-        sTmp := aVal.GetValue<string>('wallet_state');
-        if sTmp = 'working' then
+        aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp );
+        if aSymbol <> nil then
         begin
-          aSymbol.DepositState  := true;
-          aSymbol.WithDrawlState  := true;
-        end else
-        if sTmp = 'withdraw_only' then
-          iRes := aSymbol.CheckDnwState( false,  true )
-        else if sTmp = 'deposit_only' then
-          iRes := aSymbol.CheckDnwState( true,  false )
-        else if (sTmp = 'paused') or (sTmp = 'unsupported' ) then
-          iRes := aSymbol.CheckDnwState( false,  false );
+          var iRes : integer ;        iRes := 0;
 
-        if iRes > 0 then
-          App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+          sTmp := aVal.GetValue<string>('wallet_state');
+          if sTmp = 'working' then
+          begin
+            aSymbol.DepositState  := true;
+            aSymbol.WithDrawlState  := true;
+          end else
+          if sTmp = 'withdraw_only' then
+            iRes := aSymbol.CheckDnwState( false,  true )
+          else if sTmp = 'deposit_only' then
+            iRes := aSymbol.CheckDnwState( true,  false )
+          else if (sTmp = 'paused') or (sTmp = 'unsupported' ) then
+            iRes := aSymbol.CheckDnwState( false,  false );
+
+          if iRes > 0 then
+            App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+
+        end;
 
       end;
 
+    finally
+      if aArr <> nil then aArr.Free;
     end;
-
-  finally
-    if aArr <> nil then aArr.Free;
+  except on e : exception do
+    App.Log(llError, 'Upbit ParseDNWState parse error : %s, %s ' ,[ e.Message, aData ] );
   end;
 end;
 

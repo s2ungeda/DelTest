@@ -195,6 +195,10 @@ var
   sTmp : string;
 begin
   Result := Exchanges[mtSpot].PrepareMaster;
+
+  if Result and ( FExchangeKind = ekBinance ) then
+    Result := Exchanges[mtFutures].PrepareMaster;
+
   App.Log(llDebug, '', ' ---------- %s codes count %d -----------',
     [ TExchangeKindDesc[FExchangeKind], Exchanges[mtSpot].Codes.Count ] );
 

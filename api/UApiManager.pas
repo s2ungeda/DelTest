@@ -103,8 +103,19 @@ var
   I: TExchangeKind;
 begin
 
+  aList := TStringList.Create;
   try
-    aList := TStringList.Create;
+    // binance spot future 교집합..
+    for s in FExManagers[ekBinance].Exchanges[mtSpot].Codes do
+    begin
+      iRes := FExManagers[ekBinance].Exchanges[mtFutures].Codes.IndexOf(s);
+      if iRes >= 0 then
+        aList.Add(s);
+    end;
+    FExManagers[ekBinance].Exchanges[mtSpot].Codes.Clear;
+    FExManagers[ekBinance].Exchanges[mtSpot].Codes.Assign( aList );
+    aList.Clear;
+
     // upbit 와 binance 교집합
     for s in FExManagers[ekUpbit].Exchanges[mtSpot].Codes do
     begin
@@ -171,10 +182,10 @@ begin
   end;
 
   if Result  then
+  begin
+    App.Engine.SymbolCore.SymbolArrange;
     MasterLog;
-
-
-
+  end;
 end;
 
 

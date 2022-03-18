@@ -68,6 +68,7 @@ type
     function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
     procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
 
+    procedure SymbolArrange;
 
     property Specs: TMarketSpecs read FSpecs;
 
@@ -221,7 +222,6 @@ var
   stData : string;
 begin
 
-  Exit;
 
   App.DebugLog('%s_%s:%d, %s_%s:%d, %s:%d, %s:%d', [
     TExchangeKindDesc[ekBinance], TMarketTypeDesc[mtSpot], FSpots[ekBinance].Count
@@ -229,6 +229,8 @@ begin
     , TExchangeKindDesc[ekUpbit], FSpots[ekUpbit].Count
     , TExchangeKindDesc[ekBithumb],  FSpots[ekBithumb].Count
     ]);
+
+  Exit;
 
   for I := ekBinance to High(TExchangeKind) do
   begin
@@ -363,6 +365,33 @@ begin
   idx  := ( hh mod 24 * 2 ) + ( nn div 30 );
 
   JungKopi[aExKind][idx] := Value;
+end;
+
+procedure TSymbolCore.SymbolArrange;
+var
+  I, idx: Integer;
+  aSymbol : TSymbol;
+  aList : TStrings;
+begin
+  Exit;
+  aList := TStringList.Create;
+  try
+    // 1 선물 없는 현물 삭제하기.
+    for I := FSpots[ekBinance].Count-1 downto 0 do
+    begin
+      aSymbol := FSpots[ekBinance].Spots[i];
+      if not aSymbol.IsFuture then
+      begin
+        idx := FSymbols[ekBinance].IndexOfObject( aSymbol );
+        if idx >= 0 then
+          FSymbols[ekBinance].Delete(idx);
+        App.DebugLog(' Binance Spot Arrangement : %s, %d, %d, %d', [ aSymbol.Code, FSpots[ekBinance].Count, i, idx ]  );
+        FSpots[ekBinance].Delete(i);
+      end;
+    end;
+  finally
+    aList.Free;
+  end;
 end;
 
 procedure TSymbolCore.RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol);

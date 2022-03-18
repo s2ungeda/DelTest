@@ -27,6 +27,7 @@ type
     procedure ParseSpotTicker( aData : string );
 
     procedure ParseFuttMaster( aData : string );
+    function  ParsePrepareFuttMaster( aData : string ) : boolean;
     procedure ParseFuttTicker( aData : string );
 
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
@@ -72,6 +73,38 @@ begin
 
 end;
 
+
+function TBinanceParse.ParsePrepareFuttMaster(aData: string): boolean;
+var
+  aObj  : TJsonObject;
+  aArr : TJsonArray;
+
+  I : Integer;
+  sTmp : string;
+  bNew : boolean;
+  dSize, dSize2 : double;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParsePrepareFuttMaster data is empty') ;
+    Exit (false);
+  end;
+
+  aArr := (TJsonObject.ParseJSONValue( aData ) as TJsonObject).Get('symbols').JsonValue as TJsonArray;
+
+  for I := 0 to aArr.Size-1 do
+  begin
+    aObj  := aArr.Get(i) as TJsonObject;
+    sTmp  := aObj.GetValue('quoteAsset').Value;
+    if sTmp = 'USDT' then
+      FParent.Exchanges[ mtFutures ].Codes.Add( aObj.GetValue('baseAsset').Value );
+  end;
+
+  REsult := true;
+
+end;
+
+
 procedure TBinanceParse.ParseFuttMaster(aData: string);
 var
   aVal : TJsonValue;
@@ -96,16 +129,25 @@ begin
   begin
     aObj  := aArr.Get(i) as TJsonObject;
     sTmp  := aObj.GetValue('quoteAsset').Value;
-    if sTmp <> 'USDT' then Continue;
+    if sTmp <> 'USDT' then  begin
+      //sCode   := aObj.GetValue('symbol').Value;
+      //App.DebugLog( 'binance  fut  not found  : %d , %s ', [i, sCode] );
+      Continue;
+    end;
 
     sCode   := aObj.GetValue('symbol').Value;
+
     sTmp    := sCode + Fut_Suf;  // add perpectual future Suffix;
     aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sTmp);
     if aSymbol = nil then
     begin
       bNew := true;
       aSymbol := App.Engine.SymbolCore.RegisterSymbol(ekBinance, mtFutures, sCode );
-      if aSymbol = nil then Exit;
+      if aSymbol = nil then
+      begin
+        //App.DebugLog( 'binance  fut  not RegisterSymbol  : %d , %s ', [i, sCode] );
+        continue;
+      end;
     end else
       bNew := false;
 
@@ -145,8 +187,6 @@ begin
 
     if bNew then
       App.Engine.SymbolCore.RegisterSymbol( ekBinance, aSymbol );
-
-
   end;
 end;
 
@@ -239,6 +279,8 @@ begin
 
 end;
 
+
+
 procedure TBinanceParse.ParseDNWState(aData: string);
 var
   aObj : TJsonObject;
@@ -254,29 +296,34 @@ begin
     Exit;
   end;
 
-  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
   try
-    for I := 0 to aObj.Size-1 do
-    begin
-      aPair := aObj.Get(i);
 
-      sTmp  := aPair.JsonString.Value;
-      if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
-
-      aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
-      if aSymbol <> nil then
+    aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+    try
+      for I := 0 to aObj.Size-1 do
       begin
+        aPair := aObj.Get(i);
 
-        var iRes : integer;
-        iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
-                                      , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
-          if iRes > 0 then
-            App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+        sTmp  := aPair.JsonString.Value;
+        if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
+
+        aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
+        if aSymbol <> nil then
+        begin
+
+          var iRes : integer;
+          iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
+                                        , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
+            if iRes > 0 then
+              App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+        end;
+
       end;
-
+    finally
+      aObj.Free;
     end;
-  finally
-    aObj.Free;
+  except on e : exception do
+    App.Log(llError, 'ParseDNWState parse error : %s, %s ' ,[ e.Message, aData ] );
   end;
 end;
 

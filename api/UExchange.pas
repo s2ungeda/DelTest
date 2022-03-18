@@ -148,17 +148,17 @@ function TExchange.PrepareMaster: boolean;
 var
   sTmp, sOut, sJson : string;
 begin
-  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot );
+  sTmp  := App.Engine.ApiConfig.GetBaseUrl( GetExKind , FMarketType );
   SetBaseUrl( sTmp );
-  sTmp  := App.Engine.ApiConfig.GetPrepare(GetExKind , mtSpot );
+  sTmp  := App.Engine.ApiConfig.GetPrepare(GetExKind , FMarketType );
   if Request( rmGET, sTmp , '', sJson, sOut ) then
   begin
     FMasterData := sJson ;
     ParsePrepareMaster;
   end else
   begin
-    App.Log( llError, '', 'Failed %s spot PreparMaster (%s, %s)',
-      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    App.Log( llError, '', 'Failed %s %s PreparMaster (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], TMarketTypeDesc[FMarketType], sOut, sJson] );
     Exit( false );
   end;
 
@@ -191,6 +191,8 @@ begin
         OutJson:= FRestRes.Content;
         Exit( false );
       end;
+
+
 
       OutJson := FRestRes.Content;
       Result := true;
