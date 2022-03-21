@@ -26,7 +26,7 @@ type
     Destructor  Destroy; override;
 
     procedure RequestOrderBook( c : char ) ; overload;
-    procedure RequestDNWState; override;
+    function RequestDNWState : boolean; override;
 
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
@@ -95,6 +95,7 @@ function TBithSpot.RequestMaster: boolean;
 begin
   Result := RequestTicker
     and RequestOrderBook
+    and RequestDNWState
     ;
 end;
 
@@ -221,7 +222,7 @@ begin
   end;
 end;
 
-procedure TBithSpot.RequestDNWState;
+function TBithSpot.RequestDNWState : boolean;
 var
   sOut, sJson : string;
 begin
@@ -239,9 +240,10 @@ begin
     begin
       App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
         [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-      Exit;
+      Exit (false);
     end;
 
+    result := true;
 //    if not RequestAsync(
 //      ReceiveAsyncData
 //     , rmGET, '/public/assetsstatus/ALL') then

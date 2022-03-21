@@ -289,6 +289,7 @@ implementation
 uses
   USymbolCore
   , UConsts
+  , GApp
   ;
 
 
@@ -316,13 +317,16 @@ begin
   else if not b1 then
     Result := DWN_WITHDRAW_FALSE
   else if not b2 then
-    Result := DWN_DEPOSIT_FALSE;       
+    Result := DWN_DEPOSIT_FALSE;
 
-  if FDnwCount = 0 then   
+  if Result > 0 then
+    App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self );
+
+  if FDnwCount = 0 then
     Result := 0;
 
   inc( FDnwCount );
-      
+
 end;
 
 constructor TSymbol.Create(aColl: TCollection);

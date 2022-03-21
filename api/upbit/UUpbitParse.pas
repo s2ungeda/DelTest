@@ -33,7 +33,6 @@ type
 var
   gUpReceiver : TUpbitParse;
 
-
 implementation
 
 uses

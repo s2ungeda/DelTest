@@ -96,7 +96,9 @@ begin
 
   QryTimer.Enabled := false;
 
-  App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
+  if App.AppStatus > asLoad then
+    App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
+
   App.Log(llInfo, '', '--- Form Saved ---');
   App.Engine.ApiManager.DisConnectAll;
   App.Log(llInfo, '', '--- DisConnectAll ---');

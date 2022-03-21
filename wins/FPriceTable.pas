@@ -12,7 +12,6 @@ type
   TFrmPriceTable = class(TForm)
     StatusBar1: TStatusBar;
     plLeft: TPanel;
-    plLeftTop: TPanel;
     plLeftClient: TPanel;
     sgKimp: TStringGrid;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -323,7 +322,7 @@ begin
 
     if ARow = 0 then
     begin
-      aBack := clBtnFace;
+      aBack := clSkyBlue;
     end else
     begin
       //  0,1,2 ->0    3,4,5 ->1   6,7,8 -> 2

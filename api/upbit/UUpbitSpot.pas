@@ -22,13 +22,15 @@ type
     FEnable: boolean;
     procedure ReceiveDNWState ;
     procedure ParseRateLimit(sTmp: string);
+    function RequestSpotTicker : boolean;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
-    procedure RequestDNWState; override;
+
+    function RequestDNWState : boolean; override;
 
     property  LimitSec : integer read FLimitSec;
     property  LimitMin : integer read FLimitMin;
@@ -101,6 +103,14 @@ end;
 
 
 function TUpbitSpot.RequestMaster: boolean;
+begin
+  Result :=  RequestSpotTicker
+      and  RequestDNWState
+      ;
+end;
+
+
+function TUpbitSpot.RequestSpotTicker: boolean;
 var
   aList : TStringList;
   sTmp, sOut, sJson, sData  : string;
@@ -176,36 +186,36 @@ begin
   FLimitMin := StrToIntDef( trim( sts[1] ), 1 );
 end;
 
-procedure TUpbitSpot.RequestDNWState;
+function TUpbitSpot.RequestDNWState : boolean;
 var
   LToken: TJWT;
   guid : TGUID;
   sSig, sID, sToken, sData, sOut, sJson : string;
 begin
-  if not FEnable then
-  begin
-    inc( FInterval ,2 );
-    if FInterval > 30 then begin
-      FEnable   := true;
-      FInterval := 0;
-      FLimitMin := 1;
-    end else Exit;
-  end;
-
-
-  if (FLimitSec <= 0) then
-  begin
-    App.Log(llInfo, 'TUpbitSpot RequestDNWState Rate Limit %d, %d',[ FLimitMin, FLimitSec] );
-
-    if FLimitMin <= 0 then begin
-      FEnable   := false;
-      FInterval := 0;
-      Exit;
-    end;
-
-    FLimitSec := 1;
-    Exit;
-  end;
+//  if not FEnable then
+//  begin
+//    inc( FInterval ,2 );
+//    if FInterval > 30 then begin
+//      FEnable   := true;
+//      FInterval := 0;
+//      FLimitMin := 1;
+//    end else Exit;
+//  end;
+//
+//
+//  if (FLimitSec <= 0) then
+//  begin
+//    App.Log(llInfo, 'TUpbitSpot RequestDNWState Rate Limit %d, %d',[ FLimitMin, FLimitSec] );
+//
+//    if FLimitMin <= 0 then begin
+//      FEnable   := false;
+//      FInterval := 0;
+//      Exit;
+//    end;
+//
+//    FLimitSec := 1;
+//    Exit;
+//  end;
 
   LToken:= TJWT.Create(TJWTClaims);
 
@@ -224,28 +234,30 @@ begin
 
     RestReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 
-    if not RequestAsync(
-      procedure
-      var
-        sTmp : string;
-      begin
-        sTmp := RestReq.Response.Headers.Values['Remaining-Req'];
-        ParseRateLimit( sTmp );
-        gUpReceiver.ParseDNWSate( RestReq.Response.Content );
-      end
-      , rmGET, '/v1/status/wallet') then
-      App.Log( llError, 'Failed %s RequestDNWStte ', [ TExchangeKindDesc[GetExKind]] );
+//    if not RequestAsync(
+//      procedure
+//      var
+//        sTmp : string;
+//      begin
+//        sTmp := RestReq.Response.Headers.Values['Remaining-Req'];
+//        ParseRateLimit( sTmp );
+//        gUpReceiver.ParseDNWSate( RestReq.Response.Content );
+//      end
+//      , rmGET, '/v1/status/wallet') then
+//      App.Log( llError, 'Failed %s RequestDNWStte ', [ TExchangeKindDesc[GetExKind]] );
 
-//    if Request( rmGET, '/v1/status/wallet', '', sJson, sOut ) then
-//    begin         //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-//
-//      gUpReceiver.ParseDNWSate( sJson );
-//    end else
-//    begin
-//      App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
-//        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-//      Exit;
-//    end;
+    if Request( rmGET, '/v1/status/wallet', '', sJson, sOut ) then
+    begin         //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+
+      gUpReceiver.ParseDNWSate( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit (false);
+    end;
+
+    Result := true;
 
   finally
     LToken.Free;

@@ -3,7 +3,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   Top = 0
   Caption = #49884#49464#47784#45768#53552#47553
   ClientHeight = 481
-  ClientWidth = 1037
+  ClientWidth = 870
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,44 +11,41 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
     Top = 462
-    Width = 1037
+    Width = 870
     Height = 19
     Panels = <>
-    ExplicitLeft = -374
-    ExplicitTop = 317
-    ExplicitWidth = 1009
+    ExplicitWidth = 1037
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 1037
+    Width = 870
     Height = 462
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitLeft = -374
-    ExplicitTop = -202
-    ExplicitWidth = 1009
-    ExplicitHeight = 538
+    ExplicitWidth = 1037
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 1037
+      Width = 870
       Height = 51
       Align = alTop
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
-      ExplicitTop = -6
-      ExplicitWidth = 859
+      ExplicitWidth = 1037
       DesignSize = (
-        1037
+        870
         51)
       object cbOSEx: TComboBox
         Left = 80
@@ -56,7 +53,11 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 79
         Height = 21
         Style = csDropDownList
+        ItemIndex = 0
         TabOrder = 0
+        Text = 'Binance'
+        Items.Strings = (
+          'Binance')
       end
       object cbKREx1: TComboBox
         Left = 165
@@ -64,7 +65,12 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 79
         Height = 21
         Style = csDropDownList
+        ItemIndex = 0
         TabOrder = 1
+        Text = 'Upbit'
+        Items.Strings = (
+          'Upbit'
+          'Bithumb')
       end
       object cbKREx2: TComboBox
         Left = 246
@@ -72,7 +78,12 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 79
         Height = 21
         Style = csDropDownList
+        ItemIndex = 1
         TabOrder = 2
+        Text = 'Bithumb'
+        Items.Strings = (
+          'Upbit'
+          'Bithumb')
       end
       object plExRate: TPanel
         Left = 6
@@ -141,13 +152,14 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         TabOrder = 6
       end
       object Panel4: TPanel
-        Left = 848
+        Left = 681
         Top = 2
         Width = 177
         Height = 47
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
+        ExplicitLeft = 848
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -193,7 +205,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         end
       end
       object Button1: TButton
-        Left = 767
+        Left = 331
         Top = 26
         Width = 75
         Height = 21
@@ -205,29 +217,34 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     object plLeftClient: TPanel
       Left = 0
       Top = 51
-      Width = 1037
+      Width = 870
       Height = 411
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitTop = 32
-      ExplicitWidth = 1009
-      ExplicitHeight = 506
-      object sgKimp: TStringGrid
+      ExplicitWidth = 1037
+      object sgQuote: TStringGrid
         Left = 0
         Top = 0
-        Width = 1037
+        Width = 870
         Height = 411
         Align = alClient
-        ColCount = 13
+        ColCount = 12
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
         RowCount = 25
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         TabOrder = 0
-        ExplicitWidth = 859
+        OnDrawCell = sgQuoteDrawCell
+        ExplicitWidth = 1037
       end
     end
+  end
+  object Timer1: TTimer
+    Interval = 3000
+    OnTimer = Timer1Timer
+    Left = 344
+    Top = 195
   end
 end

@@ -46,6 +46,7 @@ type
     FUnderlyings: TMarketGroupsArray;
     FMainSymbols: TMainSymbols;
     FMainKimp: TMainKimpArray;
+    FSymbolDnwStates: TSymbolArray;
 
   public
 
@@ -75,6 +76,8 @@ type
     property Symbols: TSymbolArray read FSymbols;
     property Spots: TSpotArray read FSpots;
     property Futures: TFutureArray read FFutures;
+
+    property SymbolDnwStates :  TSymbolArray read FSymbolDnwStates;
 
     property Markets: TMarketArray read FMarkets;
     property SpotMarkets: TSpotMarketArray read FSpotMarkets;
@@ -150,6 +153,8 @@ begin
     FExchanges[i]   := TMarketGroups.Create;
     FUnderlyings[i] := TMarketGroups.Create;
 
+    FSymbolDnwStates[i] := TSymbolList.Create;
+
     FMainKimp[i] := 0.0;
   end;
 
@@ -162,10 +167,12 @@ begin
 
   for I := ekBinance to High( TExchangeKind ) do
   begin
+    FSymbolDnwStates[i].Free;
     FSymbols[i].Free;
     FSpots[i].Free;
 
     FFutures[i].Free;
+
 
     FMarkets[i].Free;
     FSpotMarkets[i].Free;

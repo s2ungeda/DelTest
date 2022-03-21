@@ -27,7 +27,7 @@ type
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
-    procedure RequestDNWState; override;
+    function RequestDNWState : boolean; override;
 
   end;
 
@@ -90,6 +90,7 @@ begin
   Result := RequestSpotMaster          
          and RequestMarginMaster
          and RequestSpotTicker
+         and RequestDnwState
          ;
 end;
 
@@ -212,7 +213,7 @@ begin
   gBinReceiver.ParseDNWState( RestReq.Response.Content );
 end;
 
-procedure TBinanceSpotNMargin.RequestDNWState;
+function TBinanceSpotNMargin.RequestDNWState : boolean;
 var
   data, sig, sTime: string;
   sOut, sJson : string;
@@ -225,8 +226,21 @@ begin
   SetParam('signature', sig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
 
-  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
-     App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
+//  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
+//     App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
+
+  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseDNWState( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
+
+  Result := true;
 
 end;
 

@@ -2,7 +2,7 @@ object FrmPriceTable: TFrmPriceTable
   Left = 549
   Top = 75
   Caption = #44608#54532#54788#54889#54364
-  ClientHeight = 557
+  ClientHeight = 525
   ClientWidth = 1009
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object FrmPriceTable: TFrmPriceTable
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 538
+    Top = 506
     Width = 1009
     Height = 19
     Panels = <>
@@ -28,29 +28,19 @@ object FrmPriceTable: TFrmPriceTable
     Left = 0
     Top = 0
     Width = 1009
-    Height = 538
+    Height = 506
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    object plLeftTop: TPanel
-      Left = 0
-      Top = 0
-      Width = 1009
-      Height = 32
-      Align = alTop
-      BevelOuter = bvLowered
-      ParentBackground = False
-      TabOrder = 0
-    end
     object plLeftClient: TPanel
       Left = 0
-      Top = 32
+      Top = 0
       Width = 1009
       Height = 506
       Align = alClient
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 0
       object sgKimp: TStringGrid
         Left = 0
         Top = 0

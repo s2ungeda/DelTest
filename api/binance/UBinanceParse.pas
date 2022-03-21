@@ -314,8 +314,8 @@ begin
           var iRes : integer;
           iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
                                         , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
-            if iRes > 0 then
-              App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+          if iRes > 0 then
+            App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
         end;
 
       end;
