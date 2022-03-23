@@ -12,6 +12,8 @@ uses
   ;
 
 type
+
+
   TFrmQuoteMonitors = class(TForm)
     StatusBar1: TStatusBar;
     plLeft: TPanel;
@@ -39,11 +41,16 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure sgQuoteDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
       State: TGridDrawState);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     procedure initControls;
+    function CheckFilter(aSymbol: TSymbol): boolean;
+    procedure UpdateData(aSymbol: TSymbol; iRow: integer);
+    procedure PutData(var iCol, iRow: integer; sData: string);
   public
     { Public declarations }
+    procedure RefreshData ;
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
   end;
@@ -55,7 +62,7 @@ implementation
 
 uses
   GApp   , UTableConsts
-  , UConsts
+  , UConsts, UApiConsts
   , GLibs
   ;
 
@@ -93,8 +100,8 @@ begin
     sgQuote.ColWidths[i] :=  quoteMon_Width[i];
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
   end;
-
-
+  sgQuote.RowCount := 1;
+  App.Engine.SymbolCore.CommSymbols.SortByDailyAmount;
 end;
 
 procedure TFrmQuoteMonitors.LoadEnv(aStorage: TStorage);
@@ -104,6 +111,99 @@ begin
   edtAmt.Text := aStorage.FieldByName('Amount').AsStringDef('50');
   cbUB.Checked:= aStorage.FieldByName('UB').AsBooleanDef(true);
   cbBT.Checked:= aStorage.FieldByName('BT').AsBooleanDef(true);
+end;
+
+procedure TFrmQuoteMonitors.Button1Click(Sender: TObject);
+begin
+  RefreshData;
+end;
+
+function TFrmQuoteMonitors.CheckFilter(aSymbol : TSymbol): boolean;
+
+  function compare( d : double ) : boolean ;
+  begin
+      if aSymbol.DayAmount + DOUBLE_EPSILON < d then
+        Exit (false)
+      else
+        Exit ( true );
+  end;
+begin
+  if ( not cbUB.Checked ) and ( not cbBT.Checked ) then
+    Exit  ( true )
+  else  begin
+    var dAmt : double;
+    dAmt  := StrToFloat( edtAmt.Text );
+
+    if cbUB.Checked and cbBT.Checked then
+      Exit ( compare( dAmt))
+    else if cbBT.Checked  and ( not cbUB.Checked ) then begin
+      if aSymbol.Spec.ExchangeType = ekBithumb then
+        Exit ( compare( dAmt))
+      else Exit (true);
+    end
+    else if cbBT.Checked  and ( not cbUB.Checked ) then begin
+      if aSymbol.Spec.ExchangeType = ekUpbit then
+        Exit ( compare( dAmt))
+      else Exit (true);
+    end;
+  end;
+end;
+
+procedure TFrmQuoteMonitors.RefreshData;
+var
+  I: Integer;
+  aSymbol : TSymbol;
+begin
+  InitGrid( sgQuote, true, 1 );
+
+  //sgQuote.RowCount := App.Engine.SymbolCore.CommSymbols.Count + 1;
+
+  for I := 0 to App.Engine.SymbolCore.CommSymbols.Count-1 do
+  begin
+    aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
+    if not CheckFilter( aSymbol ) then begin
+      sgQuote.RowCount := sgQuote.RowCount -1;
+      continue;
+    end;
+
+    InsertLine( sgQuote, sgQuote.RowCount );
+    UpdateData( aSymbol, sgQuote.RowCount - 1);
+  end;
+end;
+
+procedure TFrmQuoteMonitors.PutData( var iCol, iRow : integer; sData : string );
+begin
+  sgQuote.Cells[iCol, iRow] := sData;
+  inc( iCol );
+end;
+
+procedure TFrmQuoteMonitors.UpdateData( aSymbol : TSymbol; iRow : integer );
+var
+  iCol : integer;
+  dTmp : double;
+begin
+  iCol := 0;
+  with sgQuote do
+  begin
+    Objects[CoinCol, iRow]  := aSymbol;
+    PutData( iCol, iRow, aSymbol.Code );
+    PutData( iCol, iRow, TExchangeKindShortDesc[ aSymbol.Spec.ExchangeType ]  );
+    PutData( iCol, iRow, Format('%.2f %%', [ aSymbol.KimpPrice] ) );
+
+    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Asks[0].Price ) );
+    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Bids[0].Price ) );
+    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
+
+    if aSymbol.DayOpen <= 0 then  dTmp := 1
+    else dTmp := aSymbol.DayOpen;
+
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ] ) );
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ] ) );
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ] ) );
+
+    PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
+
+  end;
 end;
 
 procedure TFrmQuoteMonitors.SaveEnv(aStorage: TStorage);
@@ -136,7 +236,6 @@ begin
     if ARow = 0 then
     begin
       aBack := clMoneyGreen;
-
     end else
     begin
 

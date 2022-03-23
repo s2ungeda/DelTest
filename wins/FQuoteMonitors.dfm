@@ -22,7 +22,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     Width = 870
     Height = 19
     Panels = <>
-    ExplicitWidth = 1037
   end
   object plLeft: TPanel
     Left = 0
@@ -33,7 +32,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitWidth = 1037
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -43,7 +41,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 1037
       DesignSize = (
         870
         51)
@@ -159,7 +156,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
-        ExplicitLeft = 848
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -212,6 +208,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Anchors = [akRight, akBottom]
         Caption = 'refresh'
         TabOrder = 8
+        OnClick = Button1Click
       end
     end
     object plLeftClient: TPanel
@@ -222,7 +219,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 1037
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
@@ -237,7 +233,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         TabOrder = 0
         OnDrawCell = sgQuoteDrawCell
-        ExplicitWidth = 1037
       end
     end
   end

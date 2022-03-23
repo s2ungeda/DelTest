@@ -15,7 +15,7 @@ const
   // FQN = symbol@[sub-market.][underlying.].market.exchange.country
 
   FQN_BINAN_SPOT = 'spot.binance.os';
-  FQN_UPBIT_SOPT = 'spot.upbit.os';
+  FQN_UPBIT_SOPT = 'spot.upbit.kr';
   FQN_BITHU_SPOT = 'spot.bithumb.kr';
 
   FQN_BINAN_FUTURES = 'future.binance.os';

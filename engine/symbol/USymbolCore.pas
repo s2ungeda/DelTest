@@ -47,6 +47,7 @@ type
     FMainSymbols: TMainSymbols;
     FMainKimp: TMainKimpArray;
     FSymbolDnwStates: TSymbolArray;
+    FCommSymbols: TCommSymbolList;
 
   public
 
@@ -76,6 +77,7 @@ type
     property Symbols: TSymbolArray read FSymbols;
     property Spots: TSpotArray read FSpots;
     property Futures: TFutureArray read FFutures;
+    property CommSymbols : TCommSymbolList read FCommSymbols;
 
     property SymbolDnwStates :  TSymbolArray read FSymbolDnwStates;
 
@@ -158,6 +160,8 @@ begin
     FMainKimp[i] := 0.0;
   end;
 
+  FCommSymbols:= TCommSymbolList.Create;
+
 end;
 
 destructor TSymbolCore.Destroy;
@@ -182,7 +186,8 @@ begin
     FUnderlyings[i].Free;
   end;
 
-   FSpecs.Free;
+  FCommSymbols.Free;
+  FSpecs.Free;
 
   inherited;
 end;
@@ -440,6 +445,9 @@ begin
     FExchanges[aExKind].AddMarket(aMarket,
                          aSymbol.Spec.Exchange + '.' + aSymbol.Spec.Country,
                          aSymbol.Spec.Exchange);
+
+    if aSymbol.Spec.Country = 'kr' then
+      FCommSymbols.Add( aSymbol );
   end;
 
   aMarket.AddSymbol( aSymbol );

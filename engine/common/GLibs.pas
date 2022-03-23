@@ -32,6 +32,7 @@ procedure CloseApp( sClassName : string );
 
 procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
 procedure InsertLine( aGrid : TStringGrid; iline: Integer);
+procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer = 0);
 
 
 implementation
@@ -178,6 +179,18 @@ begin
     TmpGrid( aGrid ).MoveRow( ( RowCount - 1 ), iline );
     Rows[iline].Clear;
   end;
+end;
+
+procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer );
+var
+  i : integer;
+begin
+  for I := FixedCnt to aGrid.RowCount-1 do
+    aGrid.Rows[i].Clear;
+
+  if bClear then
+    aGrid.RowCount := FixedCnt;
+
 end;
 
 end.

@@ -284,6 +284,21 @@ type
     property Futures[i:Integer]: TFuture read GetFuture; default;
   end;
 
+
+  TCommSymbolList = class(TList)
+  private
+    function GetCommSymbol(i: Integer): TSymbol;
+
+  public
+
+    function FindSymbol( aExKind : TExchangeKind;  sCode : string ) : TSymbol; overload;
+    procedure SortByDailyAmount;
+    property CommSymbols[i:Integer]: TSymbol read GetCommSymbol; default;
+  end;
+
+
+  function CompareDailyAmount(Data1, Data2: Pointer): Integer;
+
 implementation
 
 uses
@@ -631,6 +646,55 @@ begin
     // store
   FPrev := FLast;
   FLast := Result;
+end;
+
+
+
+function CompareDailyAmount(Data1, Data2: Pointer): Integer;
+var
+  Symbol1: TSymbol absolute Data1;
+  Symbol2: TSymbol absolute Data2;
+begin
+  if Symbol1.DayAmount < Symbol2.DayAmount then
+    Result := 1
+  else if Symbol1.DayAmount > Symbol2.DayAmount  then
+    Result := -1
+  else
+    Result := 0;
+end;
+
+{ TCommSymbolList }
+
+function TCommSymbolList.FindSymbol(aExKind: TExchangeKind;
+  sCode: string): TSymbol;
+var
+  I: Integer;
+  aSymbol : TSymbol;
+begin
+  Result := nil;
+  for I := 0 to Count-1 do
+  begin
+    aSymbol := TSymbol( Items[i] );
+    if ( aSymbol.Code = sCode )
+      and ( aSymbol.Spec.ExchangeType = aExKind ) then
+    begin
+      Result := aSymbol;
+      break;
+    end;
+  end;
+end;
+
+function TCommSymbolList.GetCommSymbol(i: Integer): TSymbol;
+begin
+  if( i < 0 ) or ( i >= Count ) then
+    Result := nil
+  else
+    Result := TSymbol( Items[i] );
+end;
+
+procedure TCommSymbolList.SortByDailyAmount;
+begin
+  Sort( CompareDailyAmount );
 end;
 
 end.
