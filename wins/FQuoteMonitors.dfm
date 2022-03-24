@@ -179,6 +179,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           Checked = True
           State = cbChecked
           TabOrder = 0
+          OnClick = cbUBClick
         end
         object cbBT: TCheckBox
           Left = 32
@@ -189,6 +190,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           Checked = True
           State = cbChecked
           TabOrder = 1
+          OnClick = cbUBClick
         end
         object edtAmt: TEdit
           Left = 66
@@ -196,8 +198,10 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           Width = 50
           Height = 21
           Alignment = taRightJustify
+          NumbersOnly = True
           TabOrder = 2
           Text = '50'
+          OnKeyDown = edtAmtKeyDown
         end
       end
       object Button1: TButton

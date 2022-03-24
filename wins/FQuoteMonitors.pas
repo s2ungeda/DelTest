@@ -42,6 +42,8 @@ type
     procedure sgQuoteDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
       State: TGridDrawState);
     procedure Button1Click(Sender: TObject);
+    procedure cbUBClick(Sender: TObject);
+    procedure edtAmtKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
     procedure initControls;
@@ -79,6 +81,8 @@ end;
 procedure TFrmQuoteMonitors.FormCreate(Sender: TObject);
 begin
   initControls;
+
+  RefreshData;
 end;
 
 procedure TFrmQuoteMonitors.FormDestroy(Sender: TObject);
@@ -118,6 +122,11 @@ begin
   RefreshData;
 end;
 
+procedure TFrmQuoteMonitors.cbUBClick(Sender: TObject);
+begin
+  RefreshData;
+end;
+
 function TFrmQuoteMonitors.CheckFilter(aSymbol : TSymbol): boolean;
 
   function compare( d : double ) : boolean ;
@@ -141,7 +150,7 @@ begin
         Exit ( compare( dAmt))
       else Exit (true);
     end
-    else if cbBT.Checked  and ( not cbUB.Checked ) then begin
+    else if cbUB.Checked  and ( not cbBT.Checked ) then begin
       if aSymbol.Spec.ExchangeType = ekUpbit then
         Exit ( compare( dAmt))
       else Exit (true);
@@ -149,25 +158,54 @@ begin
   end;
 end;
 
+procedure TFrmQuoteMonitors.edtAmtKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  var
+    sText : string;
+begin
+  if Key = VK_RETURN then
+  begin
+    sText := edtAmt.Text;
+    if ( sText = '' ) or ( StrToInt( sText) < 1 ) then Exit;
+
+    refreshData;
+  end;
+
+end;
+
 procedure TFrmQuoteMonitors.RefreshData;
 var
   I: Integer;
   aSymbol : TSymbol;
+  aList : TList;
 begin
   InitGrid( sgQuote, true, 1 );
 
   //sgQuote.RowCount := App.Engine.SymbolCore.CommSymbols.Count + 1;
-
-  for I := 0 to App.Engine.SymbolCore.CommSymbols.Count-1 do
-  begin
-    aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
-    if not CheckFilter( aSymbol ) then begin
-      sgQuote.RowCount := sgQuote.RowCount -1;
-      continue;
+  aList := TList.Create;
+  try
+    for I := 0 to App.Engine.SymbolCore.CommSymbols.Count-1 do
+    begin
+      aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
+      if not CheckFilter( aSymbol ) then begin
+        sgQuote.RowCount := sgQuote.RowCount -1;
+        continue;
+      end;
+      aList.Add( aSymbol );
     end;
 
-    InsertLine( sgQuote, sgQuote.RowCount );
-    UpdateData( aSymbol, sgQuote.RowCount - 1);
+    sgQuote.RowCount := aList.Count + 1;
+
+    for I := 0 to aList.Count-1 do
+    begin
+      aSymbol := TSymbol( aList.Items[i] );
+      UpdateData( aSymbol, i+1);
+    end;
+
+    if sgQuote.RowCount > 1 then
+      sgQuote.FixedRows := 1;
+  finally
+    aList.Free;
   end;
 end;
 

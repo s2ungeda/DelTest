@@ -48,6 +48,7 @@ type
     FMainKimp: TMainKimpArray;
     FSymbolDnwStates: TSymbolArray;
     FCommSymbols: TCommSymbolList;
+    FBaseSymbols: TMarketGroups;
 
   public
 
@@ -89,6 +90,7 @@ type
     property Exchanges   : TMarketGroupsArray read FExchanges;
     // symbolKind . ExchangeKind
     property MainSymbols : TMainSymbols read FMainSymbols;
+    property BaseSymbols : TMarketGroups read FBaseSymbols;
 
     property MainKimp : TMainKimpArray read FMainKimp ;//write FMainKimp;
   end;
@@ -161,6 +163,7 @@ begin
   end;
 
   FCommSymbols:= TCommSymbolList.Create;
+  FBaseSymbols:= TMarketGroups.Create;
 
 end;
 
@@ -186,6 +189,7 @@ begin
     FUnderlyings[i].Free;
   end;
 
+  FBaseSymbols.Free;
   FCommSymbols.Free;
   FSpecs.Free;
 
@@ -232,6 +236,7 @@ var
   aSymbol : TSymbol;
   aMarket : TMarket;
   stData : string;
+  a: Integer;
 begin
 
 
@@ -242,7 +247,27 @@ begin
     , TExchangeKindDesc[ekBithumb],  FSpots[ekBithumb].Count
     ]);
 
-  Exit;
+
+
+  for j := 0 to FBaseSymbols.Count - 1 do
+  begin
+    aGroup := FBaseSymbols.Groups[j];
+    for k := 0 to aGroup.Markets.Count - 1 do
+    begin
+      aMarket := aGroup.Markets.Markets[k];
+      App.DebugLog( 'Base %d(%d), %s, %s, %s ', [
+        j,k, aMarket.FQN, aMarket.Spec.FQN, aGroup.FQN
+        ]);
+
+        for a := 0 to aMarket.Symbols.Count-1 do
+        begin
+          aSymbol := aMarket.Symbols.Symbols[a];
+          App.DebugLog( 'Base %d(%d)(%d), %s, %s ', [
+            j,k,a, aSymbol.Code, aSymbol.Spec.FQN
+            ]);
+        end;
+    end;
+  end;
 
   for I := ekBinance to High(TExchangeKind) do
   begin
@@ -445,6 +470,11 @@ begin
     FExchanges[aExKind].AddMarket(aMarket,
                          aSymbol.Spec.Exchange + '.' + aSymbol.Spec.Country,
                          aSymbol.Spec.Exchange);
+
+    FBaseSymbols.AddMarket( aMarket,
+                        aSymbol.Spec.BaseCode + '.' + aSymbol.Spec.BaseCode,
+                        TExchangeKindDesc[ aSymbol.Spec.ExchangeType]
+                          );
 
     if aSymbol.Spec.Country = 'kr' then
       FCommSymbols.Add( aSymbol );
