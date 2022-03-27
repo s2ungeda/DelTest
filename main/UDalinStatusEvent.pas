@@ -57,6 +57,15 @@ begin
     asRecovery :
       begin
         App.Engine.SymbolCore.PreSubscribe;
+
+        // 전종목 구독...
+        if not App.Engine.ApiManager.SubscribeAll then
+        begin
+          App.Log(llError, '', 'Failed SubscribeAll') ;
+          ShowMessage('Failed SubscribeAll');
+          Exit;
+        end;
+
         App.AppStatus := asLoad;
       end;
     asLoad :
@@ -68,7 +77,7 @@ begin
     asShow :
       begin
         //
-        App.Engine.ApiManager.SubscribeAll;
+//        App.Engine.ApiManager.SubscribeAll;
         FrmDalinMain.Show;
       end;
   end;

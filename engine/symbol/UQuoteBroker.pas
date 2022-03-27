@@ -27,7 +27,8 @@ type
 
     procedure SetSymbol(const Value: TSymbol);
 
-    procedure CalcKimp(aKSymbol, aOsSymbol : TSymbol);
+    procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
+    procedure CalcKimp; overload;
     procedure CalcMainKimp;  overload;
     procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
 
@@ -466,30 +467,69 @@ begin
   end;
 end;
 
-procedure TQuote.CalcKimp(aKSymbol, aOsSymbol : TSymbol );
+procedure TQuote.CalcKimp( aPrice : double; aSymbol : TSymbol );
 var
   dEx : double;
 begin
-  if ( aKSymbol = nil ) or ( aOsSymbol = nil ) then Exit;
 
-  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
+  dEx :=  Max( aPrice * App.Engine.ApiManager.ExRate.Value , 1 );
 
-  if FLastEvent = qtTimeNSale then begin
-    aKSymbol.KimpPrice  := ( aKSymbol.Last - dEx) / dEx * 100;
-//    if aKSymbol.KimpPrice < 0 then
-//      App.Log(llDebug, 'test', '%s %s %.2f, %.3f, %s: %.3f', [ TExchangeKindDesc[ aKSymbol.Spec.ExchangeType],
-//           aKSymbol.Code, aKSymbol.KimpPrice, aKSymbol.Last, aOSSymbol.Code, aOSSymbol.Last ] );
-  end
-  else begin
-    aKSymbol.KimpAskPrice  := ( aKSymbol.Asks[0].Price - dEx) / dEx * 100;
-    aKSymbol.KimpBidPrice  := ( aKSymbol.Bids[0].Price - dEx) / dEx * 100;
+  if aSymbol.Spec.ExchangeType = App.Engine.SymbolCore.MainExKind  then
+    App.DebugLog('');
+
+
+  aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
+  aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
+  aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
+
+//  if ( aSymbol.Code = 'BTC' ) and ( aSymbol.KimpAskPrice < 55 )
+//    and ( aSymbol.Spec.ExchangeType = ekBithumb )  then
+//    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ aSymbol.KimpAskPrice,
+//    aSymbol.Asks[0].Price, aPrice, App.Engine.ApiManager.ExRate.Value
+//    , FSymbol.Code, aSymbol.Code ] );
+end;
+
+procedure TQuote.CalcKimp;
+var
+  dEx : double;
+  aSymbol : TSymbol;
+  aList   : TSymbolList;
+  I: Integer;
+  bOS : boolean;
+begin
+
+  bOS := false;
+  if (FSymbol.Spec.ExchangeType = App.Engine.SymbolCore.MainExKind ) then
+    bOS := true;
+
+  if bOS then
+  begin
+    with  App.Engine.SymbolCore do
+      aList := BaseSymbols.FindSymbolList( Symbol.Spec.BaseCode );
+    if aList = nil then Exit;
+
+    for I := 0 to aList.Count-1 do
+    begin
+      asymbol := aList.Symbols[i];
+      if (aSymbol.Spec.ExchangeType = App.Engine.SymbolCore.SubExKind1) or
+         (aSymbol.Spec.ExchangeType = App.Engine.SymbolCore.SubExKind2) then
+         CalcKimp( Symbol.Last, aSymbol );
+    end;
+
+  end else
+  begin
+    with  App.Engine.SymbolCore do
+      aSymbol := BaseSymbols.FindSymbol( Symbol.Spec.BaseCode, MainExKind  );
+
+    if aSymbol = nil then Exit;
+    CalcKimp( aSymbol.Last, Symbol );
   end;
+
 end;
 
 procedure TQuote.CalcMainKimp;
 var
   dPrice : double;
-  //aBith, aUp, aBin: TSymbol;
   aKind : TMajorSymbolKind;
   aExKind : TExchangeKind;
 begin
@@ -500,22 +540,13 @@ begin
     aKind := msETH
   else Exit;
 
-  if FSymbol.Spec.ExchangeType = ekBinance then
+  if FSymbol.Spec.ExchangeType = App.Engine.SymbolCore.MainExKind then
   begin
-    CalcKimp( App.Engine.SymbolCore.MainSymbols[aKind][ekBithumb], FSymbol ) ;
-    CalcKimp( App.Engine.SymbolCore.MainSymbols[aKind][ekUpbit], FSymbol ) ;
-
-    if FLastEvent = qtTimeNSale then begin
-      CalcMainKimp( ekBithumb );
-      CalcMainKimp( ekUpbit );
-    end;
-
+    CalcMainKimp( App.Engine.SymbolCore.SubExKind1 );
+    CalcMainKimp( App.Engine.SymbolCore.SubExKind2 );
   end
-  else begin
-    CalcKimp( FSymbol, App.Engine.SymbolCore.MainSymbols[aKind][ekBinance]  );
-    if FLastEvent = qtTimeNSale then CalcMainKimp( FSymbol.Spec.ExchangeType );
-  end;
-
+  else
+    CalcMainKimp( FSymbol.Spec.ExchangeType );
 end;
 
 procedure TQuote.CalcMainKimp(aExKind: TExchangeKind);
@@ -592,6 +623,7 @@ begin
 
   end;
 
+  CalcKimp;
   CalcMainKimp;
 
   FSymbol.LastEventTime := dtTime;
@@ -638,6 +670,7 @@ procedure TQuoteBrokerManager.SetEvent;
 var
   I: TExchangeKind;
 begin
+
   for I := ekBinance to High(TExchangeKind) do
   begin
     FBrokers[i].OnSubscribe := App.Engine.ApiManager.Sub;

@@ -173,6 +173,7 @@ begin
     end;
   end;
 end;
+
 procedure TFrmDnwStates.SetSymbolToGrid( sCode: string ; bLoad : boolean);
 var
   j : TExchangeKind;
@@ -194,6 +195,7 @@ begin
   if bLoad then
     sgDnw.Cells[CoinCol, FSaveRow] := sCode;
 end;
+
 procedure TFrmDnwStates.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
 var
   iBRow, iPre : integer;
@@ -212,18 +214,14 @@ begin
       if Objects[CoinCol, iRow+1] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
-        Cells[ 2, iRow+1] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow+1] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
       end;
       if Objects[CoinCol, iRow+2] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
-        Cells[ 2, iRow+2] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow+2] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
       end;
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
       Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
@@ -238,10 +236,8 @@ begin
       if Objects[CoinCol, iBRow] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
-        Cells[ 2, iRow] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow] := Format('%.2f %%', [ aSymbol.KimpAskPrice ]);
+        Cells[ 3, iRow] := Format('%.2f %%', [ aSymbol.KimpBidPrice ]);
       end;
       Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
       Cells[ CurCol - 3, iRow] := aSymbol.PriceToStr( aSymbol.Asks[0].Price ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
@@ -349,23 +345,11 @@ begin
   if ( Receiver <> Self ) or ( DataObj = nil ) then Exit;
   aSymbol := DataObj as TSymbol;
   iRow  := sgDnw.Cols[CoinCol].IndexOfObject( aSymbol );
-  if iRow < 0 then Exit;
+  if iRow >= 0 then Exit;
   try
     if cbAuto.Checked then
       refreshTimer.Enabled := false;
-    j := iRow - integer( aSymbol.Spec.ExchangeType );
-//    for I := j to J+2 do begin
-//      pSymbol := TSymbol( sgDnw.Objects[ i, CoinCol] );
-//      if pSymbol <> nil then
-//        App.DebugLog( 'delete   %d :  %s %s ,  %d', [i, TExchangeKindDesc[ pSymbol.Spec.ExchangeType],
-//             pSymbol.Code, iRow] )
-//      else
-//        App.DebugLog('delete    %d :  %d', [ i, iRow]);
-//      DeleteLine( sgDnw, i );
-//    end;
-    DeleteLine( sgDnw, j );
-    DeleteLine( sgDnw, j );
-    DeleteLine( sgDnw, j );
+    // 젤 위에 추가..
     InsertLine( sgDnw, 1 );
     InsertLine( sgDnw, 1 );
     InsertLine( sgDnw, 1 );

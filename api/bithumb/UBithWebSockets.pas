@@ -10,13 +10,14 @@ type
   private
     FMarketType: TMarketType;
     FSubIndex: integer;
-    FSubList: TStrings;
+
     FSendQueue: TStrings;
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
 
     procedure OnMessage( const S : string );
+
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
@@ -26,9 +27,10 @@ type
     procedure SubScribe( aSymbol : TSymbol ) ; overload;
 
     procedure SubscribeAll; override;
+    procedure MakeSubData; override;
 
     property MarketType  : TMarketType read FMarketType;
-    property SubList  : TStrings  read FSubList;
+
     property SubIndex : integer   read FSubIndex;
     property Descript : string    read GetDescript;
     property SendQueue : TStrings read FSendQueue;
@@ -45,14 +47,14 @@ constructor TBithWebSocket.Create(iSockDiv, iSeq: Integer; aMtType: TMarketType)
 begin
   inherited Create( iSockDiv ,iSeq, ekBithumb);
   FMarketType := aMtType;
-  FSubList    := TStringList.Create;
+
   FSubIndex   := 0;
   FSendQueue  := TStringList.Create;
   OnNotify    := OnMessage;
 end;
 destructor TBithWebSocket.Destroy;
 begin
-  FSubList.Free;
+
   FSendQueue.Free;
   inherited;
 end;
@@ -60,11 +62,39 @@ function TBithWebSocket.GetDescript: string;
 begin
   Result := Format('%s-%s-%d', [ 'BT', TMarketTypeDesc[FMarketType], Seq ]);
 end;
+
+procedure TBithWebSocket.MakeSubData;
+var
+  sParam : string;
+  i : Integer;
+begin
+  if SubList.Count > 0 then Exit;
+
+  sParam := '';
+  with App.Engine.SymbolCore.Symbols[ekBithumb] do
+    for I := 0 to Count-1 do
+    begin
+      sParam := sParam + Format('"%s"', [ Symbols[i].OrgCode ]);
+      if i < Count-1  then
+        sParam := sParam + ','
+    end;
+
+//    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
+  SubList.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
+  SubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
+
+  App.DebugLog( '========== bithumb sub ===========');
+  for I := 0 to SubList.Count-1 do
+    App.DebugLog('(%d):%s',[ i, SubList[i] ]);
+
+end;
+
 procedure TBithWebSocket.OnAfterConnect(Sender: TObject);
 begin
   App.Log(llInfo, ' %s Connected', [ Descript]);
 //  if (FSubList.Count > 0 ) then
 //    SubScribe( true );
+
 end;
 procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
@@ -105,9 +135,9 @@ begin
       sParam := sParam + ','
   end;
   sData := Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam]);
-  FSubList.Add( sData );
-  FSubList.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam] ));
-  FSubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam] ));
+  SubList.Add( sData );
+  SubList.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam] ));
+  SubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam] ));
 end;
 
 procedure TBithWebSocket.SubScribe(aSymbol: TSymbol);
@@ -116,8 +146,8 @@ var
   sParam : string;
 begin
 
-  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
-    FSubList.Add(aSymbol.OrgCode);
+  if SubList.IndexOf(aSymbol.OrgCode) < 0 then
+    SubList.Add(aSymbol.OrgCode);
 
   if App.AppStatus <> asShow then Exit;
 
@@ -127,24 +157,34 @@ end;
 
 procedure TBithWebSocket.SubscribeAll;
 var
-  sParam : string;
-  i : Integer;
+  i : integer;
 begin
-
-  if FSubList.Count < 0 then Exit;
-
-  sParam := '';
-  for I := 0 to FSubList.Count-1 do
-  begin
-    sParam := sParam + Format('"%s"', [FSubList[i]]);
-    if i < FSubList.Count-1  then
-      sParam := sParam + ','
+  for I := 0 to SubList.Count-1 do begin
+    SendData( SubList[i] );
+    sleep(10);
   end;
-
-//    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
-  SendData( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
-  SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
 end;
+
+//procedure TBithWebSocket.SubscribeAll;
+//var
+//  sParam : string;
+//  i : Integer;
+//begin
+//
+//  if SubList.Count < 0 then Exit;
+//
+//  sParam := '';
+//  for I := 0 to SubList.Count-1 do
+//  begin
+//    sParam := sParam + Format('"%s"', [SubList[i]]);
+//    if i < SubList.Count-1  then
+//      sParam := sParam + ','
+//  end;
+//
+////    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
+//  SendData( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
+//  SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
+//end;
 
 procedure TBithWebSocket.SubScribe(bSub: boolean);
 var

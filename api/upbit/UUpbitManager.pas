@@ -101,7 +101,12 @@ begin
 
 end;
 function TUpbitManager.SubscribeAll: boolean;
+var
+  i : Integer;
 begin
+  for I := 0 to High(QuoteSock) do
+    QuoteSock[i].SubscribeAll;
+
   Timer.Enabled := true;
   Result := true;
 end;

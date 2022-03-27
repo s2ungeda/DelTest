@@ -225,11 +225,25 @@ type
     function FindCode(stCode: String): TSymbol;
     function FindCode2( stCode : string ) : TSymbol;
     procedure AddSymbol(aSymbol: TSymbol);
+    procedure AddSymbol2(aSymbol: TSymbol);
     procedure GetList( aList: TStrings); overload;
     procedure GetList( aList: TStrings; aMarket : TMarketType ); overload;
     procedure GetLists( aList : TSTrings; aMarkets : TMarketTypes );
 
     property Symbols[i:Integer]: TSymbol read GetSymbol; default;
+  end;
+
+
+
+  TBaseSymbols = class(TStringList)
+  private
+    function GetSymbolList( i : integer ) : TSymbolList;
+  public
+    constructor Create;
+    destructor  Destroy; override;
+    function FindSymbolList(sBase: String ): TSymbolList;
+    function FindSymbol( sBase : string ;  aExKind : TExchangeKind ) : TSymbol;
+    procedure AddSymbol(aSymbol: TSymbol);
   end;
 
   TSpot  = class(TSymbol);
@@ -295,6 +309,8 @@ type
     procedure SortByDailyAmount;
     property CommSymbols[i:Integer]: TSymbol read GetCommSymbol; default;
   end;
+
+
 
 
   function CompareDailyAmount(Data1, Data2: Pointer): Integer;
@@ -368,6 +384,8 @@ begin
 
 end;
 
+
+
 destructor TSymbol.Destroy;
 begin
 
@@ -404,6 +422,11 @@ end;
 procedure TSymbolList.AddSymbol(aSymbol: TSymbol);
 begin
   AddObject(aSymbol.Code, aSymbol);
+end;
+
+procedure TSymbolList.AddSymbol2(aSymbol: TSymbol);
+begin
+  AddObject(aSymbol.Spec.FQN, aSymbol);
 end;
 
 constructor TSymbolList.Create;
@@ -695,6 +718,113 @@ end;
 procedure TCommSymbolList.SortByDailyAmount;
 begin
   Sort( CompareDailyAmount );
+end;
+
+{ TBaseSymbols }
+
+//constructor TBaseSymbols.Create;
+//begin
+//  inherited Create;
+//  Sorted := true;
+//
+//  FSymbols := TList.Create;
+//end;
+//
+//destructor TBaseSymbols.Destroy;
+//begin
+//  FSymbols.Free;
+//  inherited;
+//end;
+//
+//function TBaseSymbols.FindList(sBase: String): TList;
+//begin
+//  Result := GetList(IndexOf(sBase));
+//end;
+//
+//function TBaseSymbols.GetList(i: Integer): TList;
+//begin
+//  if (i >= 0) and (i <= Count-1) then
+//    Result := Objects[i] as TList
+//  else
+//    Result := nil;
+//end;
+//
+//function TBaseSymbols.AddSymbols(aSymbol : TSymbol) : TList;
+//begin
+//  Result := FindList( aSymbol.Spec.BaseCode );
+//  if Result = nil then
+//  begin
+//    AddObject(aSymbol.Spec.BaseCode , aSymbol);
+//  end;
+//end;
+
+{ TBaseSymbols }
+
+procedure TBaseSymbols.AddSymbol(aSymbol: TSymbol);
+var
+  aSymbolList : TSymbolList;
+begin
+  aSymbolList := FindSymbolList( aSymbol.Spec.BaseCode ) ;
+
+  if aSymbolList = nil then
+  begin
+    aSymbolList := TSymbolList.Create;
+    AddObject( aSymbol.Spec.BaseCode, aSymbolList );
+  end;
+
+  aSymbolList.AddSymbol2( aSymbol );
+end;
+
+
+constructor TBaseSymbols.Create;
+begin
+  inherited Create;
+  Sorted := true;
+end;
+
+destructor TBaseSymbols.Destroy;
+var
+  I: Integer;
+begin
+
+  for I := 0 to Count-1 do
+    Objects[i].Free;
+  inherited;
+end;
+
+function TBaseSymbols.FindSymbol(sBase: string;
+  aExKind: TExchangeKind): TSymbol;
+  var
+    aSymbolList : TSymbolList;
+    aSymbol : TSymbol;
+    I: Integer;
+begin
+  Result := nil;
+  aSymbolList := FindSymbolList( sBase ) ;
+  if aSymbolList <> nil then
+    for I := 0 to aSymbolList.Count-1 do
+    begin
+      aSymbol := aSymbolList.Symbols[i];
+      if aSymbol.Spec.ExchangeType = aExKind then
+      begin
+        Result := aSymbol;
+        Break;
+      end;
+    end;
+end;
+
+function TBaseSymbols.FindSymbolList(sBase: String): TSymbolList;
+begin
+  Result := GetSymbolList( IndexOf(sBase) );
+end;
+
+
+function TBaseSymbols.GetSymbolList(i: integer): TSymbolList;
+begin
+  if (i >= 0) and (i <= Count-1) then
+    Result := Objects[i] as TSymbolList
+  else
+    Result := nil;
 end;
 
 end.

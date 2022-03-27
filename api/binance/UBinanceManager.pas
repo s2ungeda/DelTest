@@ -111,8 +111,10 @@ var
 begin
 //  Exit (true);
 //  QuoteSock[0].DoConnect;
-  for I := 0 to High(QuoteSock) do
+  for I := 0 to High(QuoteSock) do begin
     QuoteSock[i].SubscribeAll;
+    sleep(500);
+  end;
   result := true;
 end;
 

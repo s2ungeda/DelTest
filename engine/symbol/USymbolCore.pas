@@ -48,7 +48,10 @@ type
     FMainKimp: TMainKimpArray;
     FSymbolDnwStates: TSymbolArray;
     FCommSymbols: TCommSymbolList;
-    FBaseSymbols: TMarketGroups;
+    FBaseSymbols: TBaseSymbols;
+    FMainExKind: TExchangeKind;
+    FSubExKind2: TExchangeKind;
+    FSubExKind1: TExchangeKind;
 
   public
 
@@ -63,12 +66,13 @@ type
     function  FindQuoteSymbol(aExKind : TExchangeKind; sBaseCode : string ): TSymbol;
 
     procedure Log;
-    procedure PreSubscribe;
+    procedure PreSubscribe;   // 한종목씩
+    procedure SubscribeSymbols; // 모든종목 한방에
     procedure RepresentCoin;
 
     procedure GetSymbolList( aExKind : TExchangeKind; var aList : TList );
 
-    function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
+//    function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
     procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
 
     procedure SymbolArrange;
@@ -90,9 +94,14 @@ type
     property Exchanges   : TMarketGroupsArray read FExchanges;
     // symbolKind . ExchangeKind
     property MainSymbols : TMainSymbols read FMainSymbols;
-    property BaseSymbols : TMarketGroups read FBaseSymbols;
+    property BaseSymbols : TBaseSymbols read FBaseSymbols;
 
     property MainKimp : TMainKimpArray read FMainKimp ;//write FMainKimp;
+
+    property MainExKind : TExchangeKind read FMainExKind write FMainExKind;
+    property SubExKind1 : TExchangeKind read FSubExKind1 write FSubExKind1;
+    property SubExKind2 : TExchangeKind read FSubExKind2 write FSubExKind2;
+
   end;
 
 function TicksFromPrice(aSymbol: TSymbol; dPrice: Double; iTicks: Integer): Double;
@@ -109,33 +118,33 @@ uses
 
 { TSymbolCore }
 
-function TSymbolCore.CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
-var
-  tmp : TSymbol;
-  dEx : double;
-begin
-  if (aOSSymbol = nil) or (aKSymbol = nil) then Exit (0);
+//function TSymbolCore.CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
+//var
+//  tmp : TSymbol;
+//  dEx : double;
+//begin
+//  if (aOSSymbol = nil) or (aKSymbol = nil) then Exit (0);
+////
+//  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
 //
-  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
-
-  case iType of
-    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
-    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
-    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
-  end;
+//  case iType of
+//    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
+//    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
+//    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
+//  end;
+////
+////  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
+////    and ( aKSymbol.Spec.ExchangeType = ekUpbit )  then
+////    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value
+////    , aOSSymbol.Code, aKSymbol.Code ] );
 //
-//  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
-//    and ( aKSymbol.Spec.ExchangeType = ekUpbit )  then
-//    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value
-//    , aOSSymbol.Code, aKSymbol.Code ] );
-
-//  if iType = -1 then
-
-
-  Result := Result * 100;
-//  if Result < 0 then Result := 0.0;
-
-end;
+////  if iType = -1 then
+//
+//
+//  Result := Result * 100;
+////  if Result < 0 then Result := 0.0;
+//
+//end;
 
 constructor TSymbolCore.Create;
 var
@@ -162,8 +171,11 @@ begin
     FMainKimp[i] := 0.0;
   end;
 
-  FCommSymbols:= TCommSymbolList.Create;
-  FBaseSymbols:= TMarketGroups.Create;
+  FCommSymbols := TCommSymbolList.Create;
+  FBaseSymbols := TBaseSymbols.Create;
+  FMainExKind  := ekBinance;
+  FSubExKind1  := ekUpbit;
+  FSubExKind2  := ekBithumb;
 
 end;
 
@@ -247,26 +259,19 @@ begin
     , TExchangeKindDesc[ekBithumb],  FSpots[ekBithumb].Count
     ]);
 
+  Exit;
 
-
-  for j := 0 to FBaseSymbols.Count - 1 do
+  for j := 0 to FBaseSymbols.Count-1 do
   begin
-    aGroup := FBaseSymbols.Groups[j];
-    for k := 0 to aGroup.Markets.Count - 1 do
-    begin
-      aMarket := aGroup.Markets.Markets[k];
-      App.DebugLog( 'Base %d(%d), %s, %s, %s ', [
-        j,k, aMarket.FQN, aMarket.Spec.FQN, aGroup.FQN
-        ]);
+    App.DebugLog('======  %03d : BASE : %s ( %d ) ========', [ j, FBaseSymbols[j], TSymbolList(FBaseSymbols.Objects[j]).Count ]  )    ;
+    with TSymbolList(FBaseSymbols.Objects[j]) do
+      for k := 0 to Count-1 do
+      begin
+        aSymbol := Symbols[k];
+        App.DebugLog('%03d(%03d) : %s %s %s', [ j, k, TExchangeKindDesc[aSymbol.Spec.ExchangeType],
+                 TMarketTypeDesc[ aSymbol.Spec.Market], aSymbol.Spec.BaseCode]);
+      end;
 
-        for a := 0 to aMarket.Symbols.Count-1 do
-        begin
-          aSymbol := aMarket.Symbols.Symbols[a];
-          App.DebugLog( 'Base %d(%d)(%d), %s, %s ', [
-            j,k,a, aSymbol.Code, aSymbol.Spec.FQN
-            ]);
-        end;
-    end;
   end;
 
   for I := ekBinance to High(TExchangeKind) do
@@ -326,6 +331,7 @@ begin
       if aSymbol <> nil then
       begin
         FMainSymbols[i][j] := aSymbol;
+        // 전종목 구독할것이기에..주석
         App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
           App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
           );
@@ -336,6 +342,11 @@ begin
 //    for j := ekBinance to High(TExchangeKind) do
 //      if FMainSymbols[i][j] <> nil then
 //        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
+end;
+
+procedure TSymbolCore.SubscribeSymbols;
+begin
+
 end;
 
 function TSymbolCore.RegisterSymbol(aExKind: TExchangeKind;
@@ -404,6 +415,8 @@ begin
   JungKopi[aExKind][idx] := Value;
 end;
 
+
+
 procedure TSymbolCore.SymbolArrange;
 var
   I, idx: Integer;
@@ -471,13 +484,16 @@ begin
                          aSymbol.Spec.Exchange + '.' + aSymbol.Spec.Country,
                          aSymbol.Spec.Exchange);
 
-    FBaseSymbols.AddMarket( aMarket,
-                        aSymbol.Spec.BaseCode + '.' + aSymbol.Spec.BaseCode,
-                        TExchangeKindDesc[ aSymbol.Spec.ExchangeType]
-                          );
 
     if aSymbol.Spec.Country = 'kr' then
       FCommSymbols.Add( aSymbol );
+
+    if ( aSymbol.Code = 'BTC' ) and ( aSymbol.Spec.ExchangeType = ekBithumb )  then
+      App.DebugLog('');
+
+
+    FBaseSymbols.AddSymbol( aSymbol );
+
   end;
 
   aMarket.AddSymbol( aSymbol );

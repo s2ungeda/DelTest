@@ -34,6 +34,8 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FOnNotify: TGetStrProc;
     FPort: integer;
     FExchangeKind: TExchangeKind;
+    FSubData: string;
+    FSubList: TStrings;
 
 
     function Desc : string;
@@ -58,6 +60,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     destructor Destroy; override;
 
     procedure SubscribeAll; virtual; abstract;
+    procedure MakeSubData; virtual; abstract;
 
     procedure init(sAddr : string; iPort : integer = 443);
     procedure DoConnect;
@@ -81,10 +84,14 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 
     property ConnectTry : integer read FConnectTry write FConnectTry;
     property OnNotify   : TGetStrProc read FOnNotify write FOnNotify;
+
+          //  시세 구독 JSON -> String
+    property SubList  : TStrings  read FSubList write FSubList;
+
   end;
 implementation
  uses
-  ScCLRClasses
+  ScCLRClasses , ScUtils
   ,Vcl.Forms
   ,GApp
   , UApiConsts
@@ -98,6 +105,7 @@ begin
   FConnectTry := 0;
   FSockDiv    := iSockDiv;
 
+  FWebSocket.EventsCallMode := ecSynchronous;
 //  FEvent  := TEvent.Create( nil, False, False, '');
 //  FQueue  := TList.Create;
   FSeq    := iSeq;
@@ -113,6 +121,8 @@ begin
   FWebSocket.OnControlMessage := OnControlMessage;
   FWebSocket.OnMessage        := OnMessage;
   FWebSocket.BeforeConnect    := OnBeforeConnect;
+
+  FSubList    := TStringList.Create;
 //  FEvent.SetEvent;
 //  Resume;
 
@@ -131,6 +141,7 @@ destructor TWebsocket.Destroy;
 begin
 //  if FWebSocket.State = sOpen then
 //    FWebSocket.Close;
+  FSubList.Free;
   FwebSocket.Free;
 //  FQueue.Free;
 //  CloseHandle(FReceiveMutex);
@@ -179,6 +190,8 @@ begin
 
   FPort := iPort;
   FEndPoint := sAddr;
+  MakeSubData;
+
 end;
 procedure TWebsocket.OnAfterConnect(Sender: TObject);
 begin

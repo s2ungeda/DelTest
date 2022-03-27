@@ -167,6 +167,8 @@ var
   i : integer;
 begin
 
+  App.DebugLog('%s %d disconnect all ', [ TExchangeKindDesc[FExchangeKind],  High(QuoteSock) ] );
+
   if FTimer <> nil then
     FTimer.Enabled  := false;
   FDone := true;

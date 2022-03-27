@@ -160,7 +160,8 @@ begin
   ReadExRate;
   QryTimer.Enabled := true;
   // 구독/취소 이벤트 연결..
-  App.Engine.QuoteBroker.SetEvent;
+  // 실행시 전종목 구독 으로 변경.
+//  App.Engine.QuoteBroker.SetEvent;
 end;
 
 procedure TFrmDalinMain.Start;

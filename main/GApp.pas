@@ -54,7 +54,6 @@ type
     property  ErrorString : string read FErrorString write FErrorString;
       // type
     property  AppStatus : TAppStatus read FAppStatus write SetAppStatus;
-
       // event
     property  OnAppStatusEvent : TAppStatusEvent read FOnAppStatusEvent write FOnAppStatusEvent;
   end;

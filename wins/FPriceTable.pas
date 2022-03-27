@@ -180,21 +180,21 @@ begin
       if Objects[CoinCol, iRow+1] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
+//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
+//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+1] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow+1] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
       end;
 
       if Objects[CoinCol, iRow+2] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
+//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
+//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+2] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow+2] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
       end;
 
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
@@ -215,11 +215,11 @@ begin
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
 
-        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
-        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
+//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
+//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
 
-        Cells[ 2, iRow] := Format('%.2f %%', [ dKip[0] ]);
-        Cells[ 3, iRow] := Format('%.2f %%', [ dKip[1] ]);
+        Cells[ 2, iRow] := Format('%.2f %%', [ aSymbol.KimpAskPrice ]);
+        Cells[ 3, iRow] := Format('%.2f %%', [ aSymbol.KimpBidPrice ]);
       end;
 
       Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);

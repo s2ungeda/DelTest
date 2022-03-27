@@ -18,6 +18,7 @@ type
     procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
 
     procedure OnMessage( const S : string );
+    procedure MakeSubList( var aList : TStrings ); overload;
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
@@ -25,6 +26,8 @@ type
     procedure SubScribe( aSymbol : TSymbol ) ; overload;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
     procedure SubscribeAll; override;
+    procedure MakeSubData; override;
+
     property MarketType  : TMarketType read FMarketType;
     property SubList  : TStrings  read FSubList;
     property SubIndex : integer   read FSubIndex;
@@ -61,6 +64,87 @@ function TBinanceWebSocket.GetDescript: string;
 begin
   Result := Format('%s-%s-%d', [ 'BN', TMarketTypeDesc[FMarketType], Seq ]);
 end;
+
+procedure TBinanceWebSocket.MakeSubList( var aList : TStrings );
+var
+  sParam, sData : string;
+  k : Integer;
+begin
+  sParam := '';
+
+  for k := 0 to aList.Count-1 do
+  begin
+    sParam := sParam + Format('"%s"', [aList[k]]);
+    if k < aList.Count-1  then
+      sParam := sParam + ','
+  end;
+
+  aList.Clear;
+  inc(FSubIndex);
+  sData := Format('{"method": "SUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
+  SubList.Add(sData);
+end;
+
+procedure TBinanceWebSocket.MakeSubData;
+var
+  sParam, sData : string;
+  iCnt, iMod, i, j, k : Integer;
+  aList : TStrings;
+begin
+  if SubList.Count > 0 then Exit;
+
+  iCnt := App.Engine.SymbolCore.Symbols[ekBinance].Count div 20;
+  iMod := App.Engine.SymbolCore.Symbols[ekBinance].Count mod 20;
+
+  if iMod > 0 then inc(iCnt);
+
+  j := 0;
+  aList := TStringList.Create;
+  try
+
+    with App.Engine.SymbolCore.Symbols[ekBinance] do
+      for I := 0 to Count-1 do
+      begin
+
+        if FMarketType <> Symbols[i].Spec.Market then Continue;
+
+        if Symbols[i].Spec.Market = mtSpot then
+        begin
+            aList.Add( Symbols[i].OrgCode +'@bookTicker' );
+            aList.Add( Symbols[i].OrgCode +'@trade' );
+            aList.Add( Symbols[i].OrgCode +'@miniTicker' );
+
+        end else
+        if Symbols[i].Spec.Market = mtFutures then
+        begin
+            continue;
+            aList.Add( Symbols[i].OrgCode +'@depth5' );
+            aList.Add( Symbols[i].OrgCode +'@aggTrade' );
+            aList.Add( Symbols[i].OrgCode +'@miniTicker' );
+        end ;
+
+        inc(j);
+        if ((j mod 30) = 0) and ( j>0) then
+        begin
+          MakeSubList( aList );
+          j := 0;
+        end;
+      end;
+
+    MakeSubList( aList );
+
+    App.DebugLog( '========== Biance %s sub ===========', [GetDescript] );
+    for I := 0 to SubList.Count-1 do
+      App.DebugLog('(%d):%s',[ i, SubList[i] ]);
+
+
+  finally
+    aList.Free;
+  end;
+
+
+
+end      ;
 {
 //  Spot
 //  @bookTicker  : best bid and ask , realtime
@@ -72,50 +156,59 @@ end;
 //  @miniTicker  : 24hour rolling OHLC, 500ms
 }
 
-
 procedure TBinanceWebSocket.SubscribeAll;
 var
-  aList : TStrings;
-  I: Integer;
-  sParam, sData : string;
+  i : integer;
 begin
-  aList := TStringList.Create;
-  try
-
-    if FSubList.Count <= 0 then Exit;
-
-    for I := 0 to FSubList.Count-1 do
-    begin
-      if FMarketType = mtSpot then
-      begin
-          aList.Add( FSubList[i] +'@bookTicker' );
-          aList.Add( FSubList[i] +'@trade' );
-          aList.Add( FSubList[i] +'@miniTicker' );
-      end else
-      if FMarketType = mtFutures then
-      begin
-          aList.Add( FSubList[i] +'@depth5' );
-          aList.Add( FSubList[i] +'@aggTrade' );
-          aList.Add( FSubList[i] +'@miniTicker' );
-      end ;
-    end;
-
-    sParam := '';
-    for I := 0 to aList.Count-1 do
-    begin
-      sParam := sParam + Format('"%s"', [aList[i]]);
-      if i < aList.Count-1  then
-        sParam := sParam + ','
-    end;
-
-    inc(FSubIndex);
-    sData := Format('{"method": "SUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
-    SendData(sData);
-
-  finally
-    aList.Free;
+  for I := 0 to SubList.Count-1 do begin
+    SendData( SubList[i] );
+    sleep(500);
   end;
+
 end;
+//procedure TBinanceWebSocket.SubscribeAll;
+//var
+//  aList : TStrings;
+//  I: Integer;
+//  sParam, sData : string;
+//begin
+//  aList := TStringList.Create;
+//  try
+//
+//    if FSubList.Count <= 0 then Exit;
+//
+//    for I := 0 to FSubList.Count-1 do
+//    begin
+//      if FMarketType = mtSpot then
+//      begin
+//          aList.Add( FSubList[i] +'@bookTicker' );
+//          aList.Add( FSubList[i] +'@trade' );
+//          aList.Add( FSubList[i] +'@miniTicker' );
+//      end else
+//      if FMarketType = mtFutures then
+//      begin
+//          aList.Add( FSubList[i] +'@depth5' );
+//          aList.Add( FSubList[i] +'@aggTrade' );
+//          aList.Add( FSubList[i] +'@miniTicker' );
+//      end ;
+//    end;
+//
+//    sParam := '';
+//    for I := 0 to aList.Count-1 do
+//    begin
+//      sParam := sParam + Format('"%s"', [aList[i]]);
+//      if i < aList.Count-1  then
+//        sParam := sParam + ','
+//    end;
+//
+//    inc(FSubIndex);
+//    sData := Format('{"method": "SUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
+//    SendData(sData);
+//
+//  finally
+//    aList.Free;
+//  end;
+//end;
 
 procedure TBinanceWebSocket.SubScribe( aSymbol : TSymbol; bSub : boolean );
 var
@@ -133,6 +226,7 @@ begin
     end else
     if FMarketType = mtFutures then
     begin
+
         aList.Add( aSymbol.OrgCode +'@depth5' );
         aList.Add( aSymbol.OrgCode +'@aggTrade' );
         aList.Add( aSymbol.OrgCode +'@miniTicker' );
@@ -189,6 +283,7 @@ begin
 //  if (FSubList.Count > 0 ) then
 //    SubScribe( true );
   App.Log(llInfo, ' %s Connected', [ Descript]);
+
 end;
 procedure TBinanceWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
