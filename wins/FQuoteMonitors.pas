@@ -62,6 +62,7 @@ type
     procedure UpdateData(aSymbol: TSymbol; iRow: integer);
     procedure PutData(var iCol, iRow: integer; sData: string);
     procedure QuoteProc(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
+    procedure SortGrid(Grid: TStringGrid; SortCol: Integer);
   public
     { Public declarations }
     procedure RefreshData ;
@@ -386,33 +387,56 @@ begin
 
 end;
 
-procedure TFrmQuoteMonitors.SpinButton1DownClick(Sender: TObject);
+procedure TFrmQuoteMonitors.SortGrid(Grid: TStringGrid; SortCol: Integer);
+var
+
+I, J: Integer;
+temp: TStringList;
+
 begin
-  //
-  case (Sender as TComponent).Tag of
-    0 : ;     // 코인
-    1 : ;     // 거래소
-    2 : ;     // 김프
-    3 : ;     // 매도가
-    4 : ;     // 매수가
-    5 : ;     // 현재가
-    6 : ;     // 등락
-    7 : ;     // 일거래액
-  end;
+
+  temp := TStringList.create;
+  with Grid do
+
+  for I := FixedRows to RowCount - 2 do
+    for J := I + 1 to RowCount - 1 do
+    if AnsiCompareText(Cells[SortCol, I], Cells[SortCol, J]) > 0 then    begin
+      temp.assign(Rows[J]);
+
+      Rows[J].assign(Rows[I]);
+      Rows[I].assign(temp);
+    end;
+  temp.free;
 end;
 
-procedure TFrmQuoteMonitors.SpinButton1UpClick(Sender: TObject);
+// 올림차순
+procedure TFrmQuoteMonitors.SpinButton1DownClick(Sender: TObject);
 begin
-  case (Sender as TComponent).Tag of
-    0 : ;
-    1 : ;
-    2 : ;
-    3 : ;
-    4 : ;
-    5 : ;
-    6 : ;
-    7 : ;
-  end;
+//  //
+//  with sgQuote do
+//  case (Sender as TComponent).Tag of
+//    0 : sgQuote.Cols[0]. ;     // 코인
+//    1 : ;     // 거래소
+//    2 : ;     // 김프
+//    3 : ;     // 매도가
+//    4 : ;     // 매수가
+//    5 : ;     // 현재가
+//    6 : ;     // 등락
+//    7 : ;     // 일거래액
+//  end;
+end;
+
+// 내림차순..
+procedure TFrmQuoteMonitors.SpinButton1UpClick(Sender: TObject);
+var
+  iTag : integer;
+begin
+  iTag := (Sender as TComponent).Tag ;
+  if iTag = 7 then
+    SortGrid( sgQuote, 9)
+  else
+    SortGrid( sgQuote, iTag);
+
 end;
 
 procedure TFrmQuoteMonitors.Timer1Timer(Sender: TObject);

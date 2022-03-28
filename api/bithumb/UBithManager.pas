@@ -114,7 +114,7 @@ begin
   for I := 0 to High(QuoteSock) do
   begin
     iState := integer( QuoteSock[i].WebSocket.State );
-    if  iState in [4..5] then
+    if  iState = 4 then
     begin
       QuoteSock[i].DoConnect;
  //     QuoteSock[i].

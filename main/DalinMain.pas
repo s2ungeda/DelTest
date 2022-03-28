@@ -174,8 +174,8 @@ procedure TFrmDalinMain.Start;
 begin
 
  // Exit;
-//  App.AppStatus := asinit;
-  App.AppStatus := asShow;
+  App.AppStatus := asinit;
+//  App.AppStatus := asShow;
 //  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 
