@@ -52,8 +52,8 @@ begin
   FSubList    := TStringList.Create;
   OnNotify    := OnMessage;
 
-//  WebSocket.HeartBeatOptions.Enabled := true;
-//  WebSocket.HeartBeatOptions.Interval := 110;
+  WebSocket.HeartBeatOptions.Enabled := true;
+  WebSocket.HeartBeatOptions.Interval := 100;
 end;
 
 destructor TUpbitWebSocket.Destroy;

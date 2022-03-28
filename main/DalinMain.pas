@@ -87,6 +87,8 @@ begin
 end;
 
 procedure TFrmDalinMain.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  i : integer;
 begin
   if not IsRealyClose then
   begin
@@ -95,6 +97,10 @@ begin
   end;
 
   QryTimer.Enabled := false;
+
+  for i := ComponentCount-1 downto 0 do
+    if Components[i] is TForm then
+      Components[i].Free;
 
   if App.AppStatus > asLoad then
     App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
@@ -168,9 +174,9 @@ procedure TFrmDalinMain.Start;
 begin
 
  // Exit;
-  App.AppStatus := asinit;
-//  App.AppStatus := asShow;
-  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
+//  App.AppStatus := asinit;
+  App.AppStatus := asShow;
+//  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);

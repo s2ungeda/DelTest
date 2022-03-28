@@ -8,7 +8,7 @@ uses
   Vcl.ComCtrls
 
   , UStorage, USymbols
-  , UApiTypes, UDistributor
+  , UApiTypes, UDistributor, Vcl.Samples.Spin
   ;
 
 type
@@ -35,6 +35,14 @@ type
     edtAmt: TEdit;
     Label2: TLabel;
     Timer1: TTimer;
+    SpinButton1: TSpinButton;
+    SpinButton2: TSpinButton;
+    SpinButton3: TSpinButton;
+    SpinButton4: TSpinButton;
+    SpinButton5: TSpinButton;
+    SpinButton6: TSpinButton;
+    SpinButton7: TSpinButton;
+    SpinButton8: TSpinButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -44,17 +52,23 @@ type
     procedure Button1Click(Sender: TObject);
     procedure cbUBClick(Sender: TObject);
     procedure edtAmtKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure SpinButton1DownClick(Sender: TObject);
+    procedure SpinButton1UpClick(Sender: TObject);
   private
+    FSubList: TList;
     { Private declarations }
     procedure initControls;
     function CheckFilter(aSymbol: TSymbol): boolean;
     procedure UpdateData(aSymbol: TSymbol; iRow: integer);
     procedure PutData(var iCol, iRow: integer; sData: string);
+    procedure QuoteProc(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
   public
     { Public declarations }
     procedure RefreshData ;
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
+
+    property  SubList : TList read FSubList;
   end;
 
 var
@@ -64,6 +78,7 @@ implementation
 
 uses
   GApp   , UTableConsts
+  , UQuoteBroker
   , UConsts, UApiConsts
   , GLibs
   ;
@@ -88,14 +103,22 @@ end;
 procedure TFrmQuoteMonitors.FormDestroy(Sender: TObject);
 begin
   //
+  FSubList.Free;
   App.Engine.QuoteBroker.Cancel( self );
 end;
 
 procedure TFrmQuoteMonitors.initControls;
 var
-  i : integer;
+  i, iSum : integer;
+  iLeft : array [0..7] of integer;
+
+  function getwith( Components : TComponent; idx : integer ) : integer;
+  begin
+
+  end;
 begin
 
+  iSum := 0;
   for I := 0 to quoteMon_TitleCnt - 1 do
   begin
     sgQuote.Cells[i,0] := quoteMon_Title[i];
@@ -103,9 +126,37 @@ begin
       sgQuote.RowHeights[i] := 20;
     sgQuote.ColWidths[i] :=  quoteMon_Width[i];
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
+    iSum := iSum +  quoteMon_Width[i] + 1;//(i*2);
+    if i <= (high(iLeft)-1) then
+      iLeft[i] := iSum;
+
+    if i=9 then
+      iLeft[7] := iSum;
+
   end;
   sgQuote.RowCount := 1;
+  sgQuote.RowHeights[0] := 22;
   App.Engine.SymbolCore.CommSymbols.SortByDailyAmount;
+  FSubList := TList.Create;
+
+
+
+  for i := ComponentCount-1 downto 0 do
+    if Components[i] is TSpinButton then
+    begin
+      case Components[i].Tag of
+       0 : (Components[i] as TSpinButton).Left := iLeft[0] - SpinButton1.Width;
+       1 : (Components[i] as TSpinButton).Left := iLeft[1] - SpinButton1.Width;
+       2 : (Components[i] as TSpinButton).Left := iLeft[2] - SpinButton1.Width;
+       3 : (Components[i] as TSpinButton).Left := iLeft[3] - SpinButton1.Width;
+       4 : (Components[i] as TSpinButton).Left := iLeft[4] - SpinButton1.Width;
+       5 : (Components[i] as TSpinButton).Left := iLeft[5] - SpinButton1.Width;
+       6 : (Components[i] as TSpinButton).Left := iLeft[6] - SpinButton1.Width;
+       7 : (Components[i] as TSpinButton).Left := iLeft[7] - SpinButton1.Width;
+      end;
+
+    end;
+
 end;
 
 procedure TFrmQuoteMonitors.LoadEnv(aStorage: TStorage);
@@ -179,6 +230,9 @@ var
   aSymbol : TSymbol;
   aList : TList;
 begin
+
+  App.Engine.QuoteBroker.Cancel( Self );
+
   InitGrid( sgQuote, true, 1 );
 
   //sgQuote.RowCount := App.Engine.SymbolCore.CommSymbols.Count + 1;
@@ -202,6 +256,13 @@ begin
       UpdateData( aSymbol, i+1);
     end;
 
+    // 자리 배치 후 구독
+    for I := 0 to aList.Count-1 do
+    begin
+      aSymbol := TSymbol( aList.Items[i] );
+      App.Engine.QuoteBroker.Brokers[ aSymbol.Spec.ExchangeType ].Subscribe( Self, aSymbol, QuoteProc);
+    end;
+
     if sgQuote.RowCount > 1 then
       sgQuote.FixedRows := 1;
   finally
@@ -213,6 +274,23 @@ procedure TFrmQuoteMonitors.PutData( var iCol, iRow : integer; sData : string );
 begin
   sgQuote.Cells[iCol, iRow] := sData;
   inc( iCol );
+end;
+
+procedure TFrmQuoteMonitors.QuoteProc(Sender, Receiver: TObject;
+  DataID: Integer; DataObj: TObject; EventID: TDistributorID);
+  var
+    aSymbol : TSymbol;
+    iRow : integer;
+begin
+  if ( Receiver <> Self ) or ( DataObj = nil ) then Exit;
+
+  aSymbol := (DataObj as TQuote).Symbol;
+  iRow := sgQuote.Cols[CoinCol].IndexOfObject( aSymbol );
+
+  if iRow <= 0 then Exit;
+
+  UpdateData( asymbol,  iRow );
+
 end;
 
 procedure TFrmQuoteMonitors.UpdateData( aSymbol : TSymbol; iRow : integer );
@@ -306,6 +384,35 @@ begin
     end;
   end;
 
+end;
+
+procedure TFrmQuoteMonitors.SpinButton1DownClick(Sender: TObject);
+begin
+  //
+  case (Sender as TComponent).Tag of
+    0 : ;     // 코인
+    1 : ;     // 거래소
+    2 : ;     // 김프
+    3 : ;     // 매도가
+    4 : ;     // 매수가
+    5 : ;     // 현재가
+    6 : ;     // 등락
+    7 : ;     // 일거래액
+  end;
+end;
+
+procedure TFrmQuoteMonitors.SpinButton1UpClick(Sender: TObject);
+begin
+  case (Sender as TComponent).Tag of
+    0 : ;
+    1 : ;
+    2 : ;
+    3 : ;
+    4 : ;
+    5 : ;
+    6 : ;
+    7 : ;
+  end;
 end;
 
 procedure TFrmQuoteMonitors.Timer1Timer(Sender: TObject);

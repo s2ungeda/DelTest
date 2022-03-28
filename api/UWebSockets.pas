@@ -36,6 +36,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FExchangeKind: TExchangeKind;
     FSubData: string;
     FSubList: TStrings;
+    FDone: boolean;
 
 
     function Desc : string;
@@ -84,6 +85,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 
     property ConnectTry : integer read FConnectTry write FConnectTry;
     property OnNotify   : TGetStrProc read FOnNotify write FOnNotify;
+    property Done      : boolean read FDone;
 
           //  시세 구독 JSON -> String
     property SubList  : TStrings  read FSubList write FSubList;
@@ -92,8 +94,8 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 implementation
  uses
   ScCLRClasses , ScUtils
-  ,Vcl.Forms
-  ,GApp
+  , Vcl.Forms
+  , GApp
   , UApiConsts
   ;
 
@@ -123,6 +125,7 @@ begin
   FWebSocket.BeforeConnect    := OnBeforeConnect;
 
   FSubList    := TStringList.Create;
+  FDone       := false;
 //  FEvent.SetEvent;
 //  Resume;
 
@@ -160,7 +163,7 @@ begin
   try
 
     if FWebSocket.State = sOpen then
-      FWebSocket.Close;
+      FWebSocket.Abort;
   except on e : WebSocketException do
     App.Log(llError, '%s DisConnect Error : %s, %s, %d:%s',[Desc, e.Message,  e.ToString,
       integer(FWebSocket.State),  FWebSocket.CloseStatusDescription ] );

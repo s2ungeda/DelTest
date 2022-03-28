@@ -96,11 +96,17 @@ begin
   for I := 0 to High(QuoteSock) do
   begin
     iState := integer( QuoteSock[i].WebSocket.State );
-    if  iState = 4 then
+    if  iState in [4..5] then
     begin
       QuoteSock[i].DoConnect;
  //     QuoteSock[i].
-      App.DebugLog('%s, %d reconnect ', [ TExchangeKindDesc[ExchangeKind],i ] );
+      App.DebugLog('%s, %d %s reconnect ', [ TExchangeKindDesc[ExchangeKind],i, QuoteSock[i].GetSockType ] );
+
+      if QuoteSock[i].GetSockState = 'Open' then
+      begin
+        QuoteSock[i].SubscribeAll;
+        App.Log(llInfo, '%s %.dth %s SubscribeAll ', [ TExchangeKindDesc[ExchangeKind],i, QuoteSock[i].GetSockType ] );
+      end;
     end;
   end;
 end;
