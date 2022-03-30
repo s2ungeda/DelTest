@@ -98,12 +98,12 @@ begin
 
   QryTimer.Enabled := false;
 
+  if App.AppStatus > asLoad then
+    App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
+
   for i := ComponentCount-1 downto 0 do
     if Components[i] is TForm then
       Components[i].Free;
-
-  if App.AppStatus > asLoad then
-    App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
   App.Log(llInfo, '', '--- Form Saved ---');
   App.Engine.ApiManager.DisConnectAll;

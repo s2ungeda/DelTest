@@ -38,9 +38,9 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FSubList: TStrings;
     FDone: boolean;
 
-
     function Desc : string;
   protected
+    iStart, iEnd : integer;
 //    procedure Execute ; override;
 //    procedure SyncProc; virtual ;
     procedure OnAfterConnect(Sender: TObject);  virtual;
@@ -57,6 +57,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 //    FReceiveMutex : HWND;
 //    FSocketMute   : HWND;
 //    FQueue        : TList;
+
     constructor Create( iSockDiv, iSeq : integer; aExKind : TExchangeKind );
     destructor Destroy; override;
 
@@ -67,7 +68,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     procedure DoConnect;
     procedure DoDissConnect( bStart : boolean = false );
     procedure SendData( sData : string );
-
+    procedure SetIndex( i, j : integer );
 //    procedure PushQueue(Size: Integer; msg: string);
 //    procedure PushQueue(Size: Integer; Packet: PChar);
 //    function  PopQueue :  PReceiveData;
@@ -90,6 +91,8 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
           //  시세 구독 JSON -> String
     property SubList  : TStrings  read FSubList write FSubList;
 
+
+
   end;
 implementation
  uses
@@ -109,7 +112,7 @@ begin
 
   with FWebSocket do
   begin
-    EventsCallMode := ecSynchronous;
+    EventsCallMode := ecAsynchronous;
     WatchDogOptions.Enabled := true;
     WatchDogOptions.Interval:= 1;
     WatchDogOptions.Attempts:= 5;
@@ -222,8 +225,9 @@ begin
 end;
 procedure TWebsocket.OnConnectFail(Sender: TObject);
 begin
-   App.Log(llError, '%s OnConnectFail  %s', [ TExchangeKindDesc[FExchangeKind],
-    FWebsocket.CloseStatusDescription ] );
+  if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
+    App.Log(llError, '%s OnConnectFail %s ',
+      [ TExchangeKindDesc[FExchangeKind], TScWebSocketClient(Sender).CloseStatusDescription ] );
 
 end;
 procedure TWebsocket.OnControlMessage(Sender: TObject;
@@ -236,7 +240,7 @@ begin
     cmtPong: sTmp := 'pong';
   end;
 
-  App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
+//  App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
 end;
 procedure TWebsocket.OnMessage(Sender: TObject; const Data: TArray<System.Byte>;
   MessageType: TScWebSocketMessageType; EndOfMessage: Boolean);
@@ -280,6 +284,11 @@ begin
       App.Log(llError, 'Failed Send Data : %s, %s', [ e.Message, sData ] );
     end;
   end;
+end;
+
+procedure TWebsocket.SetIndex(i, j: integer);
+begin
+  iStart := i; iEnd := j;
 end;
 
 end.

@@ -77,12 +77,12 @@ begin
   if SubList.Count > 0 then Exit;
 
   sParam := '';   sParam2 := '';
-  with App.Engine.SymbolCore do
-    for I := 0 to   Spots[ ekUpbit].Count-1 do
+  with App.Engine.SymbolCore.Symbols[ ekUpbit] do
+    for I := iStart to  iEnd-1 do
     begin
-      sParam := sParam + Format('"%s"', [Symbols[ ekUpbit].Symbols[i].OrgCode  ]);
-      sParam2:= sParam2 + Format('"%s.5"', [Symbols[ ekUpbit].Symbols[i].OrgCode ]);
-      if i < Symbols[ ekUpbit].Count-1  then begin
+      sParam := sParam + Format('"%s"', [Symbols[i].OrgCode  ]);
+      sParam2:= sParam2 + Format('"%s.5"', [Symbols[i].OrgCode ]);
+      if i < iEnd-1  then begin
         sParam  := sParam + ',' ;
         sParam2 := sParam2 + ',';
       end;
@@ -102,12 +102,16 @@ end;
 
 procedure TUpbitWebSocket.OnAfterConnect(Sender: TObject);
 begin
-  App.Log(llInfo, ' %s Connected', [ Descript]);
+  inherited OnAfterConnect(Sender);
+  App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
+  if ConnectTry > 1 then
+    SubscribeAll;
 end;
 
 procedure TUpbitWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
+  inherited OnAfterDisconnect(Sender);
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
 end;
 

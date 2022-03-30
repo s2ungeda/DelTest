@@ -59,14 +59,33 @@ end;
 
 function TUpbitManager.InitMarketWebSockets: boolean;
 var
-  i, iCount : integer;
+  i, iTot, iCount, iQty : integer;
 begin
-  iCount := 1;
-  SetLength( QuoteSock, iCount );
+  iTot:= 10;
+  SetLength( QuoteSock, iTot );
 
-  for I := 0 to iCount-1 do begin
+  for I := 0 to iTot-1 do begin
     QuoteSock[i]  := TUpbitWebSocket.Create(QOUTE_SOCK,i, mtSpot ) ;
+//    QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
+  end;
+
+  iCount := App.Engine.SymbolCore.Symbols[ekUpbit].Count;
+
+  var iCnt, iMod, j : integer;
+  iCnt := iCount div iTot;
+  iMod := iCount mod iTot;
+
+
+
+  j := 0;   iQty := iCnt;
+  for I := 0 to iTot-1 do begin
+    if i = iTot -1 then
+      iQty := iQty + iMod;
+    QuoteSock[i].SetIndex(j, iQty);
+    App.DebugLog('setindex : %d, %d, %d',[ i, j, iQty]);
     QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
+    inc( j, iCnt );
+    inc( iQty, iCnt);
   end;
 
   Timer.OnTimer := OnTimer;
