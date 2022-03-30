@@ -51,6 +51,13 @@ begin
   FSubIndex   := 0;
   FSendQueue  := TStringList.Create;
   OnNotify    := OnMessage;
+
+  with WebSocket do
+  begin
+    HeartBeatOptions.Enabled := true;
+    HeartBeatOptions.Interval:= 100;
+
+  end;
 end;
 destructor TBithWebSocket.Destroy;
 begin

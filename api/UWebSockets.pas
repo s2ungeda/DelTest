@@ -107,7 +107,14 @@ begin
   FConnectTry := 0;
   FSockDiv    := iSockDiv;
 
-  FWebSocket.EventsCallMode := ecSynchronous;
+  with FWebSocket do
+  begin
+    EventsCallMode := ecSynchronous;
+    WatchDogOptions.Enabled := true;
+    WatchDogOptions.Interval:= 1;
+    WatchDogOptions.Attempts:= 5;
+  end;
+
 //  FEvent  := TEvent.Create( nil, False, False, '');
 //  FQueue  := TList.Create;
   FSeq    := iSeq;

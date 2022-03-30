@@ -56,20 +56,23 @@ type
     procedure SpinButton1UpClick(Sender: TObject);
   private
     FSubList: TList;
+    FDataList: TList;
     { Private declarations }
     procedure initControls;
     function CheckFilter(aSymbol: TSymbol): boolean;
     procedure UpdateData(aSymbol: TSymbol; iRow: integer);
     procedure PutData(var iCol, iRow: integer; sData: string);
     procedure QuoteProc(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
-    procedure SortGrid(Grid: TStringGrid; SortCol: Integer);
+    procedure SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean = true);
   public
     { Public declarations }
     procedure RefreshData ;
+    procedure SimpleRefreshData ;
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
 
     property  SubList : TList read FSubList;
+    property  DataList: TList read FDataList;
   end;
 
 var
@@ -79,7 +82,7 @@ implementation
 
 uses
   GApp   , UTableConsts
-  , UQuoteBroker
+  , UQuoteBroker  , USymbolUtils
   , UConsts, UApiConsts
   , GLibs
   ;
@@ -104,6 +107,7 @@ end;
 procedure TFrmQuoteMonitors.FormDestroy(Sender: TObject);
 begin
   //
+  FDataList.Free;
   FSubList.Free;
   App.Engine.QuoteBroker.Cancel( self );
 end;
@@ -139,7 +143,7 @@ begin
   sgQuote.RowHeights[0] := 22;
   App.Engine.SymbolCore.CommSymbols.SortByDailyAmount;
   FSubList := TList.Create;
-
+  FDataList:= TList.Create;
 
 
   for i := ComponentCount-1 downto 0 do
@@ -229,47 +233,56 @@ procedure TFrmQuoteMonitors.RefreshData;
 var
   I: Integer;
   aSymbol : TSymbol;
-  aList : TList;
+begin
+  App.Engine.QuoteBroker.Cancel( Self );
+  InitGrid( sgQuote, true, 1 );
+  FDataList.Clear;
+
+  for I := 0 to App.Engine.SymbolCore.CommSymbols.Count-1 do
+  begin
+    aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
+    if not CheckFilter( aSymbol ) then begin
+      sgQuote.RowCount := sgQuote.RowCount -1;
+      continue;
+    end;
+    FDataList.Add( aSymbol );
+  end;
+
+  sgQuote.RowCount := FDataList.Count + 1;
+
+  for I := 0 to FDataList.Count-1 do
+  begin
+    aSymbol := TSymbol( FDataList.items[i] );
+    UpdateData( aSymbol, i+1);
+  end;
+
+  // 자리 배치 후 구독
+  for I := 0 to FDataList.Count-1 do
+  begin
+    aSymbol := TSymbol( FDataList.items[i] );
+    App.Engine.QuoteBroker.Brokers[ aSymbol.Spec.ExchangeType ].Subscribe( Self, aSymbol, QuoteProc);
+  end;
+
+  if sgQuote.RowCount > 1 then
+    sgQuote.FixedRows := 1;
+end;
+
+procedure TFrmQuoteMonitors.SimpleRefreshData;
+var
+  I: Integer;
+  aSymbol : TSymbol;
 begin
 
-  App.Engine.QuoteBroker.Cancel( Self );
+  InitGrid( sgQuote, false, 1 );
 
-  InitGrid( sgQuote, true, 1 );
-
-  //sgQuote.RowCount := App.Engine.SymbolCore.CommSymbols.Count + 1;
-  aList := TList.Create;
-  try
-    for I := 0 to App.Engine.SymbolCore.CommSymbols.Count-1 do
-    begin
-      aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
-      if not CheckFilter( aSymbol ) then begin
-        sgQuote.RowCount := sgQuote.RowCount -1;
-        continue;
-      end;
-      aList.Add( aSymbol );
-    end;
-
-    sgQuote.RowCount := aList.Count + 1;
-
-    for I := 0 to aList.Count-1 do
-    begin
-      aSymbol := TSymbol( aList.Items[i] );
-      UpdateData( aSymbol, i+1);
-    end;
-
-    // 자리 배치 후 구독
-    for I := 0 to aList.Count-1 do
-    begin
-      aSymbol := TSymbol( aList.Items[i] );
-      App.Engine.QuoteBroker.Brokers[ aSymbol.Spec.ExchangeType ].Subscribe( Self, aSymbol, QuoteProc);
-    end;
-
-    if sgQuote.RowCount > 1 then
-      sgQuote.FixedRows := 1;
-  finally
-    aList.Free;
+  for I := 0 to FDataList.Count-1 do
+  begin
+    aSymbol := TSymbol( FDataList.items[i] );
+    UpdateData( aSymbol, i+1);
   end;
+
 end;
+
 
 procedure TFrmQuoteMonitors.PutData( var iCol, iRow : integer; sData : string );
 begin
@@ -298,6 +311,7 @@ procedure TFrmQuoteMonitors.UpdateData( aSymbol : TSymbol; iRow : integer );
 var
   iCol : integer;
   dTmp : double;
+  bSymbol : TSymbol;
 begin
   iCol := 0;
   with sgQuote do
@@ -319,6 +333,13 @@ begin
     PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ] ) );
 
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
+
+    bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance);
+    if bSymbol <> nil then
+    begin
+      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '○', 'X') );
+      PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '○', 'X') );
+    end;
 
   end;
 end;
@@ -387,12 +408,15 @@ begin
 
 end;
 
-procedure TFrmQuoteMonitors.SortGrid(Grid: TStringGrid; SortCol: Integer);
+
+procedure TFrmQuoteMonitors.SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean);
 var
 
 I, J: Integer;
 temp: TStringList;
-
+aSymbol, aSymbol2 : TSymbol ;
+bComp : boolean;
+iStr, jStr : string;
 begin
 
   temp := TStringList.create;
@@ -400,30 +424,46 @@ begin
 
   for I := FixedRows to RowCount - 2 do
     for J := I + 1 to RowCount - 1 do
-    if AnsiCompareText(Cells[SortCol, I], Cells[SortCol, J]) > 0 then    begin
-      temp.assign(Rows[J]);
+    begin
 
-      Rows[J].assign(Rows[I]);
-      Rows[I].assign(temp);
+      if bAsc then
+        bComp := CompareText(Cells[SortCol, I], Cells[SortCol, J]) > 0
+      else
+        bComp := CompareText(Cells[SortCol, I], Cells[SortCol, J]) < 0  ;
+
+      if bComp then
+      begin
+        temp.assign(Rows[J]);
+
+        Rows[J].assign(Rows[I]);
+        Rows[I].assign(temp);
+      end;
     end;
   temp.free;
 end;
 
 // 올림차순
 procedure TFrmQuoteMonitors.SpinButton1DownClick(Sender: TObject);
+var
+  iTag : integer;
 begin
-//  //
-//  with sgQuote do
-//  case (Sender as TComponent).Tag of
-//    0 : sgQuote.Cols[0]. ;     // 코인
-//    1 : ;     // 거래소
-//    2 : ;     // 김프
-//    3 : ;     // 매도가
-//    4 : ;     // 매수가
-//    5 : ;     // 현재가
-//    6 : ;     // 등락
-//    7 : ;     // 일거래액
-//  end;
+  iTag := (Sender as TComponent).Tag ;
+
+  //
+  with sgQuote do
+    case (Sender as TComponent).Tag of
+      0 ,
+      1 : SortGrid( sgQuote, iTag);     // 거래소
+      2 : FDataList.Sort(CompareKimpPrice2) ;     // 김프
+      3 : FDataList.Sort(CompareAskPrice2);     // 매도가
+      4 : FDataList.Sort(CompareBidPrice2);     // 매수가
+      5 : FDataList.Sort(CompareLast2);     // 현재가
+      6 : FDataList.Sort(CompareDayUpDown2);     // 등락
+      7 : FDataList.Sort(CompareDailyAmount2);     // 일거래액
+    end;
+
+  if iTag in [2..7] then
+    SimpleRefreshData;
 end;
 
 // 내림차순..
@@ -432,11 +472,22 @@ var
   iTag : integer;
 begin
   iTag := (Sender as TComponent).Tag ;
-  if iTag = 7 then
-    SortGrid( sgQuote, 9)
-  else
-    SortGrid( sgQuote, iTag);
 
+  //
+  with sgQuote do
+    case (Sender as TComponent).Tag of
+      0 ,
+      1 : SortGrid( sgQuote, iTag, false);     // 거래소
+      2 : FDataList.Sort(CompareKimpPrice) ;     // 김프
+      3 : FDataList.Sort(CompareAskPrice);     // 매도가
+      4 : FDataList.Sort(CompareBidPrice);     // 매수가
+      5 : FDataList.Sort(CompareLast);     // 현재가
+      6 : FDataList.Sort(CompareDayUpDown);     // 등락
+      7 : FDataList.Sort(CompareDailyAmount);     // 일거래액
+    end;
+
+  if iTag in [2..7] then
+    SimpleRefreshData;
 end;
 
 procedure TFrmQuoteMonitors.Timer1Timer(Sender: TObject);

@@ -309,9 +309,12 @@ begin
 
   for I := ekBinance to High(TExchangeKind) do
   begin
-    if FExManagers[i] <> nil then
+    if FExManagers[i] <> nil then begin
+      if i = ekBinance then
+        FExManagers[i].UnSubscribeAll;
       if not FExManagers[i].DissConnectAll then
         Exit (false);
+    end;
   end;
 
   Result := true;

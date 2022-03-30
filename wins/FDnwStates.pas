@@ -53,7 +53,7 @@ var
 implementation
 uses
   GApp  , GLibs
-  , UTableConsts
+  , UTableConsts  , USymbolUtils
   , UConsts , UApiConsts
   , UQuoteBroker
   ;

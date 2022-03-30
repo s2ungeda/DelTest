@@ -81,7 +81,8 @@ uses
   FDnwStates in 'wins\FDnwStates.pas' {FrmDnwStates},
   USymbolBroker in 'engine\symbol\USymbolBroker.pas',
   FServerMessage in 'wins\FServerMessage.pas' {FrmServerMessage},
-  FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors};
+  FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors},
+  USymbolUtils in 'engine\symbol\USymbolUtils.pas';
 
 {$R *.res}
 begin

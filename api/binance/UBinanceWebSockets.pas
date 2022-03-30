@@ -9,7 +9,7 @@ type
   TBinanceWebSocket = class( TWebSocket )
   private
     FMarketType: TMarketType;
-    FSubList: TStrings;
+    FUnSubList: TStrings;
     FSubIndex: integer;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
@@ -26,10 +26,11 @@ type
     procedure SubScribe( aSymbol : TSymbol ) ; overload;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
     procedure SubscribeAll; override;
+    procedure UnSubScribeAll;
     procedure MakeSubData; override;
 
     property MarketType  : TMarketType read FMarketType;
-    property SubList  : TStrings  read FSubList;
+    property UnSubList  : TStrings  read FUnSubList;
     property SubIndex : integer   read FSubIndex;
     property Descript : string    read GetDescript;
   end;
@@ -50,13 +51,13 @@ constructor TBinanceWebSocket.Create(iSockDiv, iSeq: Integer; aMtType: TMarketTy
 begin
   inherited Create( iSockDiv, iSeq, ekBinance );
   FMarketType := aMtType;
-  FSubList    := TStringList.Create;
+  FUnSubList    := TStringList.Create;
   FSubIndex   := 0;
   OnNotify    := OnMessage;
 end;
 destructor TBinanceWebSocket.Destroy;
 begin
-  FSubList.Free;
+  FUnSubList.Free;
   inherited;
 end;
 
@@ -166,6 +167,13 @@ begin
   end;
 
 end;
+
+
+procedure TBinanceWebSocket.UnSubScribeAll;
+begin
+
+end;
+
 //procedure TBinanceWebSocket.SubscribeAll;
 //var
 //  aList : TStrings;
@@ -257,12 +265,12 @@ var
   aList : TStrings;
   sParam, sData : string;
 begin
-  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
-    FSubList.Add(aSymbol.OrgCode);
-
-  if App.AppStatus <> asShow then Exit;
-
-  SubScribe( aSymbol, true );
+//  if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
+//    FSubList.Add(aSymbol.OrgCode);
+//
+//  if App.AppStatus <> asShow then Exit;
+//
+//  SubScribe( aSymbol, true );
 end;
 
 procedure TBinanceWebSocket.UnSubScribe(aSymbol: TSymbol);
@@ -271,11 +279,13 @@ var
   aList : TStrings;
   sParam, sData : string;
 begin
-  i := FSubList.IndexOf(aSymbol.OrgCode) ;
-  if i >= 0 then FSubList.Delete(i);
-
-  SubScribe( aSymbol, false );
+//  i := FSubList.IndexOf(aSymbol.OrgCode) ;
+//  if i >= 0 then FSubList.Delete(i);
+//
+//  SubScribe( aSymbol, false );
 end;
+
+
 
 
 procedure TBinanceWebSocket.OnAfterConnect(Sender: TObject);

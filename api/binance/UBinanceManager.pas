@@ -89,26 +89,9 @@ procedure TBinanceManager.OnTimer(Sender: TObject);
 var
   iState, i : integer;
 begin
-
   // 1초에 한번
   Exchanges[mtSpot].RequestDNWState;
 
-  for I := 0 to High(QuoteSock) do
-  begin
-    iState := integer( QuoteSock[i].WebSocket.State );
-    if  iState = 4 then
-    begin
-      QuoteSock[i].DoConnect;
- //     QuoteSock[i].
-      App.DebugLog('%s, %d %s reconnect ', [ TExchangeKindDesc[ExchangeKind],i, QuoteSock[i].GetSockType ] );
-
-      if QuoteSock[i].GetSockState = 'Open' then
-      begin
-        QuoteSock[i].SubscribeAll;
-        App.Log(llInfo, '%s %.dth %s SubscribeAll ', [ TExchangeKindDesc[ExchangeKind],i, QuoteSock[i].GetSockType ] );
-      end;
-    end;
-  end;
 end;
 
 function TBinanceManager.SubscribeAll: boolean;
@@ -150,9 +133,18 @@ begin
 
   end;
 end;
+
+
 procedure TBinanceManager.UnSubscribeAll;
+var
+  i, j : integer;
 begin
-  inherited;
+
+  for I := 0 to High(QuoteSock) do
+  begin
+   (QuoteSock[i] as TBinanceWebSocket).UnSubScribeAll;
+    sleep(500);
+  end;
 
 end;
 

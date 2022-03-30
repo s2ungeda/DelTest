@@ -153,7 +153,8 @@ type
 
     function  PriceToStr( Value : double ) : string;
     function  QtyToStr( Value : double ) : string;
-    function CheckDnwState( depoit, withdraw : boolean ) : integer;
+    function  CheckDnwState( depoit, withdraw : boolean ) : integer;
+    function  DayUpDown : double;
 //    property  ExchangeCode : string read FExchangeCode;
     property  Code  : string read FCode write FCode;
     property  OrgCode : string read FOrgCode write FOrgCode;
@@ -168,6 +169,7 @@ type
     property DayOpen: Double read FDayOpen write FDayOpen;
     property DayHigh: Double read FDayHigh write FDayHigh;
     property DayLow: Double read FDayLow write FDayLow;
+
     property Last: Double read FLast write FLast;
     property Change: Double read FChange write FChange;
 //    property PrevLast : Double read FPrevLast write FPrevLast;
@@ -313,12 +315,10 @@ type
 
 
 
-  function CompareDailyAmount(Data1, Data2: Pointer): Integer;
-
 implementation
 
 uses
-  USymbolCore
+  USymbolCore    , USymbolUtils
   , UConsts
   , GApp
   ;
@@ -385,6 +385,16 @@ begin
 end;
 
 
+
+function TSymbol.DayUpDown: double;
+var
+  dTmp : double;
+begin
+  if DayOpen <= 0 then  dTmp := 1
+  else dTmp := DayOpen;
+
+  Result := ( DayHigh - DayOpen) / dTmp * 100;
+end;
 
 destructor TSymbol.Destroy;
 begin
@@ -673,19 +683,6 @@ end;
 
 
 
-function CompareDailyAmount(Data1, Data2: Pointer): Integer;
-var
-  Symbol1: TSymbol absolute Data1;
-  Symbol2: TSymbol absolute Data2;
-begin
-  if Symbol1.DayAmount < Symbol2.DayAmount then
-    Result := 1
-  else if Symbol1.DayAmount > Symbol2.DayAmount  then
-    Result := -1
-  else
-    Result := 0;
-end;
-
 { TCommSymbolList }
 
 function TCommSymbolList.FindSymbol(aExKind: TExchangeKind;
@@ -826,5 +823,11 @@ begin
   else
     Result := nil;
 end;
+
+
+
+
+
+
 
 end.
