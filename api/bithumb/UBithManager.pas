@@ -133,6 +133,7 @@ end;
 
 function TBithManager.UnSubscrib(aSymbol: TSymbol): boolean;
 begin
+(QuoteSock[QOUTE_SOCK] as TBithWebSocket).UnSubScribe( aSymbol);
   Result := true;
 end;
 

@@ -109,7 +109,7 @@ begin
   //
   FDataList.Free;
   FSubList.Free;
-  App.Engine.QuoteBroker.Cancel( self );
+//  App.Engine.QuoteBroker.Cancel( self );
 end;
 
 procedure TFrmQuoteMonitors.initControls;
@@ -234,7 +234,7 @@ var
   I: Integer;
   aSymbol : TSymbol;
 begin
-  App.Engine.QuoteBroker.Cancel( Self );
+//  App.Engine.QuoteBroker.Cancel( Self );
   InitGrid( sgQuote, true, 1 );
   FDataList.Clear;
 
@@ -257,11 +257,11 @@ begin
   end;
 
   // 자리 배치 후 구독
-  for I := 0 to FDataList.Count-1 do
-  begin
-    aSymbol := TSymbol( FDataList.items[i] );
-    App.Engine.QuoteBroker.Brokers[ aSymbol.Spec.ExchangeType ].Subscribe( Self, aSymbol, QuoteProc);
-  end;
+//  for I := 0 to FDataList.Count-1 do
+//  begin
+//    aSymbol := TSymbol( FDataList.items[i] );
+//    App.Engine.QuoteBroker.Brokers[ aSymbol.Spec.ExchangeType ].Subscribe( Self, aSymbol, QuoteProc);
+//  end;
 
   if sgQuote.RowCount > 1 then
     sgQuote.FixedRows := 1;

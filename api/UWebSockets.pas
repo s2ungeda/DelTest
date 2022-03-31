@@ -203,7 +203,7 @@ begin
 
   FPort := iPort;
   FEndPoint := sAddr;
-  MakeSubData;
+  //MakeSubData;
 
 end;
 procedure TWebsocket.OnAfterConnect(Sender: TObject);

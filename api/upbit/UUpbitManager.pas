@@ -61,32 +61,32 @@ function TUpbitManager.InitMarketWebSockets: boolean;
 var
   i, iTot, iCount, iQty : integer;
 begin
-  iTot:= 10;
+  iTot:= 1;
   SetLength( QuoteSock, iTot );
 
   for I := 0 to iTot-1 do begin
     QuoteSock[i]  := TUpbitWebSocket.Create(QOUTE_SOCK,i, mtSpot ) ;
-//    QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
-  end;
-
-  iCount := App.Engine.SymbolCore.Symbols[ekUpbit].Count;
-
-  var iCnt, iMod, j : integer;
-  iCnt := iCount div iTot;
-  iMod := iCount mod iTot;
-
-
-
-  j := 0;   iQty := iCnt;
-  for I := 0 to iTot-1 do begin
-    if i = iTot -1 then
-      iQty := iQty + iMod;
-    QuoteSock[i].SetIndex(j, iQty);
-    App.DebugLog('setindex : %d, %d, %d',[ i, j, iQty]);
     QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
-    inc( j, iCnt );
-    inc( iQty, iCnt);
   end;
+
+//  iCount := App.Engine.SymbolCore.Symbols[ekUpbit].Count;
+//
+//  var iCnt, iMod, j : integer;
+//  iCnt := iCount div iTot;
+//  iMod := iCount mod iTot;
+//
+//
+//
+//  j := 0;   iQty := iCnt;
+//  for I := 0 to iTot-1 do begin
+//    if i = iTot -1 then
+//      iQty := iQty + iMod;
+//    QuoteSock[i].SetIndex(j, iQty);
+//    App.DebugLog('setindex : %d, %d, %d',[ i, j, iQty]);
+//    QuoteSock[i].init( 'api.upbit.com/websocket/v1' );
+//    inc( j, iCnt );
+//    inc( iQty, iCnt);
+//  end;
 
   Timer.OnTimer := OnTimer;
   Result := true;
@@ -111,7 +111,8 @@ end;
 
 function TUpbitManager.UnSubscrib(aSymbol: TSymbol): boolean;
 begin
-
+  (QuoteSock[QOUTE_SOCK] as TUpbitWebSocket).UnSubScribe( aSymbol);
+  Result := true;
 end;
 
 procedure TUpbitManager.UnSubscribeAll;
@@ -119,6 +120,7 @@ begin
   inherited;
 
 end;
+
 function TUpbitManager.SubscribeAll: boolean;
 var
   i : Integer;

@@ -55,7 +55,7 @@ uses
 
 procedure TFrmDalinMain.AppException(Sender: TObject; E: Exception);
 begin
-  //App.log( llError, 'Application Error : ' + E.Message );
+  App.log( llError, 'Application Error : ' + E.Message );
   //gEnv.AppMsg( WIN_ERR, 'Application Error : ' + E.Message );
 end;
 procedure TFrmDalinMain.FormCreate(Sender: TObject);
@@ -167,7 +167,7 @@ begin
   QryTimer.Enabled := true;
   // 구독/취소 이벤트 연결..
   // 실행시 전종목 구독 으로 변경.
-//  App.Engine.QuoteBroker.SetEvent;
+  App.Engine.QuoteBroker.SetEvent;
 end;
 
 procedure TFrmDalinMain.Start;

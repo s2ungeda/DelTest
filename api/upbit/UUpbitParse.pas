@@ -143,12 +143,12 @@ begin
     begin
       aVal  := aArr.Get(i);
 
+      if i >= Symbol.Asks.Size then break;
+
       Symbol.Asks[i].Price  := aVal.GetValue<double>('ap');
       Symbol.Asks[i].Volume := aVal.GetValue<double>('as');
       Symbol.Bids[i].Price  := aVal.GetValue<double>('bp');
       Symbol.Bids[i].Volume := aVal.GetValue<double>('bs');
-
-      if i >= Symbol.Asks.Size then break;
 
     end;
 

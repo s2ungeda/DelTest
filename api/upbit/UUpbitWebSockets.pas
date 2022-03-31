@@ -10,22 +10,22 @@ type
   private
     FMarketType: TMarketType;
     FSubList: TStrings;
-
+    FParam, FParam2 : string;
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
 
-    procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
-
     procedure OnMessage( const S : string );
+    function GetSubData: string;
 
   public
+
 
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
 
       // 한종목씩
-    procedure SubScribe( aSymbol : TSymbol ) ; overload;
+    procedure SubScribe( aSymbol : TSymbol ) ;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
 
     procedure SubscribeAll; override;
@@ -38,7 +38,7 @@ type
   end;
 implementation
 uses
-  GApp , GLibs
+  GApp , GLibs , UEncrypts , UTypes
   , UApiConsts
   , UUpbitParse
   ;
@@ -69,31 +69,36 @@ begin
   Result := Format('%s-%s-%d', [ 'UP', TMarketTypeDesc[FMarketType], Seq ]);
 end;
 
+function TUpbitWebSocket.GetSubData: string;
+begin
+  Result := Format('[{"ticket":"%s"},{"type":"trade","codes":[%s],"isOnlyRealtime":true } '
+   // + ',{"type":"ticker","codes":[%s],"isOnlyRealtime":true}'
+    + ',{"type":"orderbook","codes":[%s],"isOnlyRealtime":true}'
+    + ',{"format":"SIMPLE"}]'
+    , [ GetUUID, FParam, FParam, FParam2] );
+end;
+
 procedure TUpbitWebSocket.MakeSubData;
 var
-  sParam, sParam2, sData : string;
+  sData : string;
   i : integer;
 begin
   if SubList.Count > 0 then Exit;
 
-  sParam := '';   sParam2 := '';
+  FParam := '';   FParam2 := '';
   with App.Engine.SymbolCore.Symbols[ ekUpbit] do
     for I := iStart to  iEnd-1 do
     begin
-      sParam := sParam + Format('"%s"', [Symbols[i].OrgCode  ]);
-      sParam2:= sParam2 + Format('"%s.5"', [Symbols[i].OrgCode ]);
+      FParam := FParam + Format('"%s"', [Symbols[i].OrgCode  ]);
+      FParam2:= FParam2 + Format('"%s.5"', [Symbols[i].OrgCode ]);
       if i < iEnd-1  then begin
-        sParam  := sParam + ',' ;
-        sParam2 := sParam2 + ',';
+        FParam  := FParam + ',' ;
+        FParam2 := FParam2 + ',';
       end;
     end;
 
-  sData := Format('[{"ticket":"real"},{"type":"trade","codes":[%s]} '
-    + ',{"type":"ticker","codes":[%s]}'
-    + ',{"type":"orderbook","codes":[%s]},{"format":"SIMPLE"}]'
-    , [ sParam, sParam, sParam2] );
 
-  SubList.Add( sData );
+  SubList.Add( GetSubData );
   App.DebugLog( '========== upbit sub ===========');
 
   for I := 0 to SubList.Count-1 do
@@ -105,7 +110,7 @@ begin
   inherited OnAfterConnect(Sender);
   App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
-  if ConnectTry > 1 then
+  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
     SubscribeAll;
 end;
 
@@ -120,54 +125,43 @@ begin
   gUpReceiver.ParseSocketData(FMarketType, S);
 end;
 
-procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol; bSub: boolean);
-
-begin
-
-end;
-
 procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol);
 var
-  sParam, sParam2, sData : string;
+  sData : string;
   i : integer;
 begin
 
   if FSubList.IndexOf(aSymbol.OrgCode) < 0 then
     FSubList.Add(aSymbol.OrgCode);
 
-  sParam := '';   sParam2 := '';
+  FParam := '';   FParam2 := '';
   for I := 0 to FSubList.Count-1 do
   begin
-    sParam := sParam + Format('"%s"', [FSubList[i]]);
-    sParam2:= sParam2 + Format('"%s.5"', [FSubList[i]]);
+    FParam := FParam + Format('"%s"', [FSubList[i]]);
+    FParam2:= FParam2 + Format('"%s.5"', [FSubList[i]]);
     if i < FSubList.Count-1  then begin
-      sParam  := sParam + ',' ;
-      sParam2 := sParam2 + ',';
+      FParam  := FParam + ',' ;
+      FParam2 := FParam2 + ',';
     end;
   end;
 
-  sData := Format('[{"ticket":"real"},{"type":"trade","codes":[%s]} '
-    + ',{"type":"ticker","codes":[%s]}'
-    + ',{"type":"orderbook","codes":[%s]},{"format":"SIMPLE"}]'
-    , [ sParam, sParam, sParam2] );
+  if App.AppStatus <> asShow then Exit;
 
-  SendData( sData );
-//  ws[0].SendData('[{"ticket":"test"},{"type":"orderbook","codes":['+sTmp+']},{"format":"SIMPLE"}]');
+  SendData( GetSubData );
 end;
 
 procedure TUpbitWebSocket.SubscribeAll;
-var
-  i : integer;
 begin
-  for I := 0 to SubList.Count-1 do begin
-    SendData( SubList[i] );
-    sleep(10);
-  end;
+  SendData( GetSubData );
 end;
 
 procedure TUpbitWebSocket.UnSubScribe(aSymbol: TSymbol);
+var
+  idx : integer;
 begin
-
+  idx := FSubList.IndexOf(aSymbol.OrgCode);
+  if idx >= 0 then
+    FSubList.Delete(idx);
 end;
 
 

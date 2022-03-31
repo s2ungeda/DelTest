@@ -257,14 +257,13 @@ var
   i :  TExchangeKind;
 begin
 
-//  for I := ekBinance to High(TExchangeKind) do
-//  begin
-//    if not FExManagers[i].SubscribeAll then
-//      Exit (false);
-//    sleep(10);
-//  end;
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].SubscribeAll then
+      Exit (false);
+    sleep(10);
+  end;
 
-  FExManagers[ekUpbit].SubscribeAll     ;
 
   Result := true;
 

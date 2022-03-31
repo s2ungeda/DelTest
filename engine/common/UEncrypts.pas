@@ -10,6 +10,7 @@ uses
 
 
 function CalculateHMACSHA256(const value, salt: String): String;
+function GetUUID : string;
 
 implementation
 
@@ -29,6 +30,16 @@ begin
   finally
     hmac.Free;
   end;
+end;
+
+function GetUUID : string;
+var
+  guid : TGUID;
+  sData: string;
+begin
+  CreateGUID(guid);
+  sData  := GUIDToString(guid);
+  Result := Copy( sData, 2, Length( sData) - 2);
 end;
 
 end.
