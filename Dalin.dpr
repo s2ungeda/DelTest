@@ -82,7 +82,8 @@ uses
   USymbolBroker in 'engine\symbol\USymbolBroker.pas',
   FServerMessage in 'wins\FServerMessage.pas' {FrmServerMessage},
   FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors},
-  USymbolUtils in 'engine\symbol\USymbolUtils.pas';
+  USymbolUtils in 'engine\symbol\USymbolUtils.pas',
+  URestRequests in 'api\URestRequests.pas';
 
 {$R *.res}
 begin

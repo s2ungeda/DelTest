@@ -17,7 +17,7 @@ type
   private
     FParse: TBithParse;
     FDepTimer: TQuoteTimer;
-
+    FCount  : int64;
     procedure OnTimer( Sender : TObject );
   public
 
@@ -53,7 +53,7 @@ begin
   inherited Create( aExType );
   FParse  := TBithParse.Create( self );
   FParse.OnSendDone := OnSendDoneEvent;
-
+  FCount := 0;
 end;
 
 destructor TBithManager.Destroy;
@@ -86,7 +86,7 @@ begin
   // orderbook 을 위한 조회 타이머.
   FDepTimer  := App.Engine.QuoteBroker.Timers.New;
   FDepTimer.Enabled  := false;
-  FDepTimer.Interval := 500;
+  FDepTimer.Interval := 200;
   FDepTimer.OnTimer  := OnDepthTimer;
 
   Timer.OnTimer   := OnTimer;
@@ -101,13 +101,14 @@ begin
     Exit;
   end;
 
-  (Exchanges[mtSpot] as TBithSpot).RequestOrderBook('1');
+  (Exchanges[mtSpot] as TBithSpot).RequestData(0)
 end;
 
 
 procedure TBithManager.OnTimer(Sender: TObject);
 begin
-  Exchanges[mtSpot].RequestDNWState;
+  //(Exchanges[mtSpot] as TBithSpot).RequestData(1);
+  //inc( FCount);
 end;
 
 

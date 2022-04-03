@@ -6,7 +6,9 @@ uses
   System.Classes,   System.SysUtils,
   REST.Types, REST.Client ,
 
-  UApiTypes
+  UApiTypes,
+
+  URestRequests
   ;
 type
 
@@ -28,6 +30,10 @@ type
     FCodes: TStrings;
 
   public
+
+    RestResult :  TRESTExecutionThread;
+    Req : array [0..2] of TRequest;
+
     Constructor Create( aObj : TObject; aMarketType : TMarketType ); overload;
     Destructor  Destroy; override;
 
@@ -83,6 +89,8 @@ uses
 { TExchagne }
 
 constructor TExchange.Create(  aObj : TObject; aMarketType : TMarketType );
+var
+  i : Integer;
 begin
 
   FRESTClient   := TRESTClient.Create('');
@@ -99,9 +107,15 @@ begin
 
   FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;
 
+  for I := 0 to High(Req) do
+    Req[i] := TRequest.Create;
+
+  RestResult := nil;
 end;
 
 destructor TExchange.Destroy;
+var
+  i : integer;
 begin
 
   FCodes.Free;
@@ -111,6 +125,9 @@ begin
   FRestReq.Free;
 //  if FRestClient <> nil then
     FRESTClient.Free;
+
+  for I := 0 to High(Req) do
+    Req[i].Free;
 
   inherited;
 end;
@@ -228,8 +245,6 @@ procedure TExchange.Set406;
 begin
   FRestReq.Accept := '*/*';
   FRestReq.AcceptEncoding := 'gzip, deflate';
-
-
 end;
 
 procedure TExchange.SetBaseUrl(url: string);

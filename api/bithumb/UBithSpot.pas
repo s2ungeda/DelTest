@@ -16,14 +16,23 @@ uses
 type
   TBithSpot = class( TExchange )
   private
+
+    FIndex  : integer;
+    FLastIndex : integer;
+
     function RequestTicker : boolean;
     function RequestOrderBook : boolean;  overload;
 
     procedure ReceiveAsyncData;
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); override;
+    procedure parseAssetsstatus;
+    procedure parseOrderBook;
+    procedure parseTicker;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
+
+    procedure RequestData( idx : integer );
 
     procedure RequestOrderBook( c : char ) ; overload;
     function RequestDNWState : boolean; override;
@@ -48,6 +57,9 @@ uses
 constructor TBithSpot.Create(aObj: TObject; aMarketType: TMarketType);
 begin
   inherited Create( aObj, aMarketType );
+
+  FIndex  := 0;
+  FLastIndex := -1;
 
 end;
 
@@ -92,7 +104,13 @@ end;
 
 
 function TBithSpot.RequestMaster: boolean;
+var
+  i : integer;
 begin
+
+  for I := 0 to High(Req) do
+    Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ));
+
   Result := RequestTicker
     and RequestOrderBook
     and RequestDNWState
@@ -220,6 +238,67 @@ begin
   except
   //  LeaveCriticalSection(CriticalSection);
   end;
+end;
+
+procedure TBithSpot.RequestData( idx : integer );
+begin
+  if ( FIndex <> FLastIndex )
+    or ( RestResult = nil )
+    or (( RestResult <> nil ) and ( RestResult.Finished )) then
+  begin
+    FLastIndex := FIndex;
+
+    case FIndex of
+      0 , 2: begin
+        RestResult := Req[0].RequestAsync( parseOrderBook, rmGET, '/public/orderbook/ALL_KRW', true);
+      end;
+      1 : begin
+        RestResult := Req[1].RequestAsync( parseAssetsstatus, rmGET, '/public/assetsstatus/ALL', true);
+      end;
+      3 :begin
+        RestResult := Req[2].RequestAsync( parseTicker, rmGET, '/public/ticker/ALL_KRW', true);
+      end;
+      else exit;
+    end;
+
+    if RestResult = nil then
+      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], idx ] )
+    else begin
+      inc( FIndex );
+      if FIndex >= 4 then
+        FIndex := 0;
+    end;
+
+  end else
+  begin
+    var s : string;
+    if RestResult.Finished then s := 'fin' else s := 'not fin';
+    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], idx, RestResult.ThreadID, s ]  );
+  end;
+end;
+
+
+procedure TBithSpot.parseOrderBook;
+var
+  sJson : string;
+begin
+  sJson :=  Req[0].GetResponse;
+  if sJson = '' then Exit;
+  gBithReceiver.ParseSpotOrderBook( sJson );
+
+end;
+procedure TBithSpot.parseAssetsstatus;
+var
+  sJson : string;
+begin
+  sJson :=  Req[1].GetResponse;
+  if sJson = '' then Exit;
+  gBithReceiver.ParseDnwState( sJson );
+
+end;
+procedure TBithSpot.parseTicker;
+begin
+
 end;
 
 function TBithSpot.RequestDNWState : boolean;

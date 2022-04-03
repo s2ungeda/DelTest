@@ -43,6 +43,8 @@ type
     SpinButton6: TSpinButton;
     SpinButton7: TSpinButton;
     SpinButton8: TSpinButton;
+    edtSec: TLabeledEdit;
+    cbAuto: TCheckBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);

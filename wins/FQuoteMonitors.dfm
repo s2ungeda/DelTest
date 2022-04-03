@@ -205,15 +205,40 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         end
       end
       object Button1: TButton
-        Left = 331
-        Top = 26
+        Left = 467
+        Top = 24
         Width = 75
         Height = 21
         Anchors = [akRight, akBottom]
         Caption = 'refresh'
         TabOrder = 8
-        Visible = False
         OnClick = Button1Click
+      end
+      object edtSec: TLabeledEdit
+        Left = 378
+        Top = 24
+        Width = 25
+        Height = 21
+        Alignment = taRightJustify
+        Anchors = [akRight, akBottom]
+        EditLabel.Width = 54
+        EditLabel.Height = 13
+        EditLabel.Caption = '('#45800#50948' : '#52488' )'
+        LabelPosition = lpRight
+        NumbersOnly = True
+        TabOrder = 9
+        Text = '3'
+      end
+      object cbAuto: TCheckBox
+        Left = 331
+        Top = 28
+        Width = 41
+        Height = 17
+        Anchors = [akRight, akBottom]
+        Caption = 'Auto'
+        Checked = True
+        State = cbChecked
+        TabOrder = 10
       end
     end
     object plLeftClient: TPanel

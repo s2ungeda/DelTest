@@ -233,6 +233,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="engine\symbol\USymbolUtils.pas"/>
+        <DCCReference Include="api\URestRequests.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
