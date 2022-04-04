@@ -101,7 +101,7 @@ begin
     Exit;
   end;
 
-  (Exchanges[mtSpot] as TBithSpot).RequestData(0)
+  (Exchanges[mtSpot] as TBithSpot).RequestData;
 end;
 
 

@@ -28,6 +28,7 @@ type
     destructor Destroy; override;
 
     procedure ParseDnwState( aData : string );
+    procedure ParseTicker( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
 
@@ -58,9 +59,6 @@ begin
   gBithReceiver := nil;
   inherited;
 end;
-
-
-
 
 
 function TBithParse.GetSymbolCode(sCode: string): string;
@@ -113,6 +111,8 @@ begin
           aSymbol.Asks[0].Price   := StrToFloatDef( aVal.GetValue<string>( 'price' ), 0.0 );
           aSymbol.Asks[0].Volume  := StrToFloatDef( aVal.GetValue<string>( 'quantity' ), 0.0 );
         end;
+
+        App.Engine.SymbolCore.CalcKimp( aSymbol );
       end;
 
     end;
@@ -160,10 +160,7 @@ begin
       iRes := aSymbol.CheckDnwState( iw = 1, id = 1 ) ;
       if iRes > 0 then
         App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
-
-
     end;
-
 
   finally
     if aObj <> nil then aObj.free;
@@ -215,6 +212,58 @@ begin
   finally
     aObj.Free;
   end;
+end;
+
+procedure TBithParse.ParseTicker(aData: string);
+var
+  aObj, aSub, master : TJsonObject;
+  aArr : TJsonArray;
+  aPair : TJsonPair;
+  aVal  : TJsonValue;
+  i : Integer;
+  sBase, sCode, sTmp : string;
+  aSymbol : TSymbol;
+  bNew : boolean;
+  j: Integer;
+begin
+  master := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
+  aObj := master.GetValue('data') as TJsonObject;
+
+  try
+
+    try
+      for I := 0 to aObj.Size-1 do
+      begin
+        aPair := aObj.Get(i);
+        if aPair.JsonValue.ClassType <> TJSONObject then continue;
+        sCode := aPair.JsonString.Value;
+
+        aSymbol := App.Engine.SymbolCore.FindSymbol(FParent.ExchangeKind, sCode );
+        if aSymbol <> nil then
+        begin
+
+          aVal := aPair.JsonValue;
+
+          aSymbol.DayHigh     := StrToFloatDef( aVal.GetValue<string>( 'max_price' ), 0.0 );
+          aSymbol.DayLow      := StrToFloatDef( aVal.GetValue<string>( 'min_price' ), 0.0 );
+          aSymbol.DayOpen     := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+
+          aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
+          aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_value_24H' ), 0.0 ) / 100000000;
+          aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
+        end;
+
+      end;
+    except on e : exception do
+      App.log( llError,  ' %s ParseTicker Error', [  TExchangeKindDesc[ FParent.ExchangeKind], aData ] ) ;
+    end;
+  //  if ( GetCodeIndex( sCode ) < 0 ) then Continue;
+
+  finally
+    if aObj <> nil then aObj.Free
+  end;
+
+
 end;
 
 procedure TBithParse.ParseSpotOrderBook(aJson: TJsonObject);
@@ -329,6 +378,8 @@ begin
   end;
   
 end;
+
+
 
 end.
 

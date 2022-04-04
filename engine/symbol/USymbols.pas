@@ -244,7 +244,8 @@ type
     constructor Create;
     destructor  Destroy; override;
     function FindSymbolList(sBase: String ): TSymbolList;
-    function FindSymbol( sBase : string ;  aExKind : TExchangeKind ) : TSymbol;
+    function FindSymbol( sBase : string ;  aExKind : TExchangeKind ) : TSymbol; overload;
+    function FindSymbol( sBase : string ;  aExKind : TExchangeKind; aMarket : TMarketType ) : TSymbol; overload;
     procedure AddSymbol(aSymbol: TSymbol);
   end;
 
@@ -809,6 +810,29 @@ begin
       end;
     end;
 end;
+
+function TBaseSymbols.FindSymbol(sBase: string; aExKind: TExchangeKind;
+  aMarket: TMarketType): TSymbol;
+  var
+    aSymbolList : TSymbolList;
+    aSymbol : TSymbol;
+    I: Integer;
+begin
+  Result := nil;
+  aSymbolList := FindSymbolList( sBase ) ;
+  if aSymbolList <> nil then
+    for I := 0 to aSymbolList.Count-1 do
+    begin
+      aSymbol := aSymbolList.Symbols[i];
+      if ( aSymbol.Spec.ExchangeType = aExKind )
+       and ( aSymbol.Spec.Market = aMarket) then
+      begin
+        Result := aSymbol;
+        Break;
+      end;
+    end;
+end;
+
 
 function TBaseSymbols.FindSymbolList(sBase: String): TSymbolList;
 begin

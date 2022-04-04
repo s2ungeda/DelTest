@@ -27,10 +27,10 @@ type
 
     procedure SetSymbol(const Value: TSymbol);
 
-    procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
-    procedure CalcKimp; overload;
-    procedure CalcMainKimp;  overload;
-    procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
+//    procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
+//    procedure CalcKimp; overload;
+//    procedure CalcMainKimp;  overload;
+//    procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
 
   public
     constructor Create(aColl: TCollection); override;
@@ -466,7 +466,7 @@ begin
     end;
   end;
 end;
-
+              {
 procedure TQuote.CalcKimp( aPrice : double; aSymbol : TSymbol );
 var
   dEx : double;
@@ -482,11 +482,6 @@ begin
   aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
   aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
 
-//  if ( aSymbol.Code = 'BTC' ) and ( aSymbol.KimpAskPrice < 55 )
-//    and ( aSymbol.Spec.ExchangeType = ekBithumb )  then
-//    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ aSymbol.KimpAskPrice,
-//    aSymbol.Asks[0].Price, aPrice, App.Engine.ApiManager.ExRate.Value
-//    , FSymbol.Code, aSymbol.Code ] );
 end;
 
 procedure TQuote.CalcKimp;
@@ -519,7 +514,7 @@ begin
   end else
   begin
     with  App.Engine.SymbolCore do
-      aSymbol := BaseSymbols.FindSymbol( Symbol.Spec.BaseCode, MainExKind  );
+      aSymbol := BaseSymbols.FindSymbol( Symbol.Spec.BaseCode, MainExKind, mtSpot  );
 
     if aSymbol = nil then Exit;
     CalcKimp( aSymbol.Last, Symbol );
@@ -573,7 +568,7 @@ begin
   App.Engine.SymbolCore.SetMainKimp( aExKind , dVal );
 
 end;
-
+   }
 constructor TQuote.Create(aColl: TCollection);
 begin
   inherited Create(aColl);
@@ -616,15 +611,17 @@ begin
 
     FSymbol.Terms.NewTick(aTick)
 
-
   end else
   if FLastEvent = qtMarketDepth then
   begin
 
   end;
 
-  CalcKimp;
-  CalcMainKimp;
+  if FSymbol.Spec.Market = mtSpot then
+  begin
+    App.Engine.SymbolCore.CalcKimp( FSymbol );
+    App.Engine.SymbolCore.CalcMainKimp( FSymbol );
+  end;
 
   FSymbol.LastEventTime := dtTime;
   FSymbol.LastTime      := now;

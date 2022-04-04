@@ -94,7 +94,7 @@ end;
 
 procedure TUpbitManager.OnTimer(Sender: TObject);
 begin
-  Exchanges[mtSpot].RequestDNWState;
+  (Exchanges[mtSpot] as TUpbitSpot).RequestData;
 end;
 
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;

@@ -14,7 +14,7 @@ type
   private
 
     FParent: TExchangeManager;
-    procedure ParseSpotOrderBook( aJson : TJsonObject );
+    procedure ParseSpotOrderBook( aJson : TJsonObject );  overload;
     procedure ParseSpotTrade( aJson : TJsonObject );
     procedure ParseSpotRealTicker( aJson : TJsonObject );
     function GetSymbolCode(sCode: string): string;
@@ -26,6 +26,7 @@ type
     procedure ParseSpotTicker( aData : string );
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseDNWSate( aData : string );
+    procedure ParseSpotOrderBook( aData : string ); overload;
 
     property Parent : TExchangeManager read FParent;
   end;
@@ -96,6 +97,55 @@ begin
     App.DebugLog('%s %s parse error : %s', [TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[aMarket] , aData] );
   end;
 
+end;
+
+procedure TUpbitParse.ParseSpotOrderBook(aData: string);
+var
+  i , j : integer;
+  aArr, aSubArr  : TJsonArray;
+  aVal, aSubVal  : TJsonValue;
+  sCode : string;
+  sts   : TArray<string>;
+  aSymbol : TSymbol;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Upbit REST ParseSpotTicker data is empty') ;
+    Exit;
+  end;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  try
+    if aArr = nil then Exit;
+
+    for I := 0 to aArr.Size-1 do
+    begin
+      aVal := aArr.Get(i);
+      sCode:= aVal.GetValue<string>('market');
+
+      sts := sCode.Split(['-']);
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
+
+      if aSymbol = nil then continue;
+
+      aSubArr := aVal.FindValue('orderbook_units') as TJsonArray;
+
+      for j := 0 to aSubArr.Size-1 do
+      begin
+        aSubVal := aSubArr.get(j);
+        aSymbol.Asks[0].Price := aSubVal.GetValue<double>('ask_price');
+        aSymbol.Asks[0].Volume:= aSubVal.GetValue<double>('ask_size');
+        aSymbol.Bids[0].Price := aSubVal.GetValue<double>('bid_price');
+        aSymbol.Bids[0].Volume:= aSubVal.GetValue<double>('bid_size');
+
+        App.Engine.SymbolCore.CalcKimp( aSymbol );
+        break;
+      end;
+    end;
+
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
 end;
 
 procedure TUpbitParse.ParseSpotRealTicker(aJson: TJsonObject);

@@ -228,6 +228,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         NumbersOnly = True
         TabOrder = 9
         Text = '3'
+        OnKeyDown = edtSecKeyDown
       end
       object cbAuto: TCheckBox
         Left = 331
@@ -239,6 +240,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Checked = True
         State = cbChecked
         TabOrder = 10
+        OnClick = cbAutoClick
       end
     end
     object plLeftClient: TPanel
@@ -506,6 +508,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     end
   end
   object Timer1: TTimer
+    Enabled = False
     Interval = 3000
     OnTimer = Timer1Timer
     Left = 344

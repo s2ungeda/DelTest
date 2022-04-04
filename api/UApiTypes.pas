@@ -19,7 +19,9 @@ type
 
     Key : string;
     Secret  : string;
+
   end;
+
 
   TExchangeInfo = record
     Name : string;

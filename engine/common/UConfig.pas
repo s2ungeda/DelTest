@@ -18,6 +18,10 @@ type
 
     AppName : string;
     ClassName : string;
+
+    VerifyMod : boolean;
+    ExRateInterval : integer;
+
     function LoadConfig : boolean;
   end;
 
@@ -51,6 +55,7 @@ begin
       AppName := pIniFile.ReadString('App', 'ExFile', 'Sauri');
       ClassName := pIniFile.ReadString('App', 'ClassName', 'Sauri');
       /////////////////////////////////////////////////////////////
+      VerifyMod  := pIniFile.ReadInteger('ENV', 'VerifyMod', 1) = 1;
 
     except
       result := false;

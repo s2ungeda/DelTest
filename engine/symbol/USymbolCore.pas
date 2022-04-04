@@ -56,6 +56,7 @@ type
   public
 
     JungKopi  : array [TExchangeKind, 0..47] of double;
+    JKIdx     : array [TExchangeKind] of integer;
 
     constructor Create;
     destructor Destroy; override;
@@ -72,9 +73,13 @@ type
 
     procedure GetSymbolList( aExKind : TExchangeKind; var aList : TList );
 
-//    function CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
-    procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
+    // 모든 종목을 구독할수 없어서.. QuoteBroker 에서 여기로 이전..
+    procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
+    procedure CalcKimp( aSymbol : TSymbol ); overload;
+    procedure CalcMainKimp( aSymbol : TSymbol );  overload;
+    procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
 
+    procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
     procedure SymbolArrange;
 
     property Specs: TMarketSpecs read FSpecs;
@@ -118,33 +123,102 @@ uses
 
 { TSymbolCore }
 
-//function TSymbolCore.CalcKimp( aOSSymbol, aKSymbol : TSymbol; iType : integer ) : double;
-//var
-//  tmp : TSymbol;
-//  dEx : double;
-//begin
-//  if (aOSSymbol = nil) or (aKSymbol = nil) then Exit (0);
-////
-//  dEx :=  Max( aOSSymbol.Last * App.Engine.ApiManager.ExRate.Value , 1 );
-//
-//  case iType of
-//    -1 : Result := ( aKSymbol.Asks[0].Price - dEx) / dEx ;
-//    0 : Result := ( aKSymbol.Last - dEx) / dEx ;
-//    1 : Result := ( aKSymbol.Bids[0].Price - dEx) / dEx ;
-//  end;
-////
-////  if ( aKSymbol.Code = 'BTC' ) and ( Result < 0 ) and ( iType < 0 )
-////    and ( aKSymbol.Spec.ExchangeType = ekUpbit )  then
-////    App.DebugLog( 'ex : %f %f, %f, %f (%s, %s) ', [ Result, aKSymbol.Asks[0].Price, aOSSymbol.Last, App.Engine.ApiManager.ExRate.Value
-////    , aOSSymbol.Code, aKSymbol.Code ] );
-//
-////  if iType = -1 then
-//
-//
-//  Result := Result * 100;
-////  if Result < 0 then Result := 0.0;
-//
-//end;
+procedure TSymbolCore.CalcKimp( aPrice : double; aSymbol : TSymbol );
+var
+  dEx : double;
+begin
+
+  dEx :=  Max( aPrice * App.Engine.ApiManager.ExRate.Value , 1 );
+
+//  if aSymbol.Spec.ExchangeType = App.Engine.SymbolCore.MainExKind  then
+//    App.DebugLog('');
+
+  aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
+  aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
+  aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
+
+end;
+
+procedure TSymbolCore.CalcKimp( aSymbol : TSymbol );
+var
+  dEx : double;
+  pSymbol : TSymbol;
+  aList   : TSymbolList;
+  I: Integer;
+  bOS : boolean;
+begin
+
+  bOS := false;
+  if (aSymbol.Spec.ExchangeType = FMainExKind ) then
+    bOS := true;
+
+  if bOS then
+  begin
+    aList := FBaseSymbols.FindSymbolList( aSymbol.Spec.BaseCode );
+    if aList = nil then Exit;
+
+    for I := 0 to aList.Count-1 do
+    begin
+      pSymbol := aList.Symbols[i];
+      if (pSymbol.Spec.ExchangeType = FSubExKind1) or
+         (pSymbol.Spec.ExchangeType = FSubExKind2) then
+         CalcKimp( aSymbol.Last, pSymbol );
+    end;
+
+  end else
+  begin
+    pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FMainExKind, mtSpot  );
+
+    if aSymbol = nil then Exit;
+    CalcKimp( pSymbol.Last, aSymbol );
+  end;
+
+end;
+
+procedure TSymbolCore.CalcMainKimp( aSymbol : TSymbol );
+var
+  dPrice : double;
+  aKind : TMajorSymbolKind;
+  aExKind : TExchangeKind;
+begin
+
+  if (aSymbol.Spec.BaseCode = TMajorSymbolCode[msBTC] ) then
+    aKind := msBTC
+  else if (aSymbol.Spec.BaseCode = TMajorSymbolCode[msETH] ) then
+    aKind := msETH
+  else Exit;
+
+  if aSymbol.Spec.ExchangeType = FMainExKind then
+  begin
+    CalcMainKimp( FSubExKind1 );
+    CalcMainKimp( FSubExKind2 );
+  end
+  else
+    CalcMainKimp( aSymbol.Spec.ExchangeType );
+end;
+
+procedure TSymbolCore.CalcMainKimp(aExKind: TExchangeKind);
+var
+  aBTC, aETH : TSymbol;
+  dMo, dVal : double;
+begin
+
+  aBTC := FMainSymbols[msBTC][aExKind];
+  aETH := FMainSymbols[msETH][aExKind];
+
+  if ( aBTC = nil ) or ( aETH = nil ) then Exit;
+
+  dMo := Max( aBTC.DayAmount + aETH.DayAmount, 1);
+  dVal:= (aBTC.DayAmount * aBTC.KimpPrice + aETH.DayAmount * aETH.KimpPrice) / dMo ;
+
+  if dVal <  0  then
+  begin
+   // App.DebugLog( '%s, %.2f = %f, %f, %f, %f', [ TExchangeKindDesc[aExKind],dVal, aBTC.KimpPrice, aBTC.DayAmount , aETH.KimpPrice, aETH.DayAmount]   );
+  end;
+
+  SetMainKimp( aExKind , dVal );
+
+end;
 
 constructor TSymbolCore.Create;
 var
@@ -169,6 +243,7 @@ begin
     FSymbolDnwStates[i] := TSymbolList.Create;
 
     FMainKimp[i] := 0.0;
+    JKIdx[i]     := 0;
   end;
 
   FCommSymbols := TCommSymbolList.Create;
@@ -412,6 +487,7 @@ begin
 
   idx  := ( hh mod 24 * 2 ) + ( nn div 30 );
 
+  JKIdx[aExKind]  := idx;
   JungKopi[aExKind][idx] := Value;
 end;
 

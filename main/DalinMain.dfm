@@ -3,8 +3,8 @@ object FrmDalinMain: TFrmDalinMain
   Top = 0
   HelpType = htKeyword
   Caption = 'Dalin'
-  ClientHeight = 86
-  ClientWidth = 350
+  ClientHeight = 109
+  ClientWidth = 308
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,8 +20,8 @@ object FrmDalinMain: TFrmDalinMain
   TextHeight = 13
   object stsBar: TStatusBar
     Left = 0
-    Top = 67
-    Width = 350
+    Top = 90
+    Width = 308
     Height = 19
     Panels = <
       item
@@ -33,7 +33,52 @@ object FrmDalinMain: TFrmDalinMain
       item
         Width = 50
       end>
-    ExplicitTop = 34
+    ExplicitTop = 47
+    ExplicitWidth = 350
+  end
+  object Panel1: TPanel
+    Left = 8
+    Top = 8
+    Width = 177
+    Height = 65
+    TabOrder = 1
+    object edtExInterval: TLabeledEdit
+      Left = 56
+      Top = 8
+      Width = 41
+      Height = 21
+      EditLabel.Width = 44
+      EditLabel.Height = 13
+      EditLabel.Caption = #54872#50984#51452#44592
+      LabelPosition = lpLeft
+      NumbersOnly = True
+      TabOrder = 0
+      Text = '10'
+    end
+    object Button1: TButton
+      Left = 111
+      Top = 8
+      Width = 50
+      Height = 22
+      Caption = #51201#50857
+      TabOrder = 1
+      OnClick = Button1Click
+    end
+    object Edit1: TEdit
+      Left = 87
+      Top = 36
+      Width = 74
+      Height = 21
+      TabOrder = 2
+    end
+    object cbManual: TCheckBox
+      Left = 16
+      Top = 40
+      Width = 65
+      Height = 17
+      Caption = #49688#46041#54872#50984
+      TabOrder = 3
+    end
   end
   object QryTimer: TTimer
     Enabled = False

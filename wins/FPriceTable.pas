@@ -26,7 +26,7 @@ type
   private
     FFontSize: integer;
     FSaveRow, FSaveCol,  FRow   : integer;
-
+    FPrecision : integer;
     { Private declarations }
     procedure initControls;
     procedure InitObject;
@@ -82,6 +82,7 @@ begin
   FRow      := -1;
   FSaveRow  := -1;
   FSaveCol  := -1;
+  FPrecision:= App.GetPrecision;
 //  for I := 0 to prcTbl2_TitleCnt - 1 do
 //  begin
 //    sgQuote.Cells[i,0] := prcTbll2_Title[i];
@@ -183,8 +184,8 @@ begin
 //        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
 //        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+1] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
+        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
       end;
 
       if Objects[CoinCol, iRow+2] <> nil then
@@ -193,8 +194,8 @@ begin
 //        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
 //        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
 
-        Cells[ 2, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+2] := Format('%.2f %%', [ aSymbol2.KimpBidPrice ]);
+        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
+        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
       end;
 
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '¡Û', 'X');
@@ -218,8 +219,8 @@ begin
 //        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
 //        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
 
-        Cells[ 2, iRow] := Format('%.2f %%', [ aSymbol.KimpAskPrice ]);
-        Cells[ 3, iRow] := Format('%.2f %%', [ aSymbol.KimpBidPrice ]);
+        Cells[ 2, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpAskPrice ]);
+        Cells[ 3, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpBidPrice ]);
       end;
 
       Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);

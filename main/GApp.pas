@@ -43,6 +43,8 @@ type
 
     procedure SaveData( aType : TLogDataType; sData : string);
 
+    function GetPrecision : integer;
+
     property Engine : TDalinEngine read FEngine;
 
     property  Config : TConfig read FConfig ;
@@ -92,6 +94,14 @@ begin
   inherited;
 end;
 
+
+function TApp.GetPrecision: integer;
+begin
+  if FConfig.VerifyMod then
+    Result := 3
+  else
+    Result := 2;
+end;
 
 function TApp.LoadConfig: boolean;
 begin

@@ -17,11 +17,17 @@ type
   TFrmDalinMain = class(TForm)
     QryTimer: TTimer;
     stsBar: TStatusBar;
+    Panel1: TPanel;
+    edtExInterval: TLabeledEdit;
+    Button1: TButton;
+    Edit1: TEdit;
+    cbManual: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
 
     procedure QryTimerTimer(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     FExRate : integer;
@@ -29,10 +35,11 @@ type
     procedure init;
     function IsRealyClose: boolean;
     procedure SetEnv;
-    procedure GetExRate;
+    procedure GetExRate( bInit : boolean );
     procedure DalinStatusEvent( asType : TAppStatus );
-    procedure ReadExRate;
+    procedure ReadExRate( bInit : boolean = false );
     procedure AppException(Sender: TObject; E: Exception);
+    function GetInterval: integer;
 
   public
     { Public declarations }
@@ -81,6 +88,8 @@ end;
 
 
 
+
+
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);
 begin
   AppStatusEvent(asType);
@@ -123,10 +132,10 @@ end;
 
 
 
-procedure TFrmDalinMain.GetExRate;
+procedure TFrmDalinMain.GetExRate( bInit : boolean );
 begin
-  App.Engine.ApiManager.RequestExRate;
 
+  ReadExRate( bInit );
   stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
 end;
 
@@ -163,7 +172,8 @@ end;
 procedure TFrmDalinMain.SetValue;
 begin
 
-  ReadExRate;
+
+  GetExRate( true );
   QryTimer.Enabled := true;
   // 구독/취소 이벤트 연결..
   // 실행시 전종목 구독 으로 변경.
@@ -181,12 +191,10 @@ end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);
 begin
-  if FExRate >= 6 then
+  if FExRate >= GetInterval then
   begin
     FExRate := 0;
-    ReadExRate;
-    stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
-//    GetExRate;
+    GetExRate( false );
   end;
   inc(FExRate);
   inc(FDnw);
@@ -194,6 +202,17 @@ begin
 //  App.Engine.ApiManager.CheckCount;
 
   stsBar.Panels[1].Text := FormatDateTime('hh:nn:ss', now) ;
+end;
+
+function TFrmDalinMain.GetInterval : integer;
+begin
+  Result := StrToIntDef( edtExInterval.Text, 10 ) ;
+end;
+
+procedure TFrmDalinMain.Button1Click(Sender: TObject);
+begin
+  GetExRate( false );
+  QryTimer.Interval :=  GetInterval;
 end;
 
 procedure TFrmDalinMain.SaveEnv( aStorage : TStorage );
@@ -204,6 +223,10 @@ begin
   aStorage.FieldByName('Top').AsInteger := Top;
   aStorage.FieldByName('width').AsInteger := Width;
   aStorage.FieldByName('Height').AsInteger := Height;
+
+  aStorage.FieldByName('ExRateInterval').AsString := edtExInterval.Text;
+  aStorage.FieldByName('mExRate').AsString := edit1.Text  ;
+  aStorage.FieldByName('UseManual').AsBoolean := cbManual.Checked;
 
 end;
 
@@ -218,15 +241,19 @@ begin
   Width := aStorage.FieldByName('width').AsInteger;
   Height:= aStorage.FieldByName('Height').AsInteger;
 
+  edtExInterval.Text  := aStorage.FieldByName('ExRateInterval').AsStringDef( '10');
+  edit1.Text          := aStorage.FieldByName('mExRate').AsStringDef('0');
+  cbManual.Checked    := aStorage.FieldByName('UseManual').AsBooleanDef(false);
 end;
 
 
-procedure TFrmDalinMain.ReadExRate;
+procedure TFrmDalinMain.ReadExRate( bInit : boolean );
 var
   f : TextFile;  bOK : boolean;
   stData, FileName : string;
   bExist : boolean;
 
+  dTmp : double;
   function IsErrorOccur(iRes: integer; st: string): Boolean;
   begin
     Result := true;
@@ -238,6 +265,14 @@ var
   end;
 
 begin
+
+  if (cbManual.Checked) and ( not bInit ) then
+  begin
+    dTmp :=  App.Engine.ApiManager.ExRate.Value;
+    App.Engine.ApiManager.ExRate.Value := StrToFloatDef( edit1.Text, dtmp);
+    Exit;
+  end;
+
   FileName := ExtractFilePath(ParamStr(0))+'Data\';
   FileName := FileName + 'exchangeRate.log';
 
@@ -269,6 +304,7 @@ begin
 
       App.Engine.ApiManager.ExRate.Value := StrToFloat( stData);
       //gEnv.ConConfig.LastOrderNo := StrToIntDef( stData, gEnv.ConConfig.LastOrderNo );
+
     End;
 
   finally

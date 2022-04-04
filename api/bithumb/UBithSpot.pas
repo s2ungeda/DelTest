@@ -23,8 +23,7 @@ type
     function RequestTicker : boolean;
     function RequestOrderBook : boolean;  overload;
 
-    procedure ReceiveAsyncData;
-    procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); override;
+    procedure OnHTTPProtocolError(Sender: TCustomRESTRequest);
     procedure parseAssetsstatus;
     procedure parseOrderBook;
     procedure parseTicker;
@@ -32,7 +31,7 @@ type
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
-    procedure RequestData( idx : integer );
+    procedure RequestData;
 
     procedure RequestOrderBook( c : char ) ; overload;
     function RequestDNWState : boolean; override;
@@ -109,7 +108,10 @@ var
 begin
 
   for I := 0 to High(Req) do
+  begin
     Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ));
+    Req[i].Req.OnHTTPProtocolError := OnHTTPProtocolError;
+  end;
 
   Result := RequestTicker
     and RequestOrderBook
@@ -240,7 +242,7 @@ begin
   end;
 end;
 
-procedure TBithSpot.RequestData( idx : integer );
+procedure TBithSpot.RequestData;
 begin
   if ( FIndex <> FLastIndex )
     or ( RestResult = nil )
@@ -262,7 +264,7 @@ begin
     end;
 
     if RestResult = nil then
-      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], idx ] )
+      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
     else begin
       inc( FIndex );
       if FIndex >= 4 then
@@ -273,7 +275,7 @@ begin
   begin
     var s : string;
     if RestResult.Finished then s := 'fin' else s := 'not fin';
-    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], idx, RestResult.ThreadID, s ]  );
+    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
   end;
 end;
 
@@ -297,8 +299,12 @@ begin
 
 end;
 procedure TBithSpot.parseTicker;
+var
+  sJson : string;
 begin
-
+  sJson :=  Req[2].GetResponse;
+  if sJson = '' then Exit;
+  gBithReceiver.ParseTicker( sJson );
 end;
 
 function TBithSpot.RequestDNWState : boolean;
@@ -335,61 +341,11 @@ end;
 
 procedure TBithSpot.OnHTTPProtocolError(Sender: TCustomRESTRequest);
 begin
-  inherited;
-//  LeaveCriticalSection(CriticalSection);
-end;
-
-
-procedure TBithSpot.ReceiveAsyncData;
-var
-  sTmp, sJson : string;
-//  sts  : TArray<string>;
-//  I: Integer;
-begin
-  try
-      sJson:= RestReq.Response.Content;
-      if sJson = '' then Exit;
-      gBithReceiver.ParseSpotOrderBook( sJson );
-  except
-    on e : Exception do
-      App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
-        TExchangeKindDesc[ GetExKind], e.Message, sJson ]
-        );
+  if Sender <> nil  then
+  begin
+    App.Log( llError,  '%s Async Request Error : %s ( status : %d, %s)' , [ TExchangeKindDesc[GetExKind]
+    ,  Sender.Response.Content ,  Sender.Response.StatusCode, Sender.Response.StatusText ]  );
   end;
-
-//  try
-//    try
-//      sJson:= RestReq.Response.Content;
-//      if sJson = '' then Exit;
-//      gBithReceiver.ParseSpotOrderBook( sJson );
-//
-//      sTmp := RestReq.Response.FullRequestURI;
-//      sts  := sTmp.Split(['/']);
-//
-//      for I := High(sts) downto 0 do
-//      begin
-//        if sts[i] = 'orderbook' then
-//        begin
-//          gBithReceiver.ParseSpotOrderBook( sJson );
-//          break;
-//        end else
-//        if sts[i] = 'assetsstatus' then
-//        begin
-//          gBithReceiver.ParseDnwState( sJson );
-//          break;
-//        end;
-//      end;
-//    except
-//      on e : Exception do
-//        App.Log(llError, '%s ReceiveAsyncData except : %s, %s', [
-//          TExchangeKindDesc[ GetExKind], e.Message, sJson ]
-//          );
-//    end;
-//  finally
-//  //  LeaveCriticalSection(CriticalSection);
-//  end;
 end;
-
-
 
 end.

@@ -21,6 +21,8 @@ type
       State: TGridDrawState);
   private
     { Private declarations }
+    FPrecision : integer;
+    FCol, FRow : integer;
   public
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
@@ -82,6 +84,11 @@ begin
     Cells[0,2]  := 'BT ÁßÄÚÇÇ';
     Cells[0,5]  := 'RealTime';
   end;
+
+  FCol  := -1;
+  FRow  := -1;
+
+  FPrecision:= App.GetPrecision;
 end;
 
 procedure TFrmJungKopi.FormDestroy(Sender: TObject);
@@ -156,14 +163,14 @@ var
     if (a < DOUBLE_EPSILON) and ( a > (DOUBLE_EPSILON  * -1 ))  then
       Result := ''
     else
-      Result := Format('%.2f', [ a ] );
+      Result := Format('%.*n', [ FPrecision,  a ] );
   end;
 
 begin
   with sgVal do
   begin
-    Cells[0, 3] := Format('%.2f', [ App.Engine.SymbolCore.MainKimp[ekUpbit] ]);
-    Cells[0, 4] := Format('%.2f', [ App.Engine.SymbolCore.MainKimp[ekBithumb] ]);
+    Cells[0, 3] := Format('%.*n', [ FPrecision, App.Engine.SymbolCore.MainKimp[ekUpbit] ]);
+    Cells[0, 4] := Format('%.*n', [ FPrecision, App.Engine.SymbolCore.MainKimp[ekBithumb] ]);
 
     for I := 1 to ColCount-1 do
     begin

@@ -56,9 +56,12 @@ type
     procedure edtAmtKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SpinButton1DownClick(Sender: TObject);
     procedure SpinButton1UpClick(Sender: TObject);
+    procedure edtSecKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure cbAutoClick(Sender: TObject);
   private
     FSubList: TList;
     FDataList: TList;
+    FPrecision : integer;
     { Private declarations }
     procedure initControls;
     function CheckFilter(aSymbol: TSymbol): boolean;
@@ -70,6 +73,8 @@ type
     { Public declarations }
     procedure RefreshData ;
     procedure SimpleRefreshData ;
+    procedure MoreSimpleRefreshData ;
+
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
 
@@ -146,7 +151,7 @@ begin
   App.Engine.SymbolCore.CommSymbols.SortByDailyAmount;
   FSubList := TList.Create;
   FDataList:= TList.Create;
-
+  FPrecision  := App.GetPrecision;
 
   for i := ComponentCount-1 downto 0 do
     if Components[i] is TSpinButton then
@@ -173,11 +178,24 @@ begin
   edtAmt.Text := aStorage.FieldByName('Amount').AsStringDef('50');
   cbUB.Checked:= aStorage.FieldByName('UB').AsBooleanDef(true);
   cbBT.Checked:= aStorage.FieldByName('BT').AsBooleanDef(true);
+
+  edtSec.Text     := aStorage.FieldByName('Second' ).AsStringDef('10');
+  cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
+  cbAutoClick(nil);
+
 end;
+
+
 
 procedure TFrmQuoteMonitors.Button1Click(Sender: TObject);
 begin
   RefreshData;
+end;
+
+procedure TFrmQuoteMonitors.cbAutoClick(Sender: TObject);
+begin
+  Timer1.Interval := StrToInt( edtSec.Text ) * 1000;
+  Timer1.Enabled := cbAuto.Checked;
 end;
 
 procedure TFrmQuoteMonitors.cbUBClick(Sender: TObject);
@@ -229,6 +247,13 @@ begin
     refreshData;
   end;
 
+end;
+
+procedure TFrmQuoteMonitors.edtSecKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if cbAuto.Checked then
+    cbAuto.Checked := false;
 end;
 
 procedure TFrmQuoteMonitors.RefreshData;
@@ -285,6 +310,21 @@ begin
 
 end;
 
+procedure TFrmQuoteMonitors.MoreSimpleRefreshData;
+var
+  I: Integer;
+  aSymbol : TSymbol;
+begin
+
+  for I := 1 to sgQuote.RowCount-1 do
+  begin
+    aSymbol := TSymbol( sgQuote.Objects[CoinCol, i] );
+    if aSymbol <> nil then
+      UpdateData( aSymbol, i);
+  end
+
+end;
+
 
 procedure TFrmQuoteMonitors.PutData( var iCol, iRow : integer; sData : string );
 begin
@@ -321,7 +361,7 @@ begin
     Objects[CoinCol, iRow]  := aSymbol;
     PutData( iCol, iRow, aSymbol.Code );
     PutData( iCol, iRow, TExchangeKindShortDesc[ aSymbol.Spec.ExchangeType ]  );
-    PutData( iCol, iRow, Format('%.2f %%', [ aSymbol.KimpPrice] ) );
+    PutData( iCol, iRow, Format('%.*n %%', [ FPrecision, aSymbol.KimpPrice] ) );
 
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Asks[0].Price ) );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Bids[0].Price ) );
@@ -336,7 +376,7 @@ begin
 
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
 
-    bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance);
+    bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance, mtSpot);
     if bSymbol <> nil then
     begin
       PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '¡Û', 'X') );
@@ -353,6 +393,10 @@ begin
   aStorage.FieldByName('Amount').AsString := edtAmt.Text;
   aStorage.FieldByName('UB').AsBoolean := cbUB.Checked;
   aStorage.FieldByName('BT').AsBoolean := cbBT.Checked;
+
+
+  aStorage.FieldByName('Second' ).AsString := edtSec.Text;
+  aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
 end;
 
 procedure TFrmQuoteMonitors.sgQuoteDrawCell(Sender: TObject; ACol,
@@ -494,7 +538,8 @@ end;
 
 procedure TFrmQuoteMonitors.Timer1Timer(Sender: TObject);
 begin
-  plExRate.Caption  := Format('%.*n', [ 2, App.Engine.ApiManager.ExRate.Value ] )
+  plExRate.Caption  := Format('%.*n', [ 2, App.Engine.ApiManager.ExRate.Value ] );
+  MoreSimpleRefreshData;
 end;
 
 end.
