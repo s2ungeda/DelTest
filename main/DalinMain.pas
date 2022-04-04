@@ -85,10 +85,7 @@ begin
 
 end;
 
-
-
-
-
+  initControls;
 
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);
 begin
@@ -166,6 +163,11 @@ begin
   if not DirectoryExists(App.LogDir) then CreateDir(App.LogDir);
 
   App.OnAppStatusEvent := DalinStatusEvent;
+
+  if App.Config.VerifyMod then
+  begin
+    Panel1.Visible  := true;
+  end;
 
 end;
 
