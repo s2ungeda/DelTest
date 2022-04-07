@@ -257,12 +257,13 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 870
         Height = 411
         Align = alClient
-        ColCount = 12
+        ColCount = 11
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
         RowCount = 25
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
+        PopupMenu = PopupMenu1
         TabOrder = 0
         OnDrawCell = sgQuoteDrawCell
       end
@@ -513,5 +514,22 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     OnTimer = Timer1Timer
     Left = 344
     Top = 195
+  end
+  object dlgFont: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    Left = 592
+    Top = 179
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 704
+    Top = 179
+    object Font1: TMenuItem
+      Caption = 'Font'
+      OnClick = Font1Click
+    end
   end
 end

@@ -6,6 +6,7 @@ uses
   system.SysUtils,
 
   UDalinEngine, ULogThread , UConfig, UTypes
+  , FWinConfig
   ;
 
 type
@@ -43,6 +44,8 @@ type
 
     procedure SaveData( aType : TLogDataType; sData : string);
 
+    procedure CreateWinConfig;
+
     function GetPrecision : integer;
 
     property Engine : TDalinEngine read FEngine;
@@ -62,6 +65,7 @@ type
 
 var
   App : TApp;
+  gWinCfg : TFrmWinConfig;
 
 implementation
 
@@ -76,16 +80,15 @@ constructor TApp.Create;
 begin
   FEngine := TDalinEngine.Create;
   FLog    := TLogThread.Create;
-
   FAppStatus := asNone;
 end;
 
 
-
-
-
 destructor TApp.Destroy;
 begin
+
+  if gWinCfg <> nil then
+    gWinCfg.Free;
 
   FEngine.Free;
   App.Log(llInfo, '', '--- Engine free ---');
@@ -201,6 +204,11 @@ end;
 procedure TApp.SaveData(aType: TLogDataType; sData: string);
 begin
   FLog.SaveData( integer(aType), sData );
+end;
+
+procedure TApp.CreateWinConfig;
+begin
+  gWinCfg := TFrmWinConfig.Create( nil );
 end;
 
 end.

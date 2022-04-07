@@ -246,7 +246,7 @@ procedure TBinanceParse.ParseMarginPair(aData: string);
 var
   aArr : TJsonArray;
   aVal : TJsonValue;
-  I: Integer;
+  I, j: Integer;
   sTmp : string;
   bAble : boolean;
   aSymbol : TSymbol;
@@ -258,6 +258,7 @@ begin
   end;
 
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  j:= 0;
 
   for I := 0 to aArr.Size-1 do
   begin
@@ -272,10 +273,13 @@ begin
     if aSymbol <> nil then
     begin
       aSymbol.IsMargin := true;
+      inc(j);
 //      App.DebugLog('%s Enabled Margin Trade', [ aSymbol.Code] );
     end;
 
   end;
+
+  App.DebugLog('binance margin count : %d', [j] );
 
 end;
 

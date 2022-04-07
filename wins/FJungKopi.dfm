@@ -27,6 +27,12 @@ object FrmJungKopi: TFrmJungKopi
     DefaultRowHeight = 19
     DefaultDrawing = False
     RowCount = 6
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
     OnDrawCell = sgValDrawCell
   end

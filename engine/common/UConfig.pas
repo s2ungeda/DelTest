@@ -20,7 +20,8 @@ type
     ClassName : string;
 
     VerifyMod : boolean;
-    ExRateInterval : integer;
+//    FontName : string;
+//    Fontsize : integer;
 
     function LoadConfig : boolean;
   end;
@@ -56,6 +57,8 @@ begin
       ClassName := pIniFile.ReadString('App', 'ClassName', 'Sauri');
       /////////////////////////////////////////////////////////////
       VerifyMod  := pIniFile.ReadInteger('ENV', 'VerifyMod', 1) = 1;
+//      FontName  := pIniFile.ReadString('ENV', 'Font', 'Arial') ;
+//      Fontsize  := pIniFile.ReadInteger('ENV', 'Size', 11) ;
 
     except
       result := false;

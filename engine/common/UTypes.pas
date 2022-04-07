@@ -14,6 +14,12 @@ type
   TPositionTypes = set of TPositionType;
   TSideType = ( stNone, stLong, stShort );
 
+
+  TWinParam = record
+    FontName : string;
+    FontSize : integer;
+  end;
+
 const
   WM_LOGARRIVED     = WM_USER + $0002;
 

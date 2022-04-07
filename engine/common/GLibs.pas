@@ -3,9 +3,10 @@ unit GLibs;
 interface
 
 uses
-  Windows, system.SysUtils, system.Math, system.DateUtils, Winapi.messages,
-  Vcl.Forms ,
-  ShellApi ,
+  Windows, System.Classes, system.SysUtils, system.Math,
+  Vcl.StdCtrls, system.DateUtils, Winapi.messages,
+  Vcl.Forms , vcl.Dialogs, Vcl.Graphics,
+  ShellApi , UConsts,
   vcl.Grids
 
   ;
@@ -27,12 +28,17 @@ function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
 procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
 procedure CloseApp( sClassName : string );
 
-
 //--------------------------------------- controls
 
 procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
 procedure InsertLine( aGrid : TStringGrid; iline: Integer);
 procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer = 0);
+procedure ComboBox_AutoWidth(const theComboBox: TCombobox);
+
+function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;
+
+function IsZero(dZero : Double) : Boolean;
+function GetColor( d : double ) : TColor;
 
 
 implementation
@@ -190,7 +196,61 @@ begin
 
   if bClear then
     aGrid.RowCount := FixedCnt;
+end;
 
+function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;
+begin
+  with lplf^ do // 한글 폰트와 @붙지 않은 폰트만 검색
+    if {(lfCharSet=HANGEUL_CHARSET) and} Pos('@', lplf^.lfFaceName)=0 then
+      TStrings(Lines).Add(lplf.lfFaceName);
+  Result := 1;
+
+//  TStrings(Lines).Add(lplf.lfFaceName);
+//  Result:=1;
+end;
+
+
+procedure ComboBox_AutoWidth(const theComboBox: TCombobox);
+const
+  HORIZONTAL_PADDING = 4;
+var
+  itemsFullWidth: integer;
+  idx: integer;
+  itemWidth: integer;
+begin
+
+  itemsFullWidth := 0;
+  for idx := 0 to -1 + theComboBox.Items.Count do
+  begin
+    itemWidth := theComboBox.Canvas.TextWidth(theComboBox.Items[idx]);
+    Inc(itemWidth, 2 * HORIZONTAL_PADDING);
+    if (itemWidth > itemsFullWidth) then itemsFullWidth := itemWidth;
+  end;
+
+  if (itemsFullWidth > theComboBox.Width) then
+  begin
+
+    if theComboBox.DropDownCount < theComboBox.Items.Count then
+      itemsFullWidth := itemsFullWidth + GetSystemMetrics(SM_CXVSCROLL);
+
+    SendMessage(theComboBox.Handle, CB_SETDROPPEDWIDTH, itemsFullWidth, 0);
+  end;
+end;
+
+
+function IsZero(dZero : Double) : Boolean;
+begin
+  dZero := Abs(dZero);
+  Result := dZero < EPSILON;
+end;
+
+function GetColor( d : double ) : TColor;
+begin
+  Result := clBlack;
+  if d > EPSILON  then
+    Result := clRed
+  else if d < 0 then
+    Result := clBlue;
 end;
 
 end.

@@ -77,7 +77,7 @@ begin
     asShow :
       begin
         //
-        App.Engine.ApiManager.SubscribeAll;
+ //       App.Engine.ApiManager.SubscribeAll;
         FrmDalinMain.Show;
       end;
   end;

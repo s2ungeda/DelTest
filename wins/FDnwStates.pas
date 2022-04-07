@@ -34,9 +34,10 @@ type
     FRow , FSaveRow , FTerm, FCount   : integer;
     FSymbols : TList;
     FPrecision : integer;
+    FFontName: string;
     procedure initControls;
     procedure InitObject;
-    procedure SetFontSize(const Value: integer);
+
     procedure ClearGrid;
     procedure SetSymbolToGrid(sCode: string; bLoad: boolean);
     procedure UpdateSymbol(aSymbol: TSymbol; iRow: integer);
@@ -45,9 +46,12 @@ type
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
-    property FontSize : integer read FFontSize  write SetFontSize;
+
     procedure SymbolProc(Sender, Receiver: TObject; DataID: Integer;
         DataObj: TObject; EventID: TDistributorID);
+
+    property FontName : string read FFontName;
+    property FontSize : integer read FFontSize;
   end;
 var
   FrmDnwStates: TFrmDnwStates;
@@ -93,7 +97,12 @@ begin
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
   end;
 
-  FontSize  := 10;
+//  FFontName := App.Config.FontName;
+//  FFontSize := App.Config.Fontsize;
+
+  sgDnw.Canvas.Font.Name := 'Arial';
+  sgDnw.Canvas.Font.Size := 10;
+
   FRow      := -1;
   FCount    := 0;
   FTerm     := StrToInt( edtSec.Text );
@@ -314,13 +323,13 @@ begin
           dFormat := DT_RIGHT  ;
       end;
     end;
-    Canvas.Font.Name    := '³ª´®°íµñ';
-    Canvas.Font.Size    := FFontSize;
+
+
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
 //    if GetMajorRow( ARow ) > 3  then
 //      stTxt := IntTostr(  GetMajorRow( ARow ) );
-    aRect.Top := Rect.Top + 4;
+    aRect.Top := Rect.Top + 2;
     if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
       aRect.Right := aRect.Right - 2;
     dFormat := dFormat or DT_VCENTER;
@@ -433,8 +442,5 @@ begin
   aStorage.FieldByName('Second' ).AsString := edtSec.Text;
   aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
 end;
-procedure TFrmDnwStates.SetFontSize(const Value: integer);
-begin
-  FFontSize := Value;
-end;
+
 end.

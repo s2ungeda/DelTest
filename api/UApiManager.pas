@@ -14,6 +14,7 @@ type
     FExManagers: TExchangeArray;
     FCommCodes: TStrings;
     FExRate: TExchangeRate;
+    FSockState: TStrings;
     function GetExManager: integer;
     function RequestMaster : boolean;
     function LoadMaster( sMasterFile : string ) : boolean;
@@ -43,6 +44,9 @@ type
     property ExRate : TExchangeRate read FExRate;
     // 국내 거래소간 공통 코드
     property CommCodes : TStrings read FCommCodes;
+    //
+    property  SockState : TStrings read FSockState;
+
   end;
 
 implementation
@@ -55,12 +59,18 @@ uses
 { TApiManager }
 procedure TApiManager.CheckCount;
 var
-  i, j : Integer;
-  sTmp : string;
+  I : TExchangeKind;
+  j : integer;
 begin
-  if FExManagers[ekBinance].QuoteSock = nil then exit;
-  sTmp := '';
-
+  FSockState.Clear;
+  for I := ekBinance to High(TExchangeKind) do
+    for j := 0 to high(FExManagers[i].QuoteSock) do
+    begin
+      if FExManagers[i].QuoteSock[j].GetSockState <> 'Open' then
+      begin
+        FSockState.Add( Format('%s-%d(X)', [ TExchangeKindDesc[i], j ] ));
+      end;
+    end;
 end;
 
 
@@ -76,6 +86,7 @@ begin
     end;
 
   FCommCodes:= TStringList.Create;
+  FSockState:= TStringList.Create;
   FExRate:= TExchangeRate.Create(self, mtSpot );
 end;
 destructor TApiManager.Destroy;
@@ -84,6 +95,7 @@ var
 begin
   FCommCodes.Free;
   FExRate.Free;
+  FSockState.Free;
 
   for I := ekBinance to High(TExchangeKind) do
   begin

@@ -8,7 +8,8 @@ uses
   Vcl.ComCtrls
 
   , UStorage, USymbols
-  , UApiTypes, UDistributor, Vcl.Samples.Spin
+  , UApiTypes, UDistributor, Vcl.Samples.Spin, Vcl.Menus
+  , UTypes
   ;
 
 type
@@ -45,6 +46,9 @@ type
     SpinButton8: TSpinButton;
     edtSec: TLabeledEdit;
     cbAuto: TCheckBox;
+    dlgFont: TFontDialog;
+    PopupMenu1: TPopupMenu;
+    Font1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -58,10 +62,13 @@ type
     procedure SpinButton1UpClick(Sender: TObject);
     procedure edtSecKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure cbAutoClick(Sender: TObject);
+    procedure Font1Click(Sender: TObject);
   private
     FSubList: TList;
     FDataList: TList;
     FPrecision : integer;
+
+    FWinParam: TWinParam;
     { Private declarations }
     procedure initControls;
     function CheckFilter(aSymbol: TSymbol): boolean;
@@ -69,6 +76,8 @@ type
     procedure PutData(var iCol, iRow: integer; sData: string);
     procedure QuoteProc(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
     procedure SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean = true);
+    procedure DefaultParam;
+    procedure UpdateParam( bRefresh : boolean = true);
   public
     { Public declarations }
     procedure RefreshData ;
@@ -80,6 +89,8 @@ type
 
     property  SubList : TList read FSubList;
     property  DataList: TList read FDataList;
+
+    property WinParam : TWinParam read FWinParam;
   end;
 
 var
@@ -98,6 +109,27 @@ uses
 
 { TFrmQuoteMonitors }
 
+procedure TFrmQuoteMonitors.Font1Click(Sender: TObject);
+begin
+
+  if gWinCfg = nil then
+    App.CreateWinConfig;
+
+  try
+
+    if gWinCfg.Open(FWinParam) then
+    begin
+      FWinParam := gWinCfg.GetParam;
+      UpdateParam                   ;
+    end;
+
+  finally
+    if gWinCfg <> nil then
+      gWinCfg.Hide;
+  end;
+
+end;
+
 procedure TFrmQuoteMonitors.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -107,7 +139,8 @@ end;
 procedure TFrmQuoteMonitors.FormCreate(Sender: TObject);
 begin
   initControls;
-
+  DefaultParam;
+  UpdateParam( false );
   RefreshData;
 end;
 
@@ -153,6 +186,8 @@ begin
   FDataList:= TList.Create;
   FPrecision  := App.GetPrecision;
 
+
+
   for i := ComponentCount-1 downto 0 do
     if Components[i] is TSpinButton then
     begin
@@ -171,6 +206,23 @@ begin
 
 end;
 
+procedure TFrmQuoteMonitors.DefaultParam;
+begin
+  FWinParam.FontName  := 'Arial';
+  FWinParam.FontSize  := 10;
+end;
+
+procedure TFrmQuoteMonitors.UpdateParam( bRefresh : boolean );
+begin
+  with sgQuote do
+  begin
+    Font.Name := FWinParam.FontName;
+    Font.Size := FwinParam.FontSize;
+    if bRefresh then
+      Invalidate;
+  end;
+end;
+
 procedure TFrmQuoteMonitors.LoadEnv(aStorage: TStorage);
 begin
   if aStorage = nil  then Exit;
@@ -183,6 +235,9 @@ begin
   cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
   cbAutoClick(nil);
 
+  FWinParam.FontName := aStorage.FieldByName('FontName').AsStringDef( FWinParam.FontName );
+  FWinParam.FontSize := aStorage.FieldByName('FontSize').AsIntegerDef( FWinParam.FontSize );
+  UpdateParam;
 end;
 
 
@@ -325,7 +380,6 @@ begin
 
 end;
 
-
 procedure TFrmQuoteMonitors.PutData( var iCol, iRow : integer; sData : string );
 begin
   sgQuote.Cells[iCol, iRow] := sData;
@@ -379,7 +433,7 @@ begin
     bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance, mtSpot);
     if bSymbol <> nil then
     begin
-      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '¡Û', 'X') );
+//      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '¡Û', 'X') );
       PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '¡Û', 'X') );
     end;
 
@@ -394,9 +448,11 @@ begin
   aStorage.FieldByName('UB').AsBoolean := cbUB.Checked;
   aStorage.FieldByName('BT').AsBoolean := cbBT.Checked;
 
-
   aStorage.FieldByName('Second' ).AsString := edtSec.Text;
   aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
+
+  aStorage.FieldByName('FontName').AsString := FWinParam.FontName;
+  aStorage.FieldByName('FontSize').AsInteger:= FWinParam.FontSize;
 end;
 
 procedure TFrmQuoteMonitors.sgQuoteDrawCell(Sender: TObject; ACol,
@@ -422,16 +478,13 @@ begin
       aBack := clMoneyGreen;
     end else
     begin
-
+      if ACol in [3..5, 9] then
+        dFormat := DT_RIGHT;
     end;
 
-    Canvas.Font.Name    := '³ª´®°íµñ';
-    Canvas.Font.Size    := 10;
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
 
-//    if GetMajorRow( ARow ) > 3  then
-//      stTxt := IntTostr(  GetMajorRow( ARow ) );
     aRect.Top := Rect.Top + 4;
     if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
       aRect.Right := aRect.Right - 2;

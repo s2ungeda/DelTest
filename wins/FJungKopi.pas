@@ -88,6 +88,7 @@ begin
   FCol  := -1;
   FRow  := -1;
 
+  sgVal.Font.Name := 'Arial';
   FPrecision:= App.GetPrecision;
 end;
 
@@ -113,6 +114,7 @@ procedure TFrmJungKopi.sgValDrawCell(Sender: TObject; ACol, ARow: Integer;
     aBack , aFont : TColor;
     aRect : TRect;
     dFormat : word;
+    dTmp : double;
 begin
   aFont   := clBlack;
   dFormat := DT_CENTER ;
@@ -129,11 +131,12 @@ begin
       aBack := clBtnFace;
     end else
     begin
-
+      if (ACol = 0 ) and ( ARow in [3..4] ) then
+        aFont := GetColor( StrToFloatDef( stTxt, 0 ) )
+      else if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
+        aFont := GetColor( StrToFloatDef( stTxt, 0 ) );
     end;
 
-    Canvas.Font.Name    := '³ª´®°íµñ';
-    Canvas.Font.Size    := 9;
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
 
@@ -156,7 +159,8 @@ end;
 
 procedure TFrmJungKopi.Timer1Timer(Sender: TObject);
 var
-  i  : integer;
+  iCol, i  : integer;
+
 
   function GetString( a : double ) : string;
   begin
@@ -181,10 +185,15 @@ begin
       Cells[i,4] := GetString(App.Engine.SymbolCore.JungKopi[ekBithumb][i-1 + 24 ] );
     end;
 
-//    for I := 0 to High( App.Engine.SymbolCore.JungKopi[ekBinance]) do
-//    begin
-//
-//    end;
+    with App.Engine.SymbolCore do
+      iCol := JKIdx[ekUpbit];
+
+    FRow := 1;
+    FCol := iCol + 1;
+    if iCol > 23 then begin
+      FRow := 3;
+      FCol := iCol - 24 + 1;
+    end;
 
   end;
 end;

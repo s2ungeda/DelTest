@@ -84,7 +84,7 @@ uses
   FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors},
   USymbolUtils in 'engine\symbol\USymbolUtils.pas',
   URestRequests in 'api\URestRequests.pas',
-  Unit1 in 'Unit1.pas' {Form1};
+  FWinConfig in 'FWinConfig.pas' {FrmWinConfig};
 
 {$R *.res}
 begin
@@ -93,7 +93,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TFrmDalinMain, FrmDalinMain);
   Application.CreateForm(TDataModule1, DataModule1);
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TFrmWinConfig, FrmWinConfig);
   FrmDalinMain.Start;
   Application.Run;
 

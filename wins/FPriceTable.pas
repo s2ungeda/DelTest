@@ -24,14 +24,14 @@ type
     procedure sgKimpKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 
   private
-    FFontSize: integer;
+
     FSaveRow, FSaveCol,  FRow   : integer;
     FPrecision : integer;
     { Private declarations }
     procedure initControls;
     procedure InitObject;
     procedure UpdateSymbol(aSymbol: TSymbol; iRow : integer);
-    procedure SetFontSize(const Value: integer);
+
 
     procedure EnableEdit( bAble : boolean ) ;
 
@@ -43,8 +43,6 @@ type
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
-
-    property FontSize : integer read FFontSize  write SetFontSize;
   end;
 var
   FrmPriceTable: TFrmPriceTable;
@@ -78,7 +76,6 @@ begin
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
   end;
 
-  FontSize  := 10;
   FRow      := -1;
   FSaveRow  := -1;
   FSaveCol  := -1;
@@ -295,10 +292,6 @@ begin
 
 end;
 
-procedure TFrmPriceTable.SetFontSize(const Value: integer);
-begin
-  FFontSize := Value;
-end;
 
 procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -307,7 +300,7 @@ procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
     aRect : TRect;
     aFont, aBack : TColor;
     dFormat : Word;
-    iMode : integer;
+    iRow2, iMode : integer;
 
 begin
 
@@ -341,9 +334,10 @@ begin
       begin
 
        if ACol = CurCol+1 then begin
+          iRow2 := ARow-2;
           if Objects[ExCol, ARow] <> nil then
             dFormat := DT_LEFT
-          else  if Objects[ExCol, ARow-2] <> nil then
+          else  if ( iRow2 > 0 ) and (( Objects[ExCol, iRow2]) <> nil ) then
             dFormat := DT_RIGHT;
         end
         else if ACol = DayAmtCol then
@@ -352,8 +346,6 @@ begin
 
     end;
 
-    Canvas.Font.Name    := '³ª´®°íµñ';
-    Canvas.Font.Size    := FFontSize;
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
 

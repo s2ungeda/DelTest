@@ -107,11 +107,17 @@ object FrmDnwStates: TFrmDnwStates
         Height = 360
         Align = alClient
         ColCount = 13
-        DefaultRowHeight = 19
+        DefaultRowHeight = 20
         DefaultDrawing = False
         FixedCols = 0
         RowCount = 25
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
+        ParentFont = False
         TabOrder = 0
         OnDrawCell = sgDnwDrawCell
       end

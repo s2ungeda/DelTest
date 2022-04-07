@@ -234,8 +234,8 @@
         </DCCReference>
         <DCCReference Include="engine\symbol\USymbolUtils.pas"/>
         <DCCReference Include="api\URestRequests.pas"/>
-        <DCCReference Include="Unit1.pas">
-            <Form>Form1</Form>
+        <DCCReference Include="FWinConfig.pas">
+            <Form>FrmWinConfig</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">

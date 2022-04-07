@@ -85,8 +85,6 @@ begin
 
 end;
 
-  initControls;
-
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);
 begin
   AppStatusEvent(asType);
@@ -186,12 +184,15 @@ procedure TFrmDalinMain.Start;
 begin
 
  // Exit;
-  App.AppStatus := asinit;
-//  App.AppStatus := asShow;
-  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
+//  App.AppStatus := asinit;
+  App.AppStatus := asload;
+//  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);
+var
+  I: Integer;
+  sTmp : string;
 begin
   if FExRate >= GetInterval then
   begin
@@ -201,9 +202,17 @@ begin
   inc(FExRate);
   inc(FDnw);
 
-//  App.Engine.ApiManager.CheckCount;
+  App.Engine.ApiManager.CheckCount;
+
+  sTmp := '';
+  for I := 0 to App.Engine.ApiManager.SockState.Count-1 do
+    if sTmp = '' then
+      sTmp := App.Engine.ApiManager.SockState[i]
+    else
+      sTmp := sTmp + ',' + App.Engine.ApiManager.SockState[i];
 
   stsBar.Panels[1].Text := FormatDateTime('hh:nn:ss', now) ;
+  stsBar.Panels[2].Text := stmp;
 end;
 
 function TFrmDalinMain.GetInterval : integer;
