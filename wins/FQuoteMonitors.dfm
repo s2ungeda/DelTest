@@ -3,7 +3,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   Top = 0
   Caption = #49884#49464#47784#45768#53552#47553
   ClientHeight = 481
-  ClientWidth = 870
+  ClientWidth = 845
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,30 +19,33 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   object StatusBar1: TStatusBar
     Left = 0
     Top = 462
-    Width = 870
+    Width = 845
     Height = 19
     Panels = <>
+    ExplicitWidth = 870
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 870
+    Width = 845
     Height = 462
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
+    ExplicitWidth = 870
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 870
+      Width = 845
       Height = 51
       Align = alTop
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
+      ExplicitWidth = 870
       DesignSize = (
-        870
+        845
         51)
       object cbOSEx: TComboBox
         Left = 80
@@ -149,13 +152,14 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         TabOrder = 6
       end
       object Panel4: TPanel
-        Left = 681
+        Left = 656
         Top = 2
         Width = 177
         Height = 47
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
+        ExplicitLeft = 681
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -205,22 +209,20 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         end
       end
       object Button1: TButton
-        Left = 467
-        Top = 24
+        Left = 331
+        Top = 26
         Width = 75
         Height = 21
-        Anchors = [akRight, akBottom]
         Caption = 'refresh'
         TabOrder = 8
         OnClick = Button1Click
       end
       object edtSec: TLabeledEdit
-        Left = 378
-        Top = 24
+        Left = 380
+        Top = 2
         Width = 25
         Height = 21
         Alignment = taRightJustify
-        Anchors = [akRight, akBottom]
         EditLabel.Width = 54
         EditLabel.Height = 13
         EditLabel.Caption = '('#45800#50948' : '#52488' )'
@@ -231,11 +233,10 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnKeyDown = edtSecKeyDown
       end
       object cbAuto: TCheckBox
-        Left = 331
-        Top = 28
+        Left = 333
+        Top = 6
         Width = 41
         Height = 17
-        Anchors = [akRight, akBottom]
         Caption = 'Auto'
         Checked = True
         State = cbChecked
@@ -246,18 +247,19 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     object plLeftClient: TPanel
       Left = 0
       Top = 51
-      Width = 870
+      Width = 845
       Height = 411
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 870
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
-        Width = 870
+        Width = 845
         Height = 411
         Align = alClient
-        ColCount = 11
+        ColCount = 10
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
@@ -266,6 +268,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         PopupMenu = PopupMenu1
         TabOrder = 0
         OnDrawCell = sgQuoteDrawCell
+        ExplicitWidth = 870
       end
       object SpinButton1: TSpinButton
         Left = 45
@@ -386,36 +389,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnDownClick = SpinButton1DownClick
         OnUpClick = SpinButton1UpClick
       end
-      object SpinButton5: TSpinButton
-        Tag = 4
-        Left = 165
-        Top = 2
-        Width = 20
-        Height = 22
-        DownGlyph.Data = {
-          0E010000424D0E01000000000000360000002800000009000000060000000100
-          200000000000D800000000000000000000000000000000000000008080000080
-          8000008080000080800000808000008080000080800000808000008080000080
-          8000008080000080800000808000000000000080800000808000008080000080
-          8000008080000080800000808000000000000000000000000000008080000080
-          8000008080000080800000808000000000000000000000000000000000000000
-          0000008080000080800000808000000000000000000000000000000000000000
-          0000000000000000000000808000008080000080800000808000008080000080
-          800000808000008080000080800000808000}
-        TabOrder = 5
-        UpGlyph.Data = {
-          0E010000424D0E01000000000000360000002800000009000000060000000100
-          200000000000D800000000000000000000000000000000000000008080000080
-          8000008080000080800000808000008080000080800000808000008080000080
-          8000000000000000000000000000000000000000000000000000000000000080
-          8000008080000080800000000000000000000000000000000000000000000080
-          8000008080000080800000808000008080000000000000000000000000000080
-          8000008080000080800000808000008080000080800000808000000000000080
-          8000008080000080800000808000008080000080800000808000008080000080
-          800000808000008080000080800000808000}
-        OnDownClick = SpinButton1DownClick
-        OnUpClick = SpinButton1UpClick
-      end
       object SpinButton6: TSpinButton
         Tag = 5
         Left = 173
@@ -432,7 +405,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           0000008080000080800000808000000000000000000000000000000000000000
           0000000000000000000000808000008080000080800000808000008080000080
           800000808000008080000080800000808000}
-        TabOrder = 6
+        TabOrder = 5
         UpGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
           200000000000D800000000000000000000000000000000000000008080000080
@@ -462,7 +435,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           0000008080000080800000808000000000000000000000000000000000000000
           0000000000000000000000808000008080000080800000808000008080000080
           800000808000008080000080800000808000}
-        TabOrder = 7
+        TabOrder = 6
         UpGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
           200000000000D800000000000000000000000000000000000000008080000080
@@ -492,7 +465,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           0000008080000080800000808000000000000000000000000000000000000000
           0000000000000000000000808000008080000080800000808000008080000080
           800000808000008080000080800000808000}
-        TabOrder = 8
+        TabOrder = 7
         UpGlyph.Data = {
           0E010000424D0E01000000000000360000002800000009000000060000000100
           200000000000D800000000000000000000000000000000000000008080000080

@@ -20,6 +20,7 @@ type
     function RequestSpotMaster : boolean ;
     function RequestSpotTicker : boolean ;
     function RequestMarginMaster : boolean;
+    function RequestMarginTier : boolean;
     procedure ReceiveDNWState;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
@@ -277,6 +278,39 @@ begin
   Result := true;
 
   
+end;
+
+function TBinanceSpotNMargin.RequestMarginTier: boolean;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+begin
+
+  SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+  App.Log( llDebug, '', '%s : %s',  [ App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot )
+                                    , App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot )] );
+
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+  if Request( rmGET, '/sapi/v1/margin/isolated/allPairs', '', sJson, sOut ) then
+  begin
+    //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseMarginPair( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestMarginMaster (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit( false );
+  end;
+
+  Result := true;
+
 end;
 
 end.

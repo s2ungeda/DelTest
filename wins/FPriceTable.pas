@@ -38,6 +38,7 @@ type
     procedure QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;  DataObj: TObject; EventID: TDistributorID);
     procedure SetSymbolToGrid(sCode: string; bLoad : boolean = false );
     procedure ClearGrid;
+    procedure SetData(iCol, iRow: integer; aSymbol: TSymbol);
 
   public
     { Public declarations }
@@ -136,7 +137,10 @@ begin
   for j := ekBinance to High(TExchangeKind) do
   begin
 
-    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
+//    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
+//    if aSymbol = nil then Continue;
+
+    aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( sCode, j);
     if aSymbol = nil then Continue;
 
     iRow := FSaveRow + integer(j) ;
@@ -155,7 +159,16 @@ begin
     sgKimp.Cells[CoinCol, FSaveRow] := sCode;
 end;
 
-
+procedure TFrmPriceTable.SetData( iCol, iRow : integer; aSymbol : TSymbol );
+begin
+  with sgKimp do
+    case iCol of
+      2 : Cells[ iCol, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpPrice ]);
+      3 : Cells[ iCol, iRow] := Format('%.*n', [ 1, aSymbol.WDCPrice ]);
+      4 : Cells[ iCol, iRow] := Format('%.0n ', [ (aSymbol.Asks[0].Price * aSymbol.Asks[0].Volume) / 1000 ]);
+      7 : Cells[ iCol, iRow] := Format('%.0n ', [ (aSymbol.Bids[0].Price * aSymbol.Bids[0].Volume) / 1000 ]);
+    end;
+end;
 
 
 procedure TFrmPriceTable.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
@@ -178,21 +191,20 @@ begin
       if Objects[CoinCol, iRow+1] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
-//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
+        SetData( 2, iRow+1 , aSymbol2 );
+        SetData( 3, iRow+1 , aSymbol2 );
 
-        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
+//        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpPrice ]);
+//        Cells[ 3, iRow+1] := Format('%.*n %%', [ 1, aSymbol2.WDCPrice ]);
       end;
 
       if Objects[CoinCol, iRow+2] <> nil then
       begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
-//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, -1 );
-//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol, aSymbol2, 1 );
-
-        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
+        SetData( 2, iRow+2 , aSymbol2 );
+        SetData( 3, iRow+2 , aSymbol2 );
+//        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
+//        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
       end;
 
       Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
@@ -211,19 +223,17 @@ begin
 
       if Objects[CoinCol, iBRow] <> nil then
       begin
-        aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
-
-//        dKip[0] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, -1 );
-//        dKip[1] := App.Engine.SymbolCore.CalcKimp( aSymbol2, aSymbol, 1 );
-
-        Cells[ 2, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpAskPrice ]);
-        Cells[ 3, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpBidPrice ]);
+      //  aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
+        SetData( 2, iRow , aSymbol );
+        SetData( 3, iRow , aSymbol );
       end;
 
-      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
+      SetData( CurCol - 4, iRow, aSymbol );
+      SetData( CurCol - 1, iRow, aSymbol );
+//      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
       Cells[ CurCol - 3, iRow] := aSymbol.PriceToStr( aSymbol.Asks[0].Price ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
       Cells[ CurCol - 2, iRow] := aSymbol.PriceToStr( aSymbol.Bids[0].Price ); //Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
-      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
+//      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
     end;
 
     Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '○', 'X');

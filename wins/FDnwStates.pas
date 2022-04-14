@@ -88,17 +88,14 @@ procedure TFrmDnwStates.initControls;
 var
   i : integer;
 begin
-  for I := 0 to prcTbl1_TitleCnt - 1 do
+  for I := 0 to prcTbl2_TitleCnt - 1 do
   begin
-    sgDnw.Cells[i,0] := prcTbll1_Title[i];
+    sgDnw.Cells[i,0] := prcTbll2_Title[i];
     if i = 0 then
       sgDnw.RowHeights[i] := 20;
-    sgDnw.ColWidths[i] :=  prcTbll1_Width[i];
+    sgDnw.ColWidths[i] :=  prcTbll2_Width[i];
 //    sgInOut.Cells[i,0]:= prcTbll1_Title[i];
   end;
-
-//  FFontName := App.Config.FontName;
-//  FFontSize := App.Config.Fontsize;
 
   sgDnw.Canvas.Font.Name := 'Arial';
   sgDnw.Canvas.Font.Size := 10;
@@ -138,20 +135,20 @@ var
 
     Result := bFound;
   end;
-
-
 begin
+
   FSymbols := TList.Create;
 
   for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Count-1 do
     FSymbols.Add( App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Symbols[i] );
+
 
   for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekUpbit].Count-1 do
   begin
     aSymbol := App.Engine.SymbolCore.SymbolDnwStates[ekUpbit].Symbols[i];
     if not find( aSymbol.Spec.BaseCode ) then
     begin
-      bSymbol := App.Engine.SymbolCore.FindQuoteSymbol(ekBinance, aSymbol.Spec.BaseCode );
+      bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( aSymbol.Spec.BaseCode, ekBinance);
       if bSymbol <> nil then
         FSymbols.Add(bSymbol);
     end;
@@ -162,16 +159,14 @@ begin
     aSymbol := App.Engine.SymbolCore.SymbolDnwStates[ekBithumb].Symbols[i];
     if not find( aSymbol.Spec.BaseCode ) then
     begin
-      bSymbol := App.Engine.SymbolCore.FindQuoteSymbol(ekBinance, aSymbol.Spec.BaseCode );
+      bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( aSymbol.Spec.BaseCode, ekBinance);
       if bSymbol <> nil then
         FSymbols.Add(bSymbol);
     end;
   end;
 
-//  App.Engine.SymbolCore.GetSymbolList(ekBinance, FSymbols);
-
-  FSymbols.Sort( CompareDailyAmount );
-  sgDnw.RowCount := 4;
+  FSymbols.Sort( CompareDailyAmount2 );
+  sgDnw.RowCount := 1;
   for I := 0 to FSymbols.Count-1 do
   begin
     aSymbol := TSymbol( FSymbols.Items[i] );
@@ -194,7 +189,8 @@ begin
   ClearGrid;
   for j := ekBinance to High(TExchangeKind) do
   begin
-    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
+//    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
+    aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( sCode, j);
     if aSymbol = nil then Continue;
     iRow := FSaveRow + integer(j) ;
     sgDnw.Objects[CoinCol, iRow ] := aSymbol;
@@ -301,27 +297,35 @@ begin
       aBack := clBtnFace;
     end else
     begin
-      //  0,1,2 ->0    3,4,5 ->1   6,7,8 -> 2
-      iMode := (ARow-1) div 3;
-      if iMode mod 2 <> 0 then
+
+      if ACol in [1..7] then
+        aBack := LONG_COLOR
+      else if ACol in [9..10] then
         aBack := GRID_MOD_COLOR;
-      if ( ACol in [ CurCol-6..CurCol] ) then
-      begin
-        dFormat := DT_RIGHT  ;
-        if Objects[ExCol, ARow] <> nil then
-          if ACol <> CurCol then
-            dFormat := DT_CENTER;
-      end else
-      begin
-        if ACol = CurCol+1 then begin
-          if Objects[ExCol, ARow] <> nil then
-            dFormat := DT_LEFT
-          else  if Objects[ExCol, ARow-2] <> nil then
-            dFormat := DT_RIGHT;
-        end
-        else if ACol = DayAmtCol then
-          dFormat := DT_RIGHT  ;
-      end;
+
+
+
+      //  0,1,2 ->0    3,4,5 ->1   6,7,8 -> 2
+//      iMode := (ARow-1) div 3;
+//      if iMode mod 2 <> 0 then
+//        aBack := GRID_MOD_COLOR;
+//      if ( ACol in [ CurCol-6..CurCol] ) then
+//      begin
+//        dFormat := DT_RIGHT  ;
+//        if Objects[ExCol, ARow] <> nil then
+//          if ACol <> CurCol then
+//            dFormat := DT_CENTER;
+//      end else
+//      begin
+//        if ACol = CurCol+1 then begin
+//          if Objects[ExCol, ARow] <> nil then
+//            dFormat := DT_LEFT
+//          else  if Objects[ExCol, ARow-2] <> nil then
+//            dFormat := DT_RIGHT;
+//        end
+//        else if ACol = DayAmtCol then
+//          dFormat := DT_RIGHT  ;
+//      end;
     end;
 
 
@@ -335,6 +339,8 @@ begin
     dFormat := dFormat or DT_VCENTER;
     Canvas.FillRect( Rect);
     DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
+
+
     if ARow = 0 then begin
       Canvas.Pen.Color := clBlack;
       Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
@@ -344,6 +350,18 @@ begin
       Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
                        Point(Rect.Left,  Rect.Top),
                        Point(Rect.Right, Rect.Top)]);
+    end
+    else if ARow > 1 then
+    begin
+     if (ARow mod 2 = 0) then begin
+
+        Canvas.Pen.Color := clSilver;
+        Canvas.Pen.Width := 1;
+        Canvas.Pen.Style := psSolid;
+        Canvas.MoveTo( rect.left-1, rect.bottom );
+        Canvas.Lineto( rect.right, rect.bottom );
+
+      end;
     end;
   end;
 end;

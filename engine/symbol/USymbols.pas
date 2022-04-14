@@ -146,6 +146,7 @@ type
     FWithdrawlState: boolean;
     FDepositState: boolean;
     FDnwCount: integer;
+    FWDCPrice: double;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -178,6 +179,8 @@ type
     property PrevOpen: double read FPrevOpen write FPrevOpen;
 
     property KimpPrice : double read FKimpPrice write FKimpPrice;
+    property WDCPrice  : double read FWDCPrice  write FWDCPrice;
+    // 호가 기준 김프는 안 쓸듯...
     property KimpAskPrice : double read FKimpAskPrice write FKimpAskPrice;
     property KimpBidPrice : double read FKimpBidPrice write FKimpBidPrice;
 
@@ -246,6 +249,7 @@ type
     function FindSymbolList(sBase: String ): TSymbolList;
     function FindSymbol( sBase : string ;  aExKind : TExchangeKind ) : TSymbol; overload;
     function FindSymbol( sBase : string ;  aExKind : TExchangeKind; aMarket : TMarketType ) : TSymbol; overload;
+    function FindSymbolEx( sBase : string ;  aExKind : TExchangeKind ) : TSymbol;
     procedure AddSymbol(aSymbol: TSymbol);
   end;
 
@@ -382,6 +386,9 @@ begin
   FDepositState   := true;
 
   FDnwCount := 0;
+
+  FKimpPrice := 0.0;
+  FWDCPrice  := 0.0;
 
 end;
 
@@ -833,6 +840,39 @@ begin
     end;
 end;
 
+
+function TBaseSymbols.FindSymbolEx(sBase: string;
+  aExKind: TExchangeKind): TSymbol;
+  var
+    aSymbolList : TSymbolList;
+    aSymbol : TSymbol;
+    I: Integer;
+begin
+  Result := nil;
+  aSymbolList := FindSymbolList( sBase ) ;
+  if aSymbolList <> nil then
+    for I := 0 to aSymbolList.Count-1 do
+    begin
+      aSymbol := aSymbolList.Symbols[i];
+
+      if aExKind = App.Engine.SymbolCore.MainExKind then
+      begin
+        if App.Engine.SymbolCore.IsOSMain(aSymbol)then
+        begin
+          Result := aSymbol;
+          Break;
+        end
+      end
+      else begin
+        if aSymbol.Spec.ExchangeType = aExKind then
+        begin
+          Result := aSymbol;
+          Break;
+        end;
+      end;
+    end;
+
+end;
 
 function TBaseSymbols.FindSymbolList(sBase: String): TSymbolList;
 begin

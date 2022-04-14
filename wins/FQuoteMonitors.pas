@@ -40,7 +40,6 @@ type
     SpinButton2: TSpinButton;
     SpinButton3: TSpinButton;
     SpinButton4: TSpinButton;
-    SpinButton5: TSpinButton;
     SpinButton6: TSpinButton;
     SpinButton7: TSpinButton;
     SpinButton8: TSpinButton;
@@ -196,10 +195,10 @@ begin
        1 : (Components[i] as TSpinButton).Left := iLeft[1] - SpinButton1.Width;
        2 : (Components[i] as TSpinButton).Left := iLeft[2] - SpinButton1.Width;
        3 : (Components[i] as TSpinButton).Left := iLeft[3] - SpinButton1.Width;
-       4 : (Components[i] as TSpinButton).Left := iLeft[4] - SpinButton1.Width;
-       5 : (Components[i] as TSpinButton).Left := iLeft[5] - SpinButton1.Width;
-       6 : (Components[i] as TSpinButton).Left := iLeft[6] - SpinButton1.Width;
-       7 : (Components[i] as TSpinButton).Left := iLeft[7] - SpinButton1.Width;
+//       4 : (Components[i] as TSpinButton).Left := iLeft[4] - SpinButton1.Width;
+       5 : (Components[i] as TSpinButton).Left := iLeft[4] - SpinButton1.Width;
+       6 : (Components[i] as TSpinButton).Left := iLeft[5] - SpinButton1.Width;
+       7 : (Components[i] as TSpinButton).Left := iLeft[6] - SpinButton1.Width;
       end;
 
     end;
@@ -216,8 +215,8 @@ procedure TFrmQuoteMonitors.UpdateParam( bRefresh : boolean );
 begin
   with sgQuote do
   begin
-    Font.Name := FWinParam.FontName;
-    Font.Size := FwinParam.FontSize;
+    Canvas.Font.Name := FWinParam.FontName;
+    Canvas.Font.Size := FwinParam.FontSize;
     if bRefresh then
       Invalidate;
   end;
@@ -417,8 +416,7 @@ begin
     PutData( iCol, iRow, TExchangeKindShortDesc[ aSymbol.Spec.ExchangeType ]  );
     PutData( iCol, iRow, Format('%.*n %%', [ FPrecision, aSymbol.KimpPrice] ) );
 
-    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Asks[0].Price ) );
-    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Bids[0].Price ) );
+    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.WDCPrice) );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
     if aSymbol.DayOpen <= 0 then  dTmp := 1
@@ -478,7 +476,7 @@ begin
       aBack := clMoneyGreen;
     end else
     begin
-      if ACol in [3..5, 9] then
+      if ACol in [3..5, 8] then
         dFormat := DT_RIGHT;
     end;
 
@@ -554,8 +552,8 @@ begin
       0 ,
       1 : SortGrid( sgQuote, iTag);     // 거래소
       2 : FDataList.Sort(CompareKimpPrice2) ;     // 김프
-      3 : FDataList.Sort(CompareAskPrice2);     // 매도가
-      4 : FDataList.Sort(CompareBidPrice2);     // 매수가
+      3 : FDataList.Sort(CompareWDCPrice2);     // 매도가
+//      4 : FDataList.Sort(CompareBidPrice2);     // 매수가
       5 : FDataList.Sort(CompareLast2);     // 현재가
       6 : FDataList.Sort(CompareDayUpDown2);     // 등락
       7 : FDataList.Sort(CompareDailyAmount2);     // 일거래액
@@ -578,8 +576,8 @@ begin
       0 ,
       1 : SortGrid( sgQuote, iTag, false);     // 거래소
       2 : FDataList.Sort(CompareKimpPrice) ;     // 김프
-      3 : FDataList.Sort(CompareAskPrice);     // 매도가
-      4 : FDataList.Sort(CompareBidPrice);     // 매수가
+      3 : FDataList.Sort(CompareWDCPrice);     // 매도가
+//      4 : FDataList.Sort(CompareBidPrice);     // 매수가
       5 : FDataList.Sort(CompareLast);     // 현재가
       6 : FDataList.Sort(CompareDayUpDown);     // 등락
       7 : FDataList.Sort(CompareDailyAmount);     // 일거래액

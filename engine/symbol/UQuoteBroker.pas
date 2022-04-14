@@ -609,18 +609,15 @@ begin
     aTick.AskPrice:= FSymbol.Asks[0].Price;
     aTick.BidPrice:= FSymbol.Bids[0].Price;
 
-    FSymbol.Terms.NewTick(aTick)
+    FSymbol.Terms.NewTick(aTick)   ;
+
+    App.Engine.SymbolCore.CalcKimp( FSymbol );
+    App.Engine.SymbolCore.CalcMainKimp( FSymbol );
 
   end else
   if FLastEvent = qtMarketDepth then
   begin
 
-  end;
-
-  if FSymbol.Spec.Market = mtSpot then
-  begin
-    App.Engine.SymbolCore.CalcKimp( FSymbol );
-    App.Engine.SymbolCore.CalcMainKimp( FSymbol );
   end;
 
   FSymbol.LastEventTime := dtTime;

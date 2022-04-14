@@ -106,7 +106,7 @@ object FrmDnwStates: TFrmDnwStates
         Width = 1030
         Height = 360
         Align = alClient
-        ColCount = 13
+        ColCount = 14
         DefaultRowHeight = 20
         DefaultDrawing = False
         FixedCols = 0

@@ -52,6 +52,7 @@ type
     FMainExKind: TExchangeKind;
     FSubExKind2: TExchangeKind;
     FSubExKind1: TExchangeKind;
+    FMainExMarket: TMarketType;
 
   public
 
@@ -64,7 +65,9 @@ type
     procedure RegisterSymbol(aExKind : TExchangeKind; aSymbol: TSymbol); overload;
     function  RegisterSymbol(aExKind : TExchangeKind; aMarket : TMarketType; aCode : string ) : TSymbol ; overload;
     function  FindSymbol(aExKind : TExchangeKind; aCode : string ): TSymbol;
-    function  FindQuoteSymbol(aExKind : TExchangeKind; sBaseCode : string ): TSymbol;
+//    function  FindQuoteSymbol(aExKind : TExchangeKind; sBaseCode : string ): TSymbol;
+    function  IsOSMain( aSymbol : TSymbol ) : boolean;
+    function  IsKRMain( aSymbol : TSymbol ) : boolean;
 
     procedure Log;
     procedure PreSubscribe;   // 한종목씩
@@ -103,9 +106,11 @@ type
 
     property MainKimp : TMainKimpArray read FMainKimp ;//write FMainKimp;
 
+    property MainExMarket : TMarketType read FMainExMarket write FMainExMarket;
     property MainExKind : TExchangeKind read FMainExKind write FMainExKind;
     property SubExKind1 : TExchangeKind read FSubExKind1 write FSubExKind1;
     property SubExKind2 : TExchangeKind read FSubExKind2 write FSubExKind2;
+
 
   end;
 
@@ -123,6 +128,7 @@ uses
 
 { TSymbolCore }
 
+// aPrice 는 해외종목 가격..
 procedure TSymbolCore.CalcKimp( aPrice : double; aSymbol : TSymbol );
 var
   dEx : double;
@@ -130,12 +136,13 @@ begin
 
   dEx :=  Max( aPrice * App.Engine.ApiManager.ExRate.Value , 1 );
 
-//  if aSymbol.Spec.ExchangeType = App.Engine.SymbolCore.MainExKind  then
-//    App.DebugLog('');
+  if dEx > EPSILON then
+    aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
+  if aPrice > EPSILON then
+    aSymbol.WDCPrice      := ( 1/ aPrice) * aSymbol.Last;
 
-  aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
-  aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
-  aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
+//  aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
+//  aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
 
 end;
 
@@ -154,6 +161,9 @@ begin
 
   if bOS then
   begin
+
+    if aSymbol.Spec.Market <> FMainExMarket then Exit;
+
     aList := FBaseSymbols.FindSymbolList( aSymbol.Spec.BaseCode );
     if aList = nil then Exit;
 
@@ -167,10 +177,9 @@ begin
 
   end else
   begin
-    pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FMainExKind, mtSpot  );
-
-    if aSymbol = nil then Exit;
-    CalcKimp( pSymbol.Last, aSymbol );
+    pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FMainExKind, FMainExMarket  );
+    if aSymbol <> nil then
+      CalcKimp( pSymbol.Last, aSymbol );
   end;
 
 end;
@@ -188,12 +197,12 @@ begin
     aKind := msETH
   else Exit;
 
-  if aSymbol.Spec.ExchangeType = FMainExKind then
+  if IsOSMain( aSymbol ) then
   begin
     CalcMainKimp( FSubExKind1 );
     CalcMainKimp( FSubExKind2 );
-  end
-  else
+  end else
+  if IsKRMain( aSymbol ) then
     CalcMainKimp( aSymbol.Spec.ExchangeType );
 end;
 
@@ -251,6 +260,7 @@ begin
   FMainExKind  := ekBinance;
   FSubExKind1  := ekUpbit;
   FSubExKind2  := ekBithumb;
+  FMainExMarket:= mtFutures;
 
 end;
 
@@ -283,20 +293,20 @@ begin
   inherited;
 end;
 
-function TSymbolCore.FindQuoteSymbol(aExKind: TExchangeKind;
-  sBaseCode: string): TSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  // 일단 나중에..빠른  검색 로직을 추가 하자..
-  for I := 0 to FSpots[aExKind].Count -1 do
-    if FSpots[aExKind].Spots[i].Spec.BaseCode = sBaseCode then
-    begin
-      Result := FSpots[aExKind].Spots[i];
-      break;
-    end;
-end;
+//function TSymbolCore.FindQuoteSymbol(aExKind: TExchangeKind;
+//  sBaseCode: string): TSymbol;
+//var
+//  I: Integer;
+//begin
+//  Result := nil;
+//  // 일단 나중에..빠른  검색 로직을 추가 하자..
+//  for I := 0 to FSpots[aExKind].Count -1 do
+//    if FSpots[aExKind].Spots[i].Spec.BaseCode = sBaseCode then
+//    begin
+//      Result := FSpots[aExKind].Spots[i];
+//      break;
+//    end;
+//end;
 
 function TSymbolCore.FindSymbol(aExKind: TExchangeKind; aCode: string): TSymbol;
 begin
@@ -312,6 +322,24 @@ begin
   for I := 0 to FSpots[aExKind].Count-1 do
     aList.Add( FSpots[aExKind].Spots[i] as TSymbol );
 
+end;
+
+function TSymbolCore.IsKRMain(aSymbol: TSymbol): boolean;
+begin
+  if ( aSymbol.Spec.ExchangeType = FSubExKind1 )
+    or ( aSymbol.Spec.ExchangeType = FSubExKind2 ) then
+    Result := true
+  else
+    Result := false;
+end;
+
+function TSymbolCore.IsOSMain(aSymbol: TSymbol): boolean;
+begin
+  if ( aSymbol.Spec.ExchangeType = FMainExKind )
+    and ( aSymbol.Spec.Market = FMainExMarket ) then
+    Result := true
+  else
+    Result := false;
 end;
 
 procedure TSymbolCore.Log;
@@ -394,29 +422,38 @@ end;
 procedure TSymbolCore.PreSubscribe;
 var
   i : TMajorSymbolKind;
-  iRow : integer;
+  iRow, k : integer;
   j : TExchangeKind;
   aSymbol : TSymbol;
 begin
   // 선구독 종목들...BTC, ETH, XRP
+
+  for I := msBTC to High(TMajorSymbolKind) do
+  begin
+      for j := ekBinance to High(TExchangeKind) do
+      begin
+        aSymbol := nil;
+        if j= ekBinance then
+          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j, FMainExMarket)
+        else
+          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j );
+
+        if aSymbol <> nil then
+        begin
+          FMainSymbols[i][j] := aSymbol;
+
+          App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
+            App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
+            );
+        end;
+
+      end;
+  end;
+
   for I := msBTC to High(TMajorSymbolKind) do
     for j := ekBinance to High(TExchangeKind) do
-    begin
-      aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, TMajorSymbolCode[i] );
-      if aSymbol <> nil then
-      begin
-        FMainSymbols[i][j] := aSymbol;
-        // 전종목 구독할것이기에..주석
-        App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
-          App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
-          );
-      end;
-    end;
-
-//  for I := msBTC to High(TMajorSymbolKind) do
-//    for j := ekBinance to High(TExchangeKind) do
-//      if FMainSymbols[i][j] <> nil then
-//        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
+      if FMainSymbols[i][j] <> nil then
+        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
 end;
 
 procedure TSymbolCore.SubscribeSymbols;
