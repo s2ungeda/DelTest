@@ -28,6 +28,7 @@ type
   TMainSymbols    = array [TMajorSymbolKind] of  TMajorSymbols;
 
   TMainKimpArray  = array [TExchangeKind] of double;
+  TMainWDCArray  = array [TExchangeKind] of double;
 
   TSymbolCore = class
   private
@@ -53,11 +54,20 @@ type
     FSubExKind2: TExchangeKind;
     FSubExKind1: TExchangeKind;
     FMainExMarket: TMarketType;
+    FMainWDC: TMainWDCArray;
+    procedure SetMainWDC(aExKind: TExchangeKind; Value: double; sLog : string);
 
   public
 
     JungKopi  : array [TExchangeKind, 0..47] of double;
     JKIdx     : array [TExchangeKind] of integer;
+    JungKopiLog  : array [TExchangeKind, 0..47] of string;
+    //LastJKIdx : integer;
+
+    RprsntWDC : array [TExchangeKind, 0..47] of double;
+    WDCIdx    : array [TExchangeKind] of integer;
+    RprsntWDCLog : array [TExchangeKind, 0..47] of string;
+    //LastWDCIdx : integer;
 
     constructor Create;
     destructor Destroy; override;
@@ -81,8 +91,9 @@ type
     procedure CalcKimp( aSymbol : TSymbol ); overload;
     procedure CalcMainKimp( aSymbol : TSymbol );  overload;
     procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
+    procedure CalcMainWDC( aSymbol : TSymbol );
 
-    procedure SetMainKimp( aExKind : TExchangeKind; Value : double );
+    procedure SetMainKimp( aExKind : TExchangeKind; Value : double; sLog : string );
     procedure SymbolArrange;
 
     property Specs: TMarketSpecs read FSpecs;
@@ -105,6 +116,7 @@ type
     property BaseSymbols : TBaseSymbols read FBaseSymbols;
 
     property MainKimp : TMainKimpArray read FMainKimp ;//write FMainKimp;
+    property MainWDC  : TMainWDCArray  read FMainWDC;
 
     property MainExMarket : TMarketType read FMainExMarket write FMainExMarket;
     property MainExKind : TExchangeKind read FMainExKind write FMainExKind;
@@ -121,7 +133,7 @@ function GetPrecision(aSymbol: TSymbol; dPrice: Double): integer;
 implementation
 
 uses
-  GApp, UConsts
+  GApp, UConsts, GLibs
   , Math
   ;
 
@@ -210,6 +222,7 @@ procedure TSymbolCore.CalcMainKimp(aExKind: TExchangeKind);
 var
   aBTC, aETH : TSymbol;
   dMo, dVal : double;
+  sLog : string;
 begin
 
   aBTC := FMainSymbols[msBTC][aExKind];
@@ -225,8 +238,51 @@ begin
    // App.DebugLog( '%s, %.2f = %f, %f, %f, %f', [ TExchangeKindDesc[aExKind],dVal, aBTC.KimpPrice, aBTC.DayAmount , aETH.KimpPrice, aETH.DayAmount]   );
   end;
 
-  SetMainKimp( aExKind , dVal );
+  sLog := Format( '%s : %.1f = ( %.0f * %.3f ) + ( %.0f * %.3f ) / ( %.0f + %.0f ) ', [ TExchangeKindShortDesc[ aExKind ],
+    dVal, aBTC.DayAmount , aBTC.KimpPrice , aETH.DayAmount , aETH.KimpPrice , aBTC.DayAmount , aETH.DayAmount
+    ]);
 
+  SetMainKimp( aExKind , dVal, sLog );
+
+end;
+
+procedure TSymbolCore.CalcMainWDC(aSymbol: TSymbol);
+var
+  aMainKind,   aSubKind   : TMajorSymbolKind;
+  aMainSymbol, aSubSymbol : TSymbol;
+  dAmt, dVal : double;
+  sLog : string;
+begin
+  if (aSymbol.Spec.BaseCode = TMajorSymbolCode[msBTC] ) then  begin
+    aMainKind := msBTC;
+    aSubKind  := msETH;
+  end
+  else if (aSymbol.Spec.BaseCode = TMajorSymbolCode[msETH] ) then begin
+    aMainKind := msETH;
+    aSubKind  := msBTC;
+  end
+  else Exit;
+
+  if aSymbol.Spec.ExchangeType = FSubExKind1 then begin
+    aMainSymbol := FMainSymbols[aMainKind][FSubExKind1];
+    aSubSymbol  := FMainSymbols[aSubKind][FSubExKind1];
+  end
+  else if aSymbol.Spec.ExchangeType = FSubExKind2  then begin
+    aMainSymbol := FMainSymbols[aMainKind][FSubExKind2];
+    aSubSymbol  := FMainSymbols[aSubKind][FSubExKind2];
+  end
+  else Exit;
+
+  if ( aMainSymbol = nil ) or ( aSubSymbol = nil ) then Exit;
+
+  dAmt := aMainSymbol.DayAmount + aSubSymbol.DayAmount ;
+  if dAmt > EPSILON then begin
+    dVal := ( aMainSymbol.DayAmount * aMainSymbol.WDCPrice + aSubSymbol.DayAmount * aSubSymbol.WDCPrice ) / dAmt;
+    sLog := Format( '%s : %.1f = ( %.0f * %.1f ) + ( %.0f * %.1f ) / ( %.0f + %.0f ) ', [ TExchangeKindShortDesc[ aMainSymbol.Spec.ExchangeType ],
+      dVal, aMainSymbol.DayAmount , aMainSymbol.WDCPrice, aSubSymbol.DayAmount , aSubSymbol.WDCPrice
+      , aMainSymbol.DayAmount , aSubSymbol.DayAmount  ]);
+    SetMainWDC( aMainSymbol.Spec.ExchangeType, dVal, sLog );
+  end;
 end;
 
 constructor TSymbolCore.Create;
@@ -253,7 +309,11 @@ begin
 
     FMainKimp[i] := 0.0;
     JKIdx[i]     := 0;
+
+    WDCIdx[i]    := 0;
+    FMainWDC[i]  := 0.0;
   end;
+
 
   FCommSymbols := TCommSymbolList.Create;
   FBaseSymbols := TBaseSymbols.Create;
@@ -514,20 +574,37 @@ begin
 //  FMainSymbols[msBTC][ekUpbit].DayAmount;
 end;
 
-procedure TSymbolCore.SetMainKimp(aExKind: TExchangeKind; Value: double);
+
+
+procedure TSymbolCore.SetMainKimp(aExKind: TExchangeKind; Value: double; sLog : string);
 var
-  yy, mm, dd, hh, nn, ss, zz : word;
-  idx : Integer;
+  iPrev, idx : Integer;
 begin
   FMainKimp[aExKind] := Value;
-  DecodeDateTime( now, yy, mm, dd, hh, nn, ss, zz );
-
-  idx  := ( hh mod 24 * 2 ) + ( nn div 30 );
-
+  idx  := Get30TermIdx;
+  iPrev :=  JKIdx[aExKind];
   JKIdx[aExKind]  := idx;
   JungKopi[aExKind][idx] := Value;
+  JungKopiLog[aExKind][idx] := sLog;
+
+  if iPrev <> idx then
+    App.log(llInfo, 'KIP', sLog );
 end;
 
+procedure TSymbolCore.SetMainWDC(aExKind: TExchangeKind; Value: double; sLog : string);
+var
+  iPrev, idx : Integer;
+begin
+  FMainWDC[aExKind] := Value;
+  idx  := Get30TermIdx;;
+  iPrev := WDCIdx[aExKind];
+  WDCIdx[aExKind] := idx;
+  RprsntWDC[aExKind][idx] := Value;
+  RprsntWDCLog[aExKind][idx] := sLog;
+
+  if iPrev <> idx then
+    App.log(llInfo, 'WDC', sLog );
+end;
 
 
 procedure TSymbolCore.SymbolArrange;

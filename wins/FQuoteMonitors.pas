@@ -416,7 +416,7 @@ begin
     PutData( iCol, iRow, TExchangeKindShortDesc[ aSymbol.Spec.ExchangeType ]  );
     PutData( iCol, iRow, Format('%.*n %%', [ FPrecision, aSymbol.KimpPrice] ) );
 
-    PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.WDCPrice) );
+    PutData( iCol, iRow, format('%.1f', [ aSymbol.WDCPrice] ) );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
     if aSymbol.DayOpen <= 0 then  dTmp := 1

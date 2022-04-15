@@ -15,6 +15,7 @@ const
   ID_KIMP_TABLE     = 30000;
   ID_QUOTE_MONITOR  = 30001;
   ID_JUNG_KOPI      = 30002;
+  ID_RPRSNT_WDC     = 30003;
 
 
 

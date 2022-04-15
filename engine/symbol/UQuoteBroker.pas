@@ -600,19 +600,20 @@ begin
 
   if ( FSymbol.Sales <> nil ) and ( FLastEvent = qtTimeNSale ) then
   begin
-    aTick   := TTickITem( FSymbol.Ticks.Add );
-    aTick.T := FSymbol.Sales.Last.LocalTime;
-    aTick.C := FSymbol.Last;
-    aTick.FillVol := FSymbol.Sales.Last.Volume;
-    aTick.AccVol  := FSymbol.DayVolume;
-    aTick.Side    := FSymbol.Side;
-    aTick.AskPrice:= FSymbol.Asks[0].Price;
-    aTick.BidPrice:= FSymbol.Bids[0].Price;
-
-    FSymbol.Terms.NewTick(aTick)   ;
+//    aTick   := TTickITem( FSymbol.Ticks.Add );
+//    aTick.T := FSymbol.Sales.Last.LocalTime;
+//    aTick.C := FSymbol.Last;
+//    aTick.FillVol := FSymbol.Sales.Last.Volume;
+//    aTick.AccVol  := FSymbol.DayVolume;
+//    aTick.Side    := FSymbol.Side;
+//    aTick.AskPrice:= FSymbol.Asks[0].Price;
+//    aTick.BidPrice:= FSymbol.Bids[0].Price;
+//
+//    FSymbol.Terms.NewTick(aTick)   ;
 
     App.Engine.SymbolCore.CalcKimp( FSymbol );
     App.Engine.SymbolCore.CalcMainKimp( FSymbol );
+    App.Engine.SymbolCore.CalcMainWDC(FSymbol);
 
   end else
   if FLastEvent = qtMarketDepth then

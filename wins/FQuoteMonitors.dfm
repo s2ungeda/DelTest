@@ -22,7 +22,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     Width = 845
     Height = 19
     Panels = <>
-    ExplicitWidth = 870
   end
   object plLeft: TPanel
     Left = 0
@@ -33,7 +32,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitWidth = 870
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -43,7 +41,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 870
       DesignSize = (
         845
         51)
@@ -159,7 +156,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
-        ExplicitLeft = 681
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -252,7 +248,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 870
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
@@ -268,7 +263,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         PopupMenu = PopupMenu1
         TabOrder = 0
         OnDrawCell = sgQuoteDrawCell
-        ExplicitWidth = 870
       end
       object SpinButton1: TSpinButton
         Left = 45

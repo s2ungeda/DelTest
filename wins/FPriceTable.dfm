@@ -59,11 +59,20 @@ object FrmPriceTable: TFrmPriceTable
         Font.Style = []
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         ParentFont = False
+        PopupMenu = PopupMenu1
         TabOrder = 0
         OnDrawCell = sgKimpDrawCell
         OnKeyDown = sgKimpKeyDown
         OnMouseDown = sgKimpMouseDown
       end
+    end
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 368
+    Top = 216
+    object N1: TMenuItem
+      Caption = #49444#51221
+      OnClick = N1Click
     end
   end
 end

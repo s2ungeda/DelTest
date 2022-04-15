@@ -18,6 +18,7 @@ function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): Strin
 
 //----------------------------------------
 function GetPrecision( aText : string ) : integer;
+function Get30TermIdx : integer;
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 function IfThenFloat(AValue: Boolean; const ATrue: double): string;
@@ -113,6 +114,14 @@ begin
       Result := iPos2 - iPos;
   end else
     Result := 0;
+end;
+
+function Get30TermIdx : integer;
+var
+  yy, mm, dd, hh, nn, ss, zz : word;
+begin
+  DecodeDateTime( now, yy, mm, dd, hh, nn, ss, zz );
+  Result  := ( hh mod 24 * 2 ) + ( nn div 30 );
 end;
 
 

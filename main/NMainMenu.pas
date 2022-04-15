@@ -22,6 +22,7 @@ type
     N1: TMenuItem;
     nExchange: TMenuItem;
     N2: TMenuItem;
+    MainWDC1: TMenuItem;
     procedure Kimp1Click(Sender: TObject);
     procedure nExchangeClick(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
@@ -44,7 +45,8 @@ implementation
 uses
   GApp, GAppForms ,
 
-  DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors
+  DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors,
+  FRepresentWDC
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -93,6 +95,9 @@ begin
       if aForm is TFrmQuoteMonitors then
         (aForm as TFrmQuoteMonitors).LoadEnv( aStorage );
 
+    ID_RPRSNT_WDC :
+      if aForm is TFrmRprsntWDC then
+        (aForm as TFrmRprsntWDC).LoadEnv( aStorage);
 
   end;
 
@@ -119,6 +124,9 @@ begin
     ID_QUOTE_MONITOR :
       if aForm is TFrmQuoteMonitors then
         (aForm as TFrmQuoteMonitors).SaveEnv( aStorage );
+    ID_RPRSNT_WDC :
+      if aForm is TFrmRprsntWDC then
+        (aForm as TFrmRprsntWDC).SaveEnv( aStorage);
   end;
 end;
 
@@ -131,6 +139,7 @@ begin
     ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalinMain );
     ID_DNW_STATE :  aForm := TFrmDnwStates.Create( FrmDalinMain );
     ID_QUOTE_MONITOR :  aForm := TFrmQuoteMonitors.Create( FrmDalinMain );
+    ID_RPRSNT_WDC : aForm :=  TFrmRprsntWDC.Create( FrmDalinMain);
   end;
 end;
 
@@ -151,6 +160,7 @@ begin
     0 : App.Engine.FormBroker.Open(ID_KIMP_TABLE, 0);
     1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
     2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
+    3 : App.Engine.FormBroker.Open(ID_RPRSNT_WDC, 0);
   end;
 
 

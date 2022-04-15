@@ -84,7 +84,8 @@ uses
   FQuoteMonitors in 'wins\FQuoteMonitors.pas' {FrmQuoteMonitors},
   USymbolUtils in 'engine\symbol\USymbolUtils.pas',
   URestRequests in 'api\URestRequests.pas',
-  FWinConfig in 'FWinConfig.pas' {FrmWinConfig};
+  FWinConfig in 'FWinConfig.pas' {FrmWinConfig},
+  FRepresentWDC in 'wins\FRepresentWDC.pas' {FrmRprsntWDC};
 
 {$R *.res}
 begin

@@ -1,7 +1,7 @@
 object FrmJungKopi: TFrmJungKopi
   Left = 0
   Top = 0
-  Caption = #51473#53076#54588
+  Caption = #45824#54364' KIP'
   ClientHeight = 141
   ClientWidth = 943
   Color = clBtnFace

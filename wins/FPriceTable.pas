@@ -7,6 +7,7 @@ uses
 
   , UStorage, USymbols
   , UApiTypes, UDistributor
+  , UTypes, Vcl.Menus
   ;
 type
   TFrmPriceTable = class(TForm)
@@ -14,6 +15,8 @@ type
     plLeft: TPanel;
     plLeftClient: TPanel;
     sgKimp: TStringGrid;
+    PopupMenu1: TPopupMenu;
+    N1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -22,11 +25,14 @@ type
     procedure sgKimpMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure sgKimpKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure N1Click(Sender: TObject);
 
   private
-
+    FWinParam: TWinParam;
     FSaveRow, FSaveCol,  FRow   : integer;
     FPrecision : integer;
+    FFontSize: integer;
+    FFontName: string;
     { Private declarations }
     procedure initControls;
     procedure InitObject;
@@ -39,11 +45,14 @@ type
     procedure SetSymbolToGrid(sCode: string; bLoad : boolean = false );
     procedure ClearGrid;
     procedure SetData(iCol, iRow: integer; aSymbol: TSymbol);
+    procedure UpdateParam(bRefresh: boolean = true);
+    procedure DefaultParam;
 
   public
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
+
   end;
 var
   FrmPriceTable: TFrmPriceTable;
@@ -81,14 +90,27 @@ begin
   FSaveRow  := -1;
   FSaveCol  := -1;
   FPrecision:= App.GetPrecision;
-//  for I := 0 to prcTbl2_TitleCnt - 1 do
-//  begin
-//    sgQuote.Cells[i,0] := prcTbll2_Title[i];
-//
-//  end;
 
+  DefaultParam;
+  UpdateParam( false );
 end;
 
+procedure TFrmPriceTable.DefaultParam;
+begin
+  FWinParam.FontName  := 'Arial';
+  FWinParam.FontSize  := 11;
+end;
+
+procedure TFrmPriceTable.UpdateParam( bRefresh : boolean );
+begin
+  with sgKimp do
+  begin
+    Canvas.Font.Name := FWinParam.FontName;
+    Canvas.Font.Size := FwinParam.FontSize;
+    if bRefresh then
+      Invalidate;
+  end;
+end;
 
 procedure TFrmPriceTable.InitObject;
 var
@@ -281,9 +303,32 @@ begin
     end;
   end;
 
+  FWinParam.FontName := aStorage.FieldByName('FontName').AsStringDef( FWinParam.FontName );
+  FWinParam.FontSize := aStorage.FieldByName('FontSize').AsIntegerDef( FWinParam.FontSize );
+  UpdateParam;
+
   FSaveRow := -1;
 end;
 
+
+procedure TFrmPriceTable.N1Click(Sender: TObject);
+begin
+  if gWinCfg = nil then
+    App.CreateWinConfig;
+
+  try
+
+    if gWinCfg.Open(FWinParam) then
+    begin
+      FWinParam := gWinCfg.GetParam;
+      UpdateParam ;
+    end;
+
+  finally
+    if gWinCfg <> nil then
+      gWinCfg.Hide;
+  end;
+end;
 
 procedure TFrmPriceTable.SaveEnv(aStorage: TStorage);
 var
@@ -299,6 +344,9 @@ begin
     if aSymbol <> nil then
       aStorage.FieldByName('Coin_'+inttostr(i) ).AsString := aSymbol.Spec.BaseCode;
   end;
+
+  aStorage.FieldByName('FontName').AsString := FWinParam.FontName;
+  aStorage.FieldByName('FontSize').AsInteger:= FWinParam.FontSize;
 
 end;
 

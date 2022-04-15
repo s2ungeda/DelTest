@@ -365,7 +365,8 @@ begin
     Result   := 0;
     FDnwTime := 0;
   end else
-    FDnwTime  := now;
+    if Result > 0  then
+      FDnwTime  := now;
 
   inc( FDnwCount );
 

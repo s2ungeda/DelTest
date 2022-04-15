@@ -23,7 +23,7 @@ const
 
   prcTbll2_Width : array [0..prcTbl2_TitleCnt-1] of integer = ( 50, 40,
     30,  65,  30, 65, 30, 65,
-    40,  80,  80, 80, 80,
+    40,  80,  80, 100, 60,
     80 );
 
 

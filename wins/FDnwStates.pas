@@ -60,7 +60,7 @@ var
   FrmDnwStates: TFrmDnwStates;
 implementation
 uses
-  GApp  , GLibs
+  GApp  , GLibs  , Math
   , UTableConsts  , USymbolUtils
   , UConsts , UApiConsts
   , UQuoteBroker
@@ -258,8 +258,10 @@ end;
 procedure TFrmDnwStates.UpdateSymbol( iRow: integer; bInit : boolean);
 var
   aSymbol : array [0..2] of TSymbol;
-  I, iCol: integer;
+  I, j, iCol: integer;
 begin
+
+  try
 
   with sgDnw do
     for I := iRow to iRow+1 do
@@ -286,15 +288,19 @@ begin
       Cells[iCol, i] := GetData(aSymbol[2], iCol, i = iRow);       inc(iCol);
       Cells[iCol, i] := GetData(aSymbol[2], iCol, i = iRow);       inc(iCol);
 
-      inc(iCol);
-      Cells[iCol, i] := Format('%.*n %%', [ FPrecision,  GetPriceData(aSymbol[i+1], iCol, i = iRow) ]);       inc(iCol);
-      Cells[iCol, i] := Format('%.1f',    [ GetPriceData(aSymbol[i+1], iCol, i = iRow) ]);       inc(iCol);
-      Cells[iCol, i] := GetData(aSymbol[i+1], iCol, i = iRow);       inc(iCol) ;
+      inc(iCol);     j := ifThen( i = iRow, 1, 2 );
+      Cells[iCol, i] := Format('%.*n %%', [ FPrecision,  GetPriceData(aSymbol[j], iCol, i = iRow) ]);       inc(iCol);
+      Cells[iCol, i] := Format('%.1f',    [ GetPriceData(aSymbol[j], iCol, i = iRow) ]);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[j], iCol, i = iRow);       inc(iCol) ;
 
       if i = iRow then
         Cells[iCol, i] := Format('%.1f %%', [ GetPriceData(aSymbol[0], iCol, i = iRow) ]);       inc(iCol);
-      Cells[iCol, i] := GetData(aSymbol[i+1], iCol, i = iRow);       inc(iCol) ;
+      Cells[iCol, i] := GetData(aSymbol[j], iCol, i = iRow);       inc(iCol) ;
     end;
+  except on e : exception do
+    App.Log(llError, '%s, %d', [ e.Message, i ] );
+
+  end;
 end;
 
 //procedure TFrmDnwStates.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
@@ -446,25 +452,47 @@ procedure TFrmDnwStates.SymbolProc(Sender, Receiver: TObject; DataID: Integer;
   DataObj: TObject; EventID: TDistributorID);
   var
     aSymbol, pSymbol : TSymbol;
-    iRow , i, j: integer;
+    iRow , iCol, i, j: integer;
 begin
   if ( Receiver <> Self ) or ( DataObj = nil ) then Exit;
   aSymbol := DataObj as TSymbol;
-  iRow  := sgDnw.Cols[CoinCol].IndexOfObject( aSymbol );
-  if iRow >= 0 then Exit;
-  try
-    if cbAuto.Checked then
-      refreshTimer.Enabled := false;
-    // Á© À§¿¡ Ãß°¡..
-    InsertLine( sgDnw, 1 );
-    InsertLine( sgDnw, 1 );
-    InsertLine( sgDnw, 1 );
-    FSaveRow := 1;
-    SetSymbolToGrid(  aSymbol.Spec.BaseCode, true );
-  finally
-    if cbAuto.Checked then
-      refreshTimer.Enabled := true;
+
+  iCol := -1;
+  case aSymbol.Spec.ExchangeType of
+    ekBinance : iCol := BN_CoinCol;
+    ekUpbit   : iCol := UP_CoinCol;
+    ekBithumb : iCol := BT_CoinCol;
   end;
+
+  if iCol <= 0 then Exit;
+
+  iRow  := sgDnw.Cols[iCol].IndexOfObject( aSymbol );
+
+  if iRow < 0  then begin
+    if cbAuto.Checked then refreshTimer.Enabled := false;
+    SetSymbolToGrid( aSymbol.Spec.BaseCode , true );
+    if cbAuto.Checked then refreshTimer.Enabled := true;
+  end
+  else begin
+    if (iRow mod 2 ) = 0 then
+      dec( iRow );
+    UpdateSymbol( iRow );
+  end;
+
+//  if iRow >= 0 then Exit;
+//  try
+//    if cbAuto.Checked then
+//      refreshTimer.Enabled := false;
+//    // Á© À§¿¡ Ãß°¡..
+//    InsertLine( sgDnw, 1 );
+//    InsertLine( sgDnw, 1 );
+//    InsertLine( sgDnw, 1 );
+//    FSaveRow := 1;
+//    SetSymbolToGrid(  aSymbol.Spec.BaseCode, true );
+//  finally
+//    if cbAuto.Checked then
+//      refreshTimer.Enabled := true;
+//  end;
 end;
 
 
