@@ -40,7 +40,10 @@ type
 
     procedure ClearGrid;
     procedure SetSymbolToGrid(sCode: string; bLoad: boolean);
-    procedure UpdateSymbol(aSymbol: TSymbol; iRow: integer);
+//    procedure UpdateSymbol(aSymbol: TSymbol; iRow: integer); overload;
+    procedure UpdateSymbol(iRow: integer; bInit : boolean = false);
+    function GetData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): string;
+    function GetPriceData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): double;
     { Private declarations }
   public
     { Public declarations }
@@ -84,6 +87,8 @@ begin
   App.Engine.SymbolBroker.UnSubscribe( Self );
   FSymbols.Free;
 end;
+
+
 procedure TFrmDnwStates.initControls;
 var
   i : integer;
@@ -171,110 +176,182 @@ begin
   begin
     aSymbol := TSymbol( FSymbols.Items[i] );
     if aSymbol <> nil then
-    begin
-      FSaveRow := sgDnw.RowCount -3;
       SetSymbolToGrid( aSymbol.Spec.BaseCode , true );
-      if i <  FSymbols.Count-1 then
-        sgDnw.RowCount := sgDnw.RowCount + 3;
-    end;
   end;
 end;
 
 procedure TFrmDnwStates.SetSymbolToGrid( sCode: string ; bLoad : boolean);
 var
   j : TExchangeKind;
-  iRow : integer;
+  iRow, iCol : integer;
   aSymbol : TSymbol;
+  I, k: Integer;
+  aList : TSymbolList;
+  bDpst : boolean;
+  ii: Integer;
 begin
-  ClearGrid;
-  for j := ekBinance to High(TExchangeKind) do
+
+  aList := App.Engine.SymbolCore.BaseSymbols.FindSymbolList( sCode );
+  if aList <> nil  then
   begin
-//    aSymbol := App.Engine.SymbolCore.FindQuoteSymbol( j, sCode );
-    aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( sCode, j);
-    if aSymbol = nil then Continue;
-    iRow := FSaveRow + integer(j) ;
-    sgDnw.Objects[CoinCol, iRow ] := aSymbol;
-    sgDnw.Cells[ExCol,   iRow ] := TExchangeKindShortDesc[j];
-    UpdateSymbol( aSymbol, iRow );
-    if j = ekBinance then
-      sgDnw.Objects[ExCol, iRow] := Pointer(100);
+
+    InsertLine( sgDnw, 1 );
+    InsertLine( sgDnw, 1 );
+
+    for k := 0 to aList.Count-1 do
+    begin
+      aSymbol := aList.Symbols[k];
+      iCol := -1;
+      case aSymbol.Spec.ExchangeType of
+        ekBinance:
+          begin
+            if aSymbol.Spec.Market <> mtSpot then continue;
+            iCol := BN_CoinCol;
+          end;
+
+        ekUpbit  : iCol := UP_CoinCol;
+        ekBithumb: iCol := BT_CoinCol;
+      end;
+
+      if iCol > 0 then begin
+        sgDnw.Objects[iCol, 1] := aSymbol;
+        sgDnw.Objects[iCol, 2] := aSymbol;
+      end;
+    end;
+
+    UpdateSymbol( 1 , true  );
   end;
-  if bLoad then
-    sgDnw.Cells[CoinCol, FSaveRow] := sCode;
+
 end;
 
-procedure TFrmDnwStates.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
-var
-  iBRow, iPre : integer;
-  aSymbol2 : TSymbol;
-  dTmp , dVal: double;
-  dKip : array [0..1] of double;
-  bMain : boolean;
+function TFrmDnwStates.GetData( aSymbol : TSymbol; iCol : integer; bDpst : boolean ) : string;
 begin
-  if aSymbol <> nil then
-  with sgDnw do
-  begin
-    bMain := aSymbol.Spec.ExchangeType = ekBinance ;
-    dKip[0] := 0; dKip[1] := 0;
-    if bMain then
-    begin
-      if Objects[CoinCol, iRow+1] <> nil then
-      begin
-        aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
-        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
-      end;
-      if Objects[CoinCol, iRow+2] <> nil then
-      begin
-        aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
-        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
-        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
-      end;
-      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
-      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
-      if aSymbol.DayOpen <= 0 then  dTmp := 1
-      else dTmp := aSymbol.DayOpen;
-      Cells[CurCol+1, iRow]   := Format('%.1f %%',[(aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ]);
-      Cells[CurCol+1, iRow+1] := Format('%.1f %%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
-      Cells[CurCol+1, iRow+2] := Format('%.1f %%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
-    end else
-    begin
-      iBRow := FindBinRow( iRow );
-      if Objects[CoinCol, iBRow] <> nil then
-      begin
-        aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
-        Cells[ 2, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpAskPrice ]);
-        Cells[ 3, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpBidPrice ]);
-      end;
-      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
-      Cells[ CurCol - 3, iRow] := aSymbol.PriceToStr( aSymbol.Asks[0].Price ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
-      Cells[ CurCol - 2, iRow] := aSymbol.PriceToStr( aSymbol.Bids[0].Price ); //Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
-      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
-    end;
-    Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '○', 'X');
-    Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, '○', 'X');
-    Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
-    Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
-//    iBRow := FindBinRow( iRow );
-//
-//    if Objects[CoinCol, iBRow] <> nil then
-//    begin
-//      aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
-//      if aSymbol2.DayOpen <= 0 then  dTmp := 1
-//      else dTmp := aSymbol2.DayOpen;
-//
-//      case aSymbol.Spec.ExchangeType of
-//        ekBinance: dVal := (aSymbol2.DayHigh - aSymbol2.DayOpen) / dTmp * 100;
-//        ekUpbit:   dVal := (aSymbol2.Last   - aSymbol2.DayOpen) / dTmp * 100;
-//        ekBithumb: dVal := (aSymbol2.DayLow - aSymbol2.DayOpen) / dTmp * 100;
-//      end;
-//
-//      Cells[CurCol+1, iRow] := Format('%.1f%%', [ dVal ]);
-//
-//      // 당일고가 - 전일종가 / 전일종가
-//    end;
+  if aSymbol = nil then Exit ('');
+
+  case iCol of
+    0 : Result := aSymbol.Spec.BaseCode;
+    2, 4, 6 : Result := ifThenStr( bDpst , ifThenStr( aSymbol.DepositState, 'O', 'X')
+      , ifThenStr( aSymbol.WithDrawlState, 'O', 'X') )  ;
+    3, 5, 7 : Result := ifThenStr( aSymbol.DnwTime > 100, FormatDateTime('hh:nn:ss', aSymbol.DnwTime),'');
+    11 : Result := aSymbol.PriceToStr( aSymbol.Last );
+    13 : Result := Format('%.*n', [ 0, aSymbol.DayAmount ]);
   end;
 end;
+
+
+function TFrmDnwStates.GetPriceData(aSymbol: TSymbol; iCol: integer;
+  bDpst: boolean): double;
+begin
+  if aSymbol = nil then Exit (0.0);
+
+  case iCol of
+    9  : Result := aSymbol.KimpPrice;
+    10 : REsult := aSymbol.WDCPrice;
+    12 : if aSymbol.DayOpen <= 0 then
+           Result := 0.0
+         else
+          Result := ((aSymbol.DayHigh - aSymbol.DayOpen) / aSymbol.DayOpen ) * 100 ;
+
+  end;
+end;
+
+procedure TFrmDnwStates.UpdateSymbol( iRow: integer; bInit : boolean);
+var
+  aSymbol : array [0..2] of TSymbol;
+  I, iCol: integer;
+begin
+
+  with sgDnw do
+    for I := iRow to iRow+1 do
+    begin
+      if bInit then
+      begin
+        Cells[1, i] := ifThenStr( i = iRow, '입금', '출금');
+        Cells[8, i] := ifThenStr( i = iRow, TExchangeKindShortDesc[ ekUpbit]
+          , TExchangeKindShortDesc[ ekBithumb]);
+      end;
+
+      aSymbol[0] := TSymbol( Objects[BN_CoinCol, i] );
+      aSymbol[1] := TSymbol( Objects[UP_CoinCol, i] );
+      aSymbol[2] := TSymbol( Objects[BT_CoinCol, i] );
+
+      if (i = iRow) and ( bInit ) then
+          Cells[0, i] :=  GetData(aSymbol[0], 0, i = iRow);
+
+      iCol := 2;
+      Cells[iCol, i] := GetData(aSymbol[0], iCol, i = iRow);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[0], iCol, i = iRow);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[1], iCol, i = iRow);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[1], iCol, i = iRow);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[2], iCol, i = iRow);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[2], iCol, i = iRow);       inc(iCol);
+
+      inc(iCol);
+      Cells[iCol, i] := Format('%.*n %%', [ FPrecision,  GetPriceData(aSymbol[i+1], iCol, i = iRow) ]);       inc(iCol);
+      Cells[iCol, i] := Format('%.1f',    [ GetPriceData(aSymbol[i+1], iCol, i = iRow) ]);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[i+1], iCol, i = iRow);       inc(iCol) ;
+
+      if i = iRow then
+        Cells[iCol, i] := Format('%.1f %%', [ GetPriceData(aSymbol[0], iCol, i = iRow) ]);       inc(iCol);
+      Cells[iCol, i] := GetData(aSymbol[i+1], iCol, i = iRow);       inc(iCol) ;
+    end;
+end;
+
+//procedure TFrmDnwStates.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
+//var
+//  iBRow, iPre : integer;
+//  aSymbol2 : TSymbol;
+//  dTmp , dVal: double;
+//  dKip : array [0..1] of double;
+//  bMain : boolean;
+//begin
+//  if aSymbol <> nil then
+//  with sgDnw do
+//  begin
+//    bMain := aSymbol.Spec.ExchangeType = ekBinance ;
+//    dKip[0] := 0; dKip[1] := 0;
+//    if bMain then
+//    begin
+//      if Objects[CoinCol, iRow+1] <> nil then
+//      begin
+//        aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
+//        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
+//        Cells[ 3, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
+//      end;
+//      if Objects[CoinCol, iRow+2] <> nil then
+//      begin
+//        aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
+//        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
+//        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
+//      end;
+//      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
+//      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
+//      if aSymbol.DayOpen <= 0 then  dTmp := 1
+//      else dTmp := aSymbol.DayOpen;
+//      Cells[CurCol+1, iRow]   := Format('%.1f %%',[(aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ]);
+//      Cells[CurCol+1, iRow+1] := Format('%.1f %%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
+//      Cells[CurCol+1, iRow+2] := Format('%.1f %%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
+//    end else
+//    begin
+//      iBRow := FindBinRow( iRow );
+//      if Objects[CoinCol, iBRow] <> nil then
+//      begin
+//        aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
+//        Cells[ 2, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpAskPrice ]);
+//        Cells[ 3, iRow] := Format('%.*n %%', [ FPrecision, aSymbol.KimpBidPrice ]);
+//      end;
+//      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
+//      Cells[ CurCol - 3, iRow] := aSymbol.PriceToStr( aSymbol.Asks[0].Price ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Price ]);
+//      Cells[ CurCol - 2, iRow] := aSymbol.PriceToStr( aSymbol.Bids[0].Price ); //Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Price ]);
+//      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
+//    end;
+//    Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '○', 'X');
+//    Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, '○', 'X');
+//    Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
+//    Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
+//
+//  end;
+//end;
 
 procedure TFrmDnwStates.sgDnwDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -391,6 +468,8 @@ begin
 end;
 
 
+
+
 procedure TFrmDnwStates.btnSortClick(Sender: TObject);
 begin
   if cbAuto.Checked then
@@ -433,6 +512,7 @@ begin
   edtSec.Text     := aStorage.FieldByName('Second' ).AsStringDef('10');
   cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
 end;
+
 procedure TFrmDnwStates.RefreshClick(Sender: TObject);
 var
   I: Integer;
@@ -440,9 +520,12 @@ var
 begin
   for I := 1 to sgDnw.RowCount-1 do
   begin
-    aSymbol := TSymbol( sgDnw.Objects[CoinCol, i] );
-    if aSymbol <> nil then
-      UpdateSymbol( aSymbol, i );
+    if (i Mod 2) > 0 then
+      UpdateSymbol( i );
+
+//    aSymbol := TSymbol( sgDnw.Objects[CoinCol, i] );
+//    if aSymbol <> nil then
+//      UpdateSymbol( aSymbol, i );
   end;
 end;
 procedure TFrmDnwStates.refreshTimerTimer(Sender: TObject);

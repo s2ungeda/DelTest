@@ -147,6 +147,7 @@ type
     FDepositState: boolean;
     FDnwCount: integer;
     FWDCPrice: double;
+    FDnwTime: TDateTime;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -204,6 +205,7 @@ type
     //
     property WithDrawlState : boolean read FWithdrawlState write FWithdrawlState;
     property DepositState   : boolean read FDepositState   write FDepositState;
+    property DnwTime        : TDateTime read FDnwTime      write FDnwTime;
 
     property Terms: TSTerms read FTerms write FTerms;
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
@@ -359,7 +361,11 @@ begin
     App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self );
 
   if FDnwCount = 0 then
-    Result := 0;
+  begin
+    Result   := 0;
+    FDnwTime := 0;
+  end else
+    FDnwTime  := now;
 
   inc( FDnwCount );
 
@@ -386,6 +392,7 @@ begin
   FDepositState   := true;
 
   FDnwCount := 0;
+  FDnwTime  := 0;
 
   FKimpPrice := 0.0;
   FWDCPrice  := 0.0;

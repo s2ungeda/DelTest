@@ -43,6 +43,11 @@ const
   CurCol = 8;
   DayAmtCol = 12;
 
+  // only dnw state win
+  BN_CoinCol = 2;
+  UP_CoinCol = 4;
+  BT_CoinCol = 6;
+
 function GetMajorRow( i : integer ) : integer;
 function FindBinRow( iRow : integer ) : integer;
 
