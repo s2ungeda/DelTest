@@ -90,7 +90,7 @@ var
   iState, i : integer;
 begin
   // 1초에 한번
-  Exchanges[mtSpot].RequestDNWState;
+  //Exchanges[mtSpot].RequestDNWState;
 
 end;
 
@@ -114,7 +114,7 @@ begin
   Result := false;
   try
     i := ifThen( aSymbol.Spec.Market = mtSpot , 0, 1 );
-    (QuoteSock[QOUTE_SOCK] as TBinanceWebSocket).UnSubScribe( aSymbol );
+    (QuoteSock[i] as TBinanceWebSocket).UnSubScribe( aSymbol );
     Result := true;
   except
   end;

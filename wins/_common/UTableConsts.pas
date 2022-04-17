@@ -27,13 +27,13 @@ const
     80 );
 
 
-  quoteMon_TitleCnt = 10;
+  quoteMon_TitleCnt = 9;
   quoteMon_Title : array [0..quoteMon_TitleCnt-1] of string = ('코인', '거래소'
     ,'KIP', 'WCD','현재가','등락'
-    ,'고','저', '일거래액', '마진');
+    ,'고','저', '일거래액');
   quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (70, 40
     , 80, 80, 120, 80
-    , 80, 80, 80, 35  );
+    , 80, 80, 80 );
 
   CoinCol = 0;
   ExCol   = 1;

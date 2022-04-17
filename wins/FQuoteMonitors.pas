@@ -62,10 +62,12 @@ type
     procedure edtSecKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure cbAutoClick(Sender: TObject);
     procedure Font1Click(Sender: TObject);
+    procedure cbKREx1Change(Sender: TObject);
   private
     FSubList: TList;
     FDataList: TList;
     FPrecision : integer;
+    FShowSubEx : array [0..1] of TExchangeKind;
 
     FWinParam: TWinParam;
     { Private declarations }
@@ -77,6 +79,8 @@ type
     procedure SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean = true);
     procedure DefaultParam;
     procedure UpdateParam( bRefresh : boolean = true);
+
+    function GetExchangeKind( iTag : integer ) : TExchangeKind;
   public
     { Public declarations }
     procedure RefreshData ;
@@ -151,6 +155,14 @@ begin
 //  App.Engine.QuoteBroker.Cancel( self );
 end;
 
+function TFrmQuoteMonitors.GetExchangeKind( iTag : integer ): TExchangeKind;
+begin
+  if iTag = 0 then
+    REsult := TExchangeKind( cbKREx1.ItemIndex + 1 )
+  else
+    REsult := TExchangeKind( cbKREx2.ItemIndex + 1 );
+end;
+
 procedure TFrmQuoteMonitors.initControls;
 var
   i, iSum : integer;
@@ -174,8 +186,8 @@ begin
     if i <= (high(iLeft)-1) then
       iLeft[i] := iSum;
 
-    if i=9 then
-      iLeft[7] := iSum;
+    if i=8 then
+      iLeft[6] := iSum;
 
   end;
   sgQuote.RowCount := 1;
@@ -209,6 +221,9 @@ procedure TFrmQuoteMonitors.DefaultParam;
 begin
   FWinParam.FontName  := 'Arial';
   FWinParam.FontSize  := 10;
+
+  FShowSubEx[0] := GetExchangeKind(0);
+  FShowSubEx[1] := GetExchangeKind(1);
 end;
 
 procedure TFrmQuoteMonitors.UpdateParam( bRefresh : boolean );
@@ -234,12 +249,16 @@ begin
   cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
   cbAutoClick(nil);
 
+  cbKREx1.ItemIndex := aStorage.FieldByName('cbKREx1').AsIntegerDef( 0 );
+  cbKREx2.ItemIndex := aStorage.FieldByName('cbKREx2').AsIntegerDef( 1 );
+
   FWinParam.FontName := aStorage.FieldByName('FontName').AsStringDef( FWinParam.FontName );
   FWinParam.FontSize := aStorage.FieldByName('FontSize').AsIntegerDef( FWinParam.FontSize );
-  UpdateParam;
+
+  UpdateParam( false );
+
+  RefreshData;
 end;
-
-
 
 procedure TFrmQuoteMonitors.Button1Click(Sender: TObject);
 begin
@@ -250,6 +269,21 @@ procedure TFrmQuoteMonitors.cbAutoClick(Sender: TObject);
 begin
   Timer1.Interval := StrToInt( edtSec.Text ) * 1000;
   Timer1.Enabled := cbAuto.Checked;
+end;
+
+procedure TFrmQuoteMonitors.cbKREx1Change(Sender: TObject);
+var
+  iTag, idx : integer;
+  bTmp : array [0..1] of TExchangeKind;
+begin
+  iTag := (Sender as TComboBox).Tag;
+  idx  := (Sender as TComboBox).ItemIndex;
+
+  bTmp[iTag] :=  FShowSubEx[iTag];
+  FShowSubEx[iTag] := GetExchangeKind(iTag);
+
+  if FShowSubEx[iTag] <> bTmp[iTag] then
+    RefreshData;
 end;
 
 procedure TFrmQuoteMonitors.cbUBClick(Sender: TObject);
@@ -267,6 +301,11 @@ function TFrmQuoteMonitors.CheckFilter(aSymbol : TSymbol): boolean;
         Exit ( true );
   end;
 begin
+
+  if ( FShowSubEx[0] <> aSymbol.Spec.ExchangeType ) and
+    ( FShowSubEx[1] <> aSymbol.Spec.ExchangeType ) then
+    Exit ( false );
+
   if ( not cbUB.Checked ) and ( not cbBT.Checked ) then
     Exit  ( true )
   else  begin
@@ -286,6 +325,9 @@ begin
       else Exit (true);
     end;
   end;
+
+
+  result := true;
 end;
 
 procedure TFrmQuoteMonitors.edtAmtKeyDown(Sender: TObject; var Key: Word;
@@ -429,11 +471,11 @@ begin
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
 
     bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance, mtSpot);
-    if bSymbol <> nil then
-    begin
+ //   if bSymbol <> nil then
+ //   begin
 //      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '¡Û', 'X') );
-      PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '¡Û', 'X') );
-    end;
+//      PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '¡Û', 'X') );
+//    end;
 
   end;
 end;
@@ -451,6 +493,9 @@ begin
 
   aStorage.FieldByName('FontName').AsString := FWinParam.FontName;
   aStorage.FieldByName('FontSize').AsInteger:= FWinParam.FontSize;
+
+  aStorage.FieldByName('cbKREx1').AsInteger := cbKREx1.ItemIndex;
+  aStorage.FieldByName('cbKREx2').AsInteger := cbKREx2.ItemIndex;
 end;
 
 procedure TFrmQuoteMonitors.sgQuoteDrawCell(Sender: TObject; ACol,

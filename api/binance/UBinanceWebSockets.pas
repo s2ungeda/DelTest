@@ -30,6 +30,8 @@ type
     procedure UnSubScribeAll;
     procedure MakeSubData; override;
 
+    procedure AllMarketTicker( bSub : boolean );
+
     property MarketType  : TMarketType read FMarketType;
     property UnSubList  : TStrings  read FUnSubList;
     property SubIndex : integer   read FSubIndex;
@@ -42,6 +44,16 @@ uses
   , UBinanceParse
   ;
 { TBinanceWebSocket }
+procedure TBinanceWebSocket.AllMarketTicker( bSub : boolean );
+var
+  sTmp, sData : string;
+begin
+  sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
+  inc(FSubIndex);
+  sData := Format('{"method": "%s","params":["%s"],"id": %d}', [ sTmp, '!miniTicker@arr', FSubIndex ] );
+  SendData(sData);
+end;
+
 procedure TBinanceWebSocket.CheckPingPong;
 var
   iGap : integer;
@@ -193,7 +205,7 @@ begin
 
         aList.Add( aSymbol.OrgCode +'@depth5' );
         aList.Add( aSymbol.OrgCode +'@aggTrade' );
-        aList.Add( aSymbol.OrgCode +'@miniTicker' );
+//        aList.Add( aSymbol.OrgCode +'@miniTicker' );
     end else
       Exit;
 
@@ -260,7 +272,7 @@ begin
       begin
           aList.Add( SubList[i] +'@depth5' );
           aList.Add( SubList[i] +'@aggTrade' );
-          aList.Add( SubList[i] +'@miniTicker' );
+//          aList.Add( SubList[i] +'@miniTicker' );
       end ;
     end;
 
@@ -288,6 +300,8 @@ begin
     sData := Format('{"method": "SUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
     SendData(sData);
   end;
+  //  바이낸스는..추가로 구독
+  AllMarketTicker(true);
 end;
 
 procedure TBinanceWebSocket.UnSubScribeAll;
@@ -301,14 +315,14 @@ begin
     sData := Format('{"method": "UNSUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
     SendData(sData);
   end;
-
+  //  바이낸스는..추가로 구독취소
+  AllMarketTicker(false);
 end;
 
 
 procedure TBinanceWebSocket.OnAfterConnect(Sender: TObject);
 begin
-//  if (FSubList.Count > 0 ) then
-//    SubScribe( true );
+
   App.Log(llInfo, ' %s Connected', [ Descript]);
 
 end;

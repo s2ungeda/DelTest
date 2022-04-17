@@ -57,7 +57,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           'Binance')
       end
       object cbKREx1: TComboBox
-        Left = 165
+        Left = 167
         Top = 26
         Width = 79
         Height = 21
@@ -65,19 +65,22 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         ItemIndex = 0
         TabOrder = 1
         Text = 'Upbit'
+        OnChange = cbKREx1Change
         Items.Strings = (
           'Upbit'
           'Bithumb')
       end
       object cbKREx2: TComboBox
+        Tag = 1
         Left = 246
-        Top = 26
+        Top = 24
         Width = 79
         Height = 21
         Style = csDropDownList
         ItemIndex = 1
         TabOrder = 2
         Text = 'Bithumb'
+        OnChange = cbKREx1Change
         Items.Strings = (
           'Upbit'
           'Bithumb')
@@ -254,7 +257,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 845
         Height = 411
         Align = alClient
-        ColCount = 10
+        ColCount = 9
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0

@@ -196,7 +196,7 @@ end;
 procedure TFrmPriceTable.UpdateSymbol( aSymbol : TSymbol; iRow : integer );
 var
   iBRow, iPre : integer;
-  aSymbol2 : TSymbol;
+  aUnder, aSymbol2 : TSymbol;
   dTmp , dVal: double;
   dKip : array [0..1] of double;
   bMain : boolean;
@@ -229,8 +229,18 @@ begin
 //        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
       end;
 
-      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '¡Û', 'X');
-      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '¡Û', 'X');
+      if aSymbol is TFuture then
+      begin
+        aUnder := ( aSymbol as TFuture).Underlying;
+        if aUnder <> nil  then
+        begin
+          Cells[ CurCol - 3, iRow] := ifThenStr( aUnder.IsFuture, '¡Û', 'X');
+          Cells[ CurCol - 2, iRow] := ifThenStr( aUnder.IsMargin, '¡Û', 'X');
+        end;
+      end;
+
+//      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '¡Û', 'X');
+//      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '¡Û', 'X');
 
       if aSymbol.DayOpen <= 0 then  dTmp := 1
       else dTmp := aSymbol.DayOpen;

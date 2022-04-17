@@ -7,6 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs
 
   , UStorage, Vcl.Grids, Vcl.ExtCtrls
+  , UTypes
   ;
 
 type

@@ -65,7 +65,7 @@ begin
         sgWDC1.ColWidths[i] := 60;
       end
       else begin
-        ColWidths[i] := 40;
+        ColWidths[i] := 45;
         sgWDC1.ColWidths[i] := 45;
       end;
 
