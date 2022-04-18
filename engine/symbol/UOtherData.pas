@@ -14,19 +14,14 @@ type
   TWCDData = class( TCollectionItem )
   private
     FTimStr  : string;
-    FValue : array [0..1] of double;
     FName: string;
-    function GetPrice(ekKind: TExchangeKind): double;
-    procedure SetPrice(ekKind: TExchangeKind; const Value: double);
-    function GetWCDPrice(ekKind: TExchangeKind): double;
-    function GetAmount(ekKind: TExchangeKind): double;
-    procedure SetAmount(ekKind: TExchangeKind; const Value: double);
+
   public
+    Price : array [TMajorSymbolKind, TExchangeKind ] of double;
+    Amount: array [TMajorSymbolKind, TExchangeKind ] of double;
+    WCDPrice: array [TExchangeKind ] of double;
     property Name : string read FName write FName;
     property TimStr : string read FTimStr write FTimStr;
-    property Price[ ekKind : TExchangeKind ] : double read GetPrice write SetPrice;
-    property Amount[ ekKind : TExchangeKind ] : double read GetAmount write SetAmount;
-    property WCDPrice[ ekKind : TExchangeKind ] : double read GetWCDPrice;
   end;
 
   TWCDDataList = class( TCollection )
@@ -47,30 +42,6 @@ uses
 
 { TOtherData }
 
-function TWCDData.GetAmount(ekKind: TExchangeKind): double;
-begin
-
-end;
-
-function TWCDData.GetPrice(ekKind: TExchangeKind): double;
-begin
-  Result := FValue[ integer( ekKind ) - 1 ] ;
-end;
-
-procedure TWCDData.SetAmount(ekKind: TExchangeKind; const Value: double);
-begin
-
-end;
-
-procedure TWCDData.SetPrice(ekKind: TExchangeKind; const Value: double);
-begin
-  FValue[ integer( ekKind ) - 1 ] := Value;
-end;
-
-function TWCDData.GetWCDPrice(ekKind: TExchangeKind): double;
-begin
-
-end;
 
 { TTWCDDataList }
 

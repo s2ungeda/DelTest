@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON , USymbols, UExchangeManager
-  , UApiTypes
+  , UApiTypes, UOtherData
   ;
 
 type
@@ -31,7 +31,7 @@ type
     procedure ParseTicker( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
-    procedure ParseCandleData( sUnit , aData : string );
+    procedure ParseCandleData( aKind: TMajorSymbolKind;  sUnit , aData : string );
 
     property Parent : TExchangeManager read FParent;
     property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
@@ -135,16 +135,19 @@ end;
 // 24 는 0 시기준 -> 뒤에서 부터 24까지만..
 // 30 분 은 날자 파싱해서..오늘날자 까지만. 만.
 
-procedure TBithParse.ParseCandleData(sUnit, aData: string);
+procedure TBithParse.ParseCandleData(aKind: TMajorSymbolKind; sUnit, aData: string);
 var
   aObj : TJsonObject;
   aPair : TJsonPair;
   iResult : integer;
   aArr, aSubArr : TJsonArray;
-  I, j: Integer;    iTime : int64;
+  I, j, iCnt: Integer;    iTime : int64;
   dTime : TDateTime;
   aNum : TJSONNumber;
   sTmp, sTmp2 : string;
+  aWcd : TWCDData;
+  d, h, m : word;
+  aPrice, amt : double;
 begin
   if aData = '' then
   begin
@@ -178,10 +181,43 @@ begin
         sTmp  := aSubArr.Get(2).Value;
         sTmp2 := aSubArr.Get(5).Value;
 
+        aPrice:= StrToFloat( sTmp );
+        amt   := StrToFloat( sTmp2 );
+
+        d := Dayof(  dTime );
+        h := Hourof( dTime );
+        m := MinuteOf(dTime);
+
         inc(j);
 
         if (sUnit = '30m') and ( not IsToday( dTime )) then
           break;
+
+        aWcd := nil;
+
+        if (sUnit = '24h') and ( not IsToday( dTime )) then begin
+          sTmp := Format('%2.2d00', [ d] );
+          aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
+          if aWcd = nil then
+            aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+          iCnt := App.Engine.SymbolCore.WCDays.Count;
+        end else
+        if (sUnit = '30m') and (( m = 30 ) or ( m = 0)) then
+        begin
+          sTmp := Format('%2.2d%2.2d', [ h, m] );
+          aWcd := App.Engine.SymbolCore.WCD30s.Find( sTmp );
+          if aWcd = nil then
+            aWcd := App.Engine.SymbolCore.WCD30s.New( sTmp );
+          iCnt := App.Engine.SymbolCore.WCD30s.Count;
+        end;
+
+        if aWcd <> nil then
+        begin
+          aWcd.Price[ aKind, FParent.ExchangeKind] := aPrice;
+          aWcd.Amount[aKind, FParent.ExchangeKind] := amt * aPrice;
+//          App.DebugLog('%s, %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+//            sTmp, iCnt ,  aPrice, amt * aPrice ]);
+        end;
 
         if j > 50 then break;
 

@@ -25,7 +25,7 @@ type
   TMarketGroupsArray  = array [ TExchangeKind ] of TMarketGroups;
 
   TMajorSymbols    = array [TExchangeKind] of TSymbol;
-  TMainSymbols    = array [TMajorSymbolKind] of  TMajorSymbols;
+  TMainSymbols     = array [TMajorSymbolKind] of  TMajorSymbols;
 
   TMainKimpArray  = array [TExchangeKind] of double;
   TMainWDCArray  = array [TExchangeKind] of double;
@@ -86,6 +86,7 @@ type
     procedure PreSubscribe;   // 한종목씩
     procedure SubscribeSymbols; // 모든종목 한방에
     procedure RepresentCoin;
+    procedure MakePrevData;
 
     procedure GetSymbolList( aExKind : TExchangeKind; var aList : TList );
 
@@ -491,6 +492,28 @@ begin
 
       end;
     end;
+
+  end;
+end;
+
+procedure TSymbolCore.MakePrevData;
+var
+  I: Integer;
+  aWcd : TWCDData;
+  dAmt, dVAl : double;
+begin
+  for I := 0 to FWCDays.Count-1 do
+  begin
+    aWcd := FWCDays.WCDs[i];
+    dAmt  := aWcd.Amount[msBTC][ekUpbit] + aWcd.Amount[msETH][ekUpbit];
+
+//    if dAmt > EPSILON then
+//      dVal := aWcd.Amount[msBTC][ekUpbit] *
+
+
+//    dAmt := aWcd[msBTC, .DayAmount + aSubSymbol.DayAmount ;
+//    if dAmt > EPSILON then begin
+//      dVal := ( aMainSymbol.DayAmount * aMainSymbol.WDCPrice + aSubSymbol.DayAmount * aSubSymbol.WDCPrice ) / dAmt;
 
   end;
 end;

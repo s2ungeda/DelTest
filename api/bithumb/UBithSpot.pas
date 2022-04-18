@@ -245,8 +245,9 @@ end;
 
 function TBithSpot.RequestCandleData(sUnit, sCode: string): boolean;
 var
-  sOut, sJson, sRrs : string;
+  sOut, sJson, sRrs, sTmp : string;
   bRes : boolean;
+  aKind : TMajorSymbolKind;
 begin
 
   bRes := false;
@@ -259,7 +260,11 @@ begin
     sRrs := Format('public/candlestick/%s/%s', [ sCode, sUnit] );
     if Request( rmGET, sRrs, '', sJson, sOut ) then
     begin
-      gBithReceiver.ParseCandleData(sUnit, sJson );
+      sTmp := copy( sCode, 1, 3 );
+      if sTmp = 'BTC' then
+        aKind := msBTC
+      else aKind := msETH;
+      gBithReceiver.ParseCandleData(aKind, sUnit, sJson );
     end else
     begin
       App.Log( llError, '', 'Failed %s RequestCandleData (%s, %s)',

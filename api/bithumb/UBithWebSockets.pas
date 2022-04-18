@@ -99,13 +99,19 @@ end;
 
 procedure TBithWebSocket.OnAfterConnect(Sender: TObject);
 begin
-  App.Log(llInfo, ' %s Connected', [ Descript]);
+
+  inherited OnAfterConnect(Sender);
+  App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
+
+  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
+    SubscribeAll;
 //  if (FSubList.Count > 0 ) then
 //    SubScribe( true );
 
 end;
 procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
+  inherited OnAfterDisconnect(Sender);
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
 end;
 

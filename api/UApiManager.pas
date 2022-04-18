@@ -218,6 +218,8 @@ begin
       Exit;
   end;
 
+  App.Engine.SymbolCore.MakePrevData;
+
 end;
 
 procedure TApiManager.MasterLog;

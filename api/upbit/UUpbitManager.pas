@@ -103,7 +103,7 @@ begin
 
   stmp := App.Engine.SymbolCore.MainSymbols[msETH][ExchangeKind].OrgCode;
   Result := Exchanges[mtSpot].RequestCandleData('240', sTmp )
-    and Exchanges[mtSpot].RequestCandleData('3m', sTmp )    ;
+    and Exchanges[mtSpot].RequestCandleData('30', sTmp )    ;
 end;
 
 procedure TUpbitManager.OnTimer(Sender: TObject);

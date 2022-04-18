@@ -327,7 +327,7 @@ begin
 
     SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
     SetParam('market', sCode );
-    SetParam('count', '50' );
+    SetParam('count', '142' );
 
     if Request( rmGET, 'v1/candles/minutes/'+sUnit, '', sJson, sOut ) then
     begin

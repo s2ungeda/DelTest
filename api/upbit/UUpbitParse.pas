@@ -28,7 +28,7 @@ type
     procedure ParseDNWSate( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
 
-    procedure ParseCandleData( sUnit , aData : string );
+    procedure ParseCandleData( sUnit, aData : string );
 
     property Parent : TExchangeManager read FParent;
   end;
@@ -276,12 +276,13 @@ var
   aArr : TJsonArray;
   aVal : TJsonValue;
   I: Integer;
-  d, dd, h : word;
-  sTmp : string;
+  d, dd, h, m : word;
+  sTmp, sCode : string;
   dTime, dtime2: TDateTime;
   aSymbol : TSymbol;
-  accAmt, aAmt, aPrice : double;
+  accAmt, aAmt, aPrice, aClose : double;
   aWcd : TWCDData;
+  aKind : TMajorSymbolKind;
 begin
   if aData = '' then
   begin
@@ -304,39 +305,62 @@ begin
 
         aVal := aArr.Get(i);
 
+        sCode:= GetSymbolCode( aVal.GetValue<string>('market') );
+
+        if sCode = 'BTC' then
+          aKind := msBTC
+        else
+          aKind := msETH;
+
         sTmp := aVal.GetValue<string>('candle_date_time_kst');
         dTime:= GetStrToTime( sTmp );
 
         aAmt   := aVal.GetValue<double>('candle_acc_trade_price');
         aPrice := aVal.GetValue<double>('trade_price');
 
+        d := Dayof(  dTime );
+        h := Hourof( dTime );
+        m := MinuteOf(dTime);
+
         if sUnit = '240' then begin
 
           accAmt := accAmt + aAmt;
-          d := Dayof(  dTime );
-          h := Hourof( dTime );
+
 
           if h = 9 then
           begin
             if Dayof(Date) <> dd then
             begin
-              sTmp := Format('%02d00', [ d] );
+              sTmp := Format('%2.2d00', [ d] );
               aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
               if aWcd = nil then
                 aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
 
-              aWcd.Price[FParent.ExchangeKind]  := aPrice;
-              aWcd.Amount[FParent.ExchangeKind] := accAmt;
+              aWcd.Price[ aKind, FParent.ExchangeKind] := aClose;
+              aWcd.Amount[aKind, FParent.ExchangeKind] := accAmt;
+//              App.DebugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+//                sTmp,  App.Engine.SymbolCore.WCDays.Count,  aClose, accAmt ]);
             end;
             if App.Engine.SymbolCore.WCDays.Count >= 24 then break;
             accAmt := 0;
-          end;
+          end else
+          if h = 5 then
+            aClose := aPrice;
           dd := d;
         end
         else if sUnit = '30' then begin
 
+          if not IsToday( dTime ) then break;
 
+          sTmp := Format('%2.2d%2.2d', [ h,m] );
+          aWcd := App.Engine.SymbolCore.WCD30s.Find( sTmp );
+          if aWcd = nil then
+            aWcd := App.Engine.SymbolCore.WCD30s.New( sTmp );
 
+          aWcd.Price[ aKind, FParent.ExchangeKind] := aPrice;
+          aWcd.Amount[aKind, FParent.ExchangeKind] := aAmt;
+//          App.DebugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+//            sTmp,  App.Engine.SymbolCore.WCD30s.Count,  aPrice, aAmt ]);
         end;
 
       end;
