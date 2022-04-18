@@ -31,6 +31,7 @@ type
     procedure ParseTicker( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
+    procedure ParseCandleData( sUnit , aData : string );
 
     property Parent : TExchangeManager read FParent;
     property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
@@ -41,7 +42,7 @@ var
 implementation
 
 uses
-  GApp, GLibs, Math
+  GApp, GLibs, Math , UTypes
   , UApiConsts
   , UQuoteBroker
   ;
@@ -80,6 +81,7 @@ var
   aSymbol : TSymbol;
   bNew : boolean;
   j: Integer;
+  aQuote : TQuote;
 begin
   master := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
   aObj := master.GetValue('data') as TJsonObject;
@@ -112,7 +114,14 @@ begin
           aSymbol.Asks[0].Volume  := StrToFloatDef( aVal.GetValue<string>( 'quantity' ), 0.0 );
         end;
 
-        App.Engine.SymbolCore.CalcKimp( aSymbol );
+        if App.AppStatus > asLoad then  begin
+          App.Engine.SymbolCore.CalcKimp( aSymbol );
+          aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(aSymbol.Code)    ;
+          if aQuote <> nil then  begin
+            aQuote.LastEvent := qtMarketDepth;
+            aQuote.Update(now);
+          end;
+        end;
       end;
 
     end;
@@ -121,9 +130,69 @@ begin
   finally
     aObj.Free
   end;
-
 end;
 
+// 24 는 0 시기준 -> 뒤에서 부터 24까지만..
+// 30 분 은 날자 파싱해서..오늘날자 까지만. 만.
+
+procedure TBithParse.ParseCandleData(sUnit, aData: string);
+var
+  aObj : TJsonObject;
+  aPair : TJsonPair;
+  iResult : integer;
+  aArr, aSubArr : TJsonArray;
+  I, j: Integer;    iTime : int64;
+  dTime : TDateTime;
+  aNum : TJSONNumber;
+  sTmp, sTmp2 : string;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseDnwState data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aObj := nil;
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+
+    try
+      iResult := StrToInt( aObj.GetValue('status').Value );
+      if iResult <> 0 then begin
+        App.Log(llError, 'Request Result %d (ParseCandleData)', [ iResult ] );
+        Exit;
+      end;
+
+      aArr := aObj.GetValue('data') as TJsonArray;
+
+      j := 0;
+      for i := aArr.Size-1 downto 0 do
+      begin
+        if ( sUnit = '24h' ) and ( j >= 24 ) then break;
+
+        aSubArr := aArr.Get(i) as TJsonArray;
+
+        aNum  := aSubArr.Get(0) as TJSONNumber ;
+        iTime := aNum.GetValue<int64>;
+        dTime := UnixTimeToDateTime( iTime );
+        sTmp  := aSubArr.Get(2).Value;
+        sTmp2 := aSubArr.Get(5).Value;
+
+        inc(j);
+
+        if (sUnit = '30m') and ( not IsToday( dTime )) then
+          break;
+
+        if j > 50 then break;
+
+      end;
+
+    except
+    end;
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
+end;
 
 procedure TBithParse.ParseDnwState(aData: string);
 var
@@ -157,7 +226,7 @@ begin
       id := aPair.JsonValue.GetValue<integer>('deposit_status');
 
       var iRes : integer;
-      iRes := aSymbol.CheckDnwState( iw = 1, id = 1 ) ;
+      iRes := aSymbol.CheckDnwState( id = 1, iw = 1 ) ;
       if iRes > 0 then
         App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
     end;

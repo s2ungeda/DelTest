@@ -32,6 +32,7 @@ type
     function ConnectAll: boolean;
     function DisConnectAll : boolean;
 
+    procedure MakeCloseData;
     procedure RequestExRate;
     procedure CheckCount;
 
@@ -203,6 +204,19 @@ end;
 
 function TApiManager.LoadMaster(sMasterFile: string): boolean;
 begin
+
+end;
+
+procedure TApiManager.MakeCloseData;
+  // 거래소별 과거 분봉 데이터를 통해  데이터 생성..
+var
+  i : TExchangeKind;
+begin
+  for I := ekUpbit to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].MakeCloseData then
+      Exit;
+  end;
 
 end;
 

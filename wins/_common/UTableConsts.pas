@@ -5,7 +5,7 @@ interface
 const
   prcTbl1_TitleCnt = 13 ;
   prcTbll1_Title : array [0..prcTbl1_TitleCnt-1]of string = ('코인', '거래소'
-    ,'KIP', 'WDC', '잔량(천)', '선물/매도가','마진/매수가'
+    ,'KIP', 'WCD', '잔량(천)', '선물/매도가','마진/매수가'
     ,'잔량(천)', '현재가', '고/등락/저','입금','출금'
     ,'일거래액');
 

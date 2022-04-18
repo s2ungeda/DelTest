@@ -49,11 +49,11 @@ type
     function  GetExKind : TExchangeKind;
     function  GetCodeIndex( S : string ) : integer;
 
-
 //----------------------------------------------------------- common request
     function ParsePrepareMaster : integer ; virtual; abstract;
     function RequestMaster : boolean ; virtual; abstract;
     function RequestDNWState : boolean; virtual; abstract;
+    function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
 //--------------------------------------------------------------
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;

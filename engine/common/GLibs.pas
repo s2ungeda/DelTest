@@ -26,6 +26,7 @@ function IfThenFloat(AValue: Boolean; const ATrue: double): string;
 
 function GetTimestamp(len: Integer = 13): string;
 function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
+function GetStrToTime(sTime : string) : TDateTime;
 procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
 procedure CloseApp( sClassName : string );
 
@@ -158,6 +159,17 @@ begin
                     ,StrToInt(copy(sTmp, 15,2))
                     ,StrToInt(copy(sTmp, 18,2))
                     ,StrToInt(copy(sTmp, 21,3)) )  ;
+end;
+
+// no millisecond    "2022-03-25T20:00:00"
+function GetStrToTime(sTime : string) : TDateTime;
+begin
+  REsult := EncodeDate(  StrToInt(copy(sTime, 1, 4 ) ) , StrToInt( copy(sTime, 6, 2 )) , StrToInt( copy(sTime, 9,2)) )
+          + EnCodeTime(StrToInt(copy(sTime, 12,2))
+                    ,StrToInt(copy(sTime, 15,2))
+                    ,StrToInt(copy(sTime, 18,2))
+                    ,0 )  ;
+
 end;
 
 

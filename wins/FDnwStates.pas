@@ -384,8 +384,10 @@ begin
       if ACol in [1..7] then
         aBack := LONG_COLOR
       else if ACol in [9..10] then
-        aBack := GRID_MOD_COLOR;
+        aBack := SHORT_COLOR;//GRID_MOD_COLOR;
 
+      if ACol in [9..13] then
+        dFormat := DT_RIGHT;
 
 
       //  0,1,2 ->0    3,4,5 ->1   6,7,8 -> 2

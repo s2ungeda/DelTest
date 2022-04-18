@@ -28,6 +28,8 @@ type
     procedure ParseDNWSate( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
 
+    procedure ParseCandleData( sUnit , aData : string );
+
     property Parent : TExchangeManager read FParent;
   end;
 
@@ -37,8 +39,9 @@ var
 implementation
 
 uses
-  GApp, GLibs  , Math
+  GApp, GLibs  , Math , UTypes
   , UApiConsts
+  , UOtherData
   ;
 
 { TUpbitParse }
@@ -138,7 +141,8 @@ begin
         aSymbol.Bids[0].Price := aSubVal.GetValue<double>('bid_price');
         aSymbol.Bids[0].Volume:= aSubVal.GetValue<double>('bid_size');
 
-        App.Engine.SymbolCore.CalcKimp( aSymbol );
+        if App.AppStatus > asLoad then
+          App.Engine.SymbolCore.CalcKimp( aSymbol );
         break;
       end;
     end;
@@ -266,6 +270,86 @@ begin
   end;
 end;
 
+
+procedure TUpbitParse.ParseCandleData(sUnit, aData: string);
+var
+  aArr : TJsonArray;
+  aVal : TJsonValue;
+  I: Integer;
+  d, dd, h : word;
+  sTmp : string;
+  dTime, dtime2: TDateTime;
+  aSymbol : TSymbol;
+  accAmt, aAmt, aPrice : double;
+  aWcd : TWCDData;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseDNWSate data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+  aArr := nil;
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  try
+    if aArr = nil then Exit;
+
+    try
+
+      dTime2 := Date;
+      accAmt := 0;
+
+      for I := 0 to aArr.Size-1 do
+      begin
+
+        aVal := aArr.Get(i);
+
+        sTmp := aVal.GetValue<string>('candle_date_time_kst');
+        dTime:= GetStrToTime( sTmp );
+
+        aAmt   := aVal.GetValue<double>('candle_acc_trade_price');
+        aPrice := aVal.GetValue<double>('trade_price');
+
+        if sUnit = '240' then begin
+
+          accAmt := accAmt + aAmt;
+          d := Dayof(  dTime );
+          h := Hourof( dTime );
+
+          if h = 9 then
+          begin
+            if Dayof(Date) <> dd then
+            begin
+              sTmp := Format('%02d00', [ d] );
+              aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
+              if aWcd = nil then
+                aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+
+              aWcd.Price[FParent.ExchangeKind]  := aPrice;
+              aWcd.Amount[FParent.ExchangeKind] := accAmt;
+            end;
+            if App.Engine.SymbolCore.WCDays.Count >= 24 then break;
+            accAmt := 0;
+          end;
+          dd := d;
+        end
+        else if sUnit = '30' then begin
+
+
+
+        end;
+
+      end;
+
+    except
+    end;
+
+  finally
+    if aArr <> nil  then aArr.Free;
+  end;
+
+
+end;
 
 procedure TUpbitParse.ParseDNWSate(aData: string);
 var

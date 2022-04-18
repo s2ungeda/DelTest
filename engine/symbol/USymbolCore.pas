@@ -7,7 +7,7 @@ uses
 
   UFQN, UMarketSpecs, USymbols, UMarkets,
 
-  UApiTypes,
+  UApiTypes, UOtherData,
 
   UApiConsts
   ;
@@ -55,6 +55,9 @@ type
     FSubExKind1: TExchangeKind;
     FMainExMarket: TMarketType;
     FMainWDC: TMainWDCArray;
+
+    FWCDays: TWCDDataList;
+    FWCD30s: TWCDDataList;
     procedure SetMainWDC(aExKind: TExchangeKind; Value: double; sLog : string);
 
   public
@@ -123,6 +126,8 @@ type
     property SubExKind1 : TExchangeKind read FSubExKind1 write FSubExKind1;
     property SubExKind2 : TExchangeKind read FSubExKind2 write FSubExKind2;
 
+    property WCDays : TWCDDataList read FWCDays;
+    property WCD30s : TWCDDataList read FWCD30s;
 
   end;
 
@@ -152,6 +157,12 @@ begin
     aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
   if aPrice > EPSILON then
     aSymbol.WDCPrice      := ( 1/ aPrice) * aSymbol.Last;
+
+//  if aSymbol.KimpPrice > 99999 then
+//    App.DebugLog('%s, %s, %.3f =  %s, %s, %.1f', [ TExchangeKindDesc[ aSymbol.Spec.ExchangeType ],
+//      aSymbol.Code, aSymbol.KimpPrice, aSymbol.PriceToStr(aSymbol.Last)
+//      , aSymbol.PriceToStr(aPrice),  App.Engine.ApiManager.ExRate.Value ]
+//      );
 
 //  aSymbol.KimpAskPrice  := ( aSymbol.Asks[0].Price - dEx) / dEx * 100;
 //  aSymbol.KimpBidPrice  := ( aSymbol.Bids[0].Price - dEx) / dEx * 100;
@@ -322,6 +333,8 @@ begin
   FSubExKind2  := ekBithumb;
   FMainExMarket:= mtFutures;
 
+  FWCDays:= TWCDDataList.Create;
+  FWCD30s:= TWCDDataList.Create;
 end;
 
 destructor TSymbolCore.Destroy;
@@ -345,6 +358,9 @@ begin
     FExchanges[i].Free;
     FUnderlyings[i].Free;
   end;
+
+  FWCDays.Free;
+  FWCD30s.Free;
 
   FBaseSymbols.Free;
   FCommSymbols.Free;
@@ -488,32 +504,35 @@ var
 begin
   // 선구독 종목들...BTC, ETH, XRP
 
-  for I := msBTC to High(TMajorSymbolKind) do
-  begin
-      for j := ekBinance to High(TExchangeKind) do
-      begin
-        aSymbol := nil;
-        if j= ekBinance then
-          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j, FMainExMarket)
-        else
-          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j );
-
-        if aSymbol <> nil then
-        begin
-          FMainSymbols[i][j] := aSymbol;
-
-          App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
-            App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
-            );
-        end;
-
-      end;
-  end;
+//  for I := msBTC to High(TMajorSymbolKind) do
+//  begin
+//      for j := ekBinance to High(TExchangeKind) do
+//      begin
+//        aSymbol := nil;
+//        if j= ekBinance then
+//          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j, FMainExMarket)
+//        else
+//          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j );
+//
+//        if aSymbol <> nil then
+//        begin
+//          FMainSymbols[i][j] := aSymbol;
+//
+//          App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
+//            App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
+//            );
+//        end;
+//
+//      end;
+//  end;
 
   for I := msBTC to High(TMajorSymbolKind) do
     for j := ekBinance to High(TExchangeKind) do
       if FMainSymbols[i][j] <> nil then
-        App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
+          App.Engine.QuoteBroker.Brokers[j].Subscribe(Self,  FMainSymbols[i][j],
+            App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
+            );
+        //App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
 end;
 
 procedure TSymbolCore.SubscribeSymbols;
@@ -608,29 +627,54 @@ end;
 
 
 procedure TSymbolCore.SymbolArrange;
+//var
+//  I, idx: Integer;
+//  aSymbol : TSymbol;
+//  aList : TStrings;
+//begin
+//  Exit;
+//  aList := TStringList.Create;
+//  try
+//    // 1 선물 없는 현물 삭제하기.
+//    for I := FSpots[ekBinance].Count-1 downto 0 do
+//    begin
+//      aSymbol := FSpots[ekBinance].Spots[i];
+//      if not aSymbol.IsFuture then
+//      begin
+//        idx := FSymbols[ekBinance].IndexOfObject( aSymbol );
+//        if idx >= 0 then
+//          FSymbols[ekBinance].Delete(idx);
+//        App.DebugLog(' Binance Spot Arrangement : %s, %d, %d, %d', [ aSymbol.Code, FSpots[ekBinance].Count, i, idx ]  );
+//        FSpots[ekBinance].Delete(i);
+//      end;
+//    end;
+//  finally
+//    aList.Free;
+//  end;
+
 var
-  I, idx: Integer;
+  i : TMajorSymbolKind;
+  iRow, k : integer;
+  j : TExchangeKind;
   aSymbol : TSymbol;
-  aList : TStrings;
 begin
-  Exit;
-  aList := TStringList.Create;
-  try
-    // 1 선물 없는 현물 삭제하기.
-    for I := FSpots[ekBinance].Count-1 downto 0 do
-    begin
-      aSymbol := FSpots[ekBinance].Spots[i];
-      if not aSymbol.IsFuture then
+  // 선구독 종목들...BTC, ETH, XRP
+
+  for I := msBTC to High(TMajorSymbolKind) do
+  begin
+      for j := ekBinance to High(TExchangeKind) do
       begin
-        idx := FSymbols[ekBinance].IndexOfObject( aSymbol );
-        if idx >= 0 then
-          FSymbols[ekBinance].Delete(idx);
-        App.DebugLog(' Binance Spot Arrangement : %s, %d, %d, %d', [ aSymbol.Code, FSpots[ekBinance].Count, i, idx ]  );
-        FSpots[ekBinance].Delete(i);
+        aSymbol := nil;
+        if j= ekBinance then
+          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j, FMainExMarket)
+        else
+          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j );
+
+        if aSymbol <> nil then
+        begin
+          FMainSymbols[i][j] := aSymbol;
+        end;
       end;
-    end;
-  finally
-    aList.Free;
   end;
 end;
 

@@ -545,6 +545,18 @@ begin
       Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
                        Point(Rect.Left,  Rect.Top),
                        Point(Rect.Right, Rect.Top)]);
+    end
+    else if ARow > 1 then
+    begin
+     if (ARow mod 5 = 0) then begin
+
+        Canvas.Pen.Color := clSilver;
+        Canvas.Pen.Width := 1;
+        Canvas.Pen.Style := psSolid;
+        Canvas.MoveTo( rect.left-1, rect.bottom );
+        Canvas.Lineto( rect.right, rect.bottom );
+
+      end;
     end;
   end;
 

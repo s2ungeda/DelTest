@@ -40,7 +40,7 @@ object DataModule1: TDataModule1
       end
       object MainWDC1: TMenuItem
         Tag = 3
-        Caption = #45824#54364' WDC'
+        Caption = #45824#54364' WCD'
         OnClick = Kimp1Click
       end
     end

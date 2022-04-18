@@ -40,7 +40,9 @@ type
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
     function SubscribeAll : boolean; virtual; abstract;
+    function MakeCloseData : boolean; virtual; abstract;
     procedure UnSubscribeAll ; virtual; abstract;
+
 
     function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;

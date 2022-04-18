@@ -17,7 +17,7 @@ type
   TQuote = class;
 
   TQuoteEvent = function(aQuote: TQuote) : boolean of object;
-  TQuoteType = (qtNone, qtMarketDepth, qtTimeNSale, qtCustom, qtUnknown);
+ // TQuoteType = (qtNone, qtMarketDepth, qtTimeNSale, qtCustom, qtUnknown);
 
   TQuote = class( TCollectionItem )
   private

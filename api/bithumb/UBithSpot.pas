@@ -38,6 +38,7 @@ type
 
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
+    function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
 
   end;
 
@@ -240,6 +241,37 @@ begin
   except
   //  LeaveCriticalSection(CriticalSection);
   end;
+end;
+
+function TBithSpot.RequestCandleData(sUnit, sCode: string): boolean;
+var
+  sOut, sJson, sRrs : string;
+  bRes : boolean;
+begin
+
+  bRes := false;
+  try
+
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    // 406 에러 때문에 아래 와 같이 헤더 추가
+    Set406;
+
+    sRrs := Format('public/candlestick/%s/%s', [ sCode, sUnit] );
+    if Request( rmGET, sRrs, '', sJson, sOut ) then
+    begin
+      gBithReceiver.ParseCandleData(sUnit, sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestCandleData (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit ( false );
+    end;
+    bRes := true;
+  except
+  end;
+
+  Result := bRes;
+
 end;
 
 procedure TBithSpot.RequestData;

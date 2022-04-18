@@ -85,7 +85,8 @@ uses
   USymbolUtils in 'engine\symbol\USymbolUtils.pas',
   URestRequests in 'api\URestRequests.pas',
   FWinConfig in 'FWinConfig.pas' {FrmWinConfig},
-  FRepresentWDC in 'wins\FRepresentWDC.pas' {FrmRprsntWDC};
+  FRepresentWDC in 'wins\FRepresentWDC.pas' {FrmRprsntWDC},
+  UOtherData in 'engine\symbol\UOtherData.pas';
 
 {$R *.res}
 begin

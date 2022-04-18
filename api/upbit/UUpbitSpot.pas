@@ -43,6 +43,7 @@ type
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
+    function RequestCandleData( sUnit : string; sCode : string ) : boolean; override;
 
     function RequestDNWState : boolean; override;
     function RequestAsyncDnwState( idx : Integer ) : TRESTExecutionThread;
@@ -312,6 +313,37 @@ begin
   finally
     LToken.Free;
   end;
+end;
+
+function TUpbitSpot.RequestCandleData(sUnit, sCode: string): boolean;
+var
+  sJson, sOut : string;
+  bRes : boolean;
+begin
+
+  bRes := false;
+
+  try
+
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    SetParam('market', sCode );
+    SetParam('count', '50' );
+
+    if Request( rmGET, 'v1/candles/minutes/'+sUnit, '', sJson, sOut ) then
+    begin
+      gUpReceiver.ParseCandleData( sUnit, sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestCandleData (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit( false );
+    end;
+
+    bRes := true;
+  except
+  end;
+
+  result := bRes;
 end;
 
 function TUpbitSpot.RequestDNWState : boolean;

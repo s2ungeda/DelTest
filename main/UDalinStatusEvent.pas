@@ -56,6 +56,8 @@ begin
 
     asRecovery :
       begin
+        App.Engine.ApiManager.MakeCloseData;
+
         App.Engine.SymbolCore.PreSubscribe;
 
 //        // 전종목 구독...

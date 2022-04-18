@@ -41,7 +41,7 @@ var
 implementation
 uses
   GApp   , UApiConsts,  UConsts
-  , GLibs
+  , GLibs  , UTypes
   , UQuoteBroker
   , USymbols
   ;
