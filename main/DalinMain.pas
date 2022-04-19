@@ -270,7 +270,7 @@ var
     Result := true;
 
     if iRes <> 0 then begin
-      MessageDlg('Order No File IO Error ( '+ st + InttoStr( GetLastError ) +' ) ', mtInformation, [mbOK], 0 );
+      App.Log(llError, 'Order No File IO Error ( '+ st + InttoStr( GetLastError ) +' ) ');
       Result := false;
     end;
   end;

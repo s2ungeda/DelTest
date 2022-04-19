@@ -120,21 +120,20 @@ begin
 end;
 
 procedure TFrmServerMessage.UpdateLog( iKind : integer; bNew : boolean);
-begin
 //var
 //  stLine : string;
 //  aColor : TColor;
 //  iLast, i : integer;
 //  aItem : TAppLogItem;
 //  aList : TListItem;
-//  aKind : TLogKind;
-//begin
+//  aKind : TLogLevel;
+begin
+
+//  if App = nil then Exit;
 //
-//  if gAppLog = nil then Exit;
+//  aKind := TLogLevel( iKind );
 //
-//  aKind := TLogKind( iKind );
-//
-//  if aKind = lkDebug then
+//  if aKind in [ llDebug..llTrace] then
 //  begin
 //    lvLog.Items.Count := 0;
 //    lvLog.Invalidate;
