@@ -26,6 +26,7 @@ type
     FLastEvent: TQuoteType;
 
     procedure SetSymbol(const Value: TSymbol);
+    procedure checkHoga;
 
 //    procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
 //    procedure CalcKimp; overload;
@@ -45,7 +46,6 @@ type
 
   TQuoteBroker = class(TCodedCollection)
   private
-
 
       // events
     FOnSubscribe: TQuoteEvent;
@@ -112,6 +112,7 @@ type
   private
     FBrokers: TBrokerArray;
     FQuoteTimers: TQuoteTimers;
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -126,7 +127,7 @@ type
 implementation
 
 uses
-  GApp  , UApiConsts, Math
+  GApp  , UApiConsts, Math  , UConsts
   , UTicks
   ;
 
@@ -621,10 +622,48 @@ begin
 
   end;
 
+  checkHoga;
+
+
   FSymbol.LastEventTime := dtTime;
   FSymbol.LastTime      := now;
 
   FDistributor.Distribute(Self, 0, Self, 0);
+end;
+
+procedure TQuote.checkHoga;
+var
+  bLog : boolean;
+begin
+  try
+
+    if FSymbol.Spec.ExchangeType = ekBithumb then Exit;
+
+    if isZero( FSymbol.Asks[0].Price ) or isZero( FSymbol.Bids[0].Price ) or isZero( FSymbol.Last ) then
+      Exit;
+
+    bLog := false;
+    if FSymbol.Last > ( FSymbol.Asks[0].Price + DOUBLE_EPSILON )  then
+      bLog := true
+    else if FSymbol.Bids[0].Price > ( FSymbol.Last + DOUBLE_EPSILON )   then
+      bLog := true;
+
+
+    if bLog then
+    begin
+      var sData : string;
+      sData := Format('%s %s : %s %s [%s] %s %s ', [ TExchangeKindDesc[ FSymbol.Spec.ExchangeType ],  FSymbol.Code
+        , FSymbol.PriceToStr( FSymbol.Asks[1].Price )
+        , FSymbol.PriceToStr( FSymbol.Asks[0].Price )
+        , FSymbol.PriceToStr( FSymbol.Last )
+        , FSymbol.PriceToStr( FSymbol.Bids[0].Price )
+        , FSymbol.PriceToStr( FSymbol.Bids[1].Price )
+        ] );
+      App.Log(llInfo, 'price', sData );
+    end;
+  except
+  end;
+
 end;
 
 { TQuoteBrokerCore }
