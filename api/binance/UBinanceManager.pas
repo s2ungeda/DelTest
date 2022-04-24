@@ -25,6 +25,7 @@ type
     function InitMarketWebSockets : boolean ; override;
     function SubscribeAll : boolean; override;
     procedure UnSubscribeAll ; override;
+    function MakeCloseData : boolean ; override;
 
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
@@ -84,6 +85,19 @@ begin
 end;
 
 
+
+function TBinanceManager.MakeCloseData: boolean;
+var
+  sTmp : string;
+begin
+  stmp := App.Engine.SymbolCore.MainSymbols[msBTC][ExchangeKind].OrgCode;
+  Result := Exchanges[mtFutures].RequestCandleData('1d', sTmp )
+    and Exchanges[mtFutures].RequestCandleData('30m', sTmp )    ;
+
+  stmp := App.Engine.SymbolCore.MainSymbols[msETH][ExchangeKind].OrgCode;
+  Result := Exchanges[mtFutures].RequestCandleData('1d', sTmp )
+    and Exchanges[mtFutures].RequestCandleData('30m', sTmp )    ;
+end;
 
 procedure TBinanceManager.OnTimer(Sender: TObject);
 var

@@ -5,9 +5,9 @@ interface
 const
   prcTbl1_TitleCnt = 13 ;
   prcTbll1_Title : array [0..prcTbl1_TitleCnt-1]of string = ('코인', '거래소'
-    ,'KIP', 'WCD', '잔량(천)', '선물/매도가','마진/매수가'
-    ,'잔량(천)', '현재가', '고/등락/저','입금','출금'
-    ,'일거래액');
+    ,'KIP', 'WCD', 'KRW잔량(천원)', '매도가','매수가'
+    ,'KRW잔량(천원)', '현재가', '고/등락/저','입금','출금'
+    ,'일거래액(억)');
 
   prcTbll1_Width : array [0..prcTbl1_TitleCnt-1] of integer = ( 50, 40,
     80, 80, 100, 100, 100,  //  마진 매수
@@ -19,7 +19,7 @@ const
   prcTbll2_Title : array [0..prcTbl2_TitleCnt-1]of string = ('코인', ''
     ,'BN', '시각', 'UP', '시각','BT','시각'
     ,'거래소','KIP', 'WCD', '현재가','등락'
-    ,'일거래액');
+    ,'일거래액(억)');
 
   prcTbll2_Width : array [0..prcTbl2_TitleCnt-1] of integer = ( 50, 40,
     30,  65,  30, 65, 30, 65,
@@ -27,12 +27,12 @@ const
     80 );
 
 
-  quoteMon_TitleCnt = 9;
+  quoteMon_TitleCnt = 10;
   quoteMon_Title : array [0..quoteMon_TitleCnt-1] of string = ('코인', '거래소'
-    ,'KIP', 'WCD','현재가','등락'
-    ,'고','저', '일거래액');
+    ,'KIP', 'WCD','SP','현재가','등락'
+    ,'고','저', '일거래액(억)');
   quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (70, 40
-    , 80, 80, 120, 80
+    , 80, 80, 80, 100, 80
     , 80, 80, 80 );
 
   CoinCol = 0;
@@ -47,6 +47,9 @@ const
   BN_CoinCol = 2;
   UP_CoinCol = 4;
   BT_CoinCol = 6;
+
+
+  RPSNT_COL_WID = 47;
 
 function GetMajorRow( i : integer ) : integer;
 function FindBinRow( iRow : integer ) : integer;

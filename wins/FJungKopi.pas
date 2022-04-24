@@ -8,6 +8,7 @@ uses
 
   , UStorage, Vcl.Grids, Vcl.ExtCtrls
   , UTypes
+  , UApiTypes
   ;
 
 type
@@ -24,6 +25,10 @@ type
     { Private declarations }
     FPrecision : integer;
     FCol, FRow : integer;
+    FLastIdx   : integer;
+    FData     : array [ TExchangeKind ] of double;
+
+    procedure initData;
   public
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
@@ -37,7 +42,9 @@ implementation
 
 uses
   GApp  , GLibs , UConsts
-  , UApiTypes
+  , Math
+  , UOtherData
+  , UTableConsts
   ;
 
 {$R *.dfm}
@@ -61,7 +68,7 @@ begin
       if i = 0 then
         ColWidths[i] := 60
       else
-        ColWidths[i] := 45;
+        ColWidths[i] := RPSNT_COL_WID;
 
       if i > 0  then  begin
         iMod := i Mod 2;
@@ -88,9 +95,13 @@ begin
 
   FCol  := -1;
   FRow  := -1;
+  FLastIdx  := -1;
 
   sgVal.Canvas.Font.Name := 'Arial';
+  sgVal.Canvas.Font.Size := 9;
   FPrecision:= App.GetPrecision;
+
+  initData;
 end;
 
 procedure TFrmJungKopi.FormDestroy(Sender: TObject);
@@ -105,6 +116,44 @@ end;
 
 procedure TFrmJungKopi.SaveEnv(aStorage: TStorage);
 begin
+
+end;
+procedure TFrmJungKopi.initData;
+var
+  aWcd : TWCDData;
+  I, j, iCol, iRow: Integer;
+  dPrev : array [TExchangeKind] of double;
+  dVal : double;
+begin
+
+  with sgVal, App.Engine.SymbolCore do
+    for i := 0 to JKIdx[ekUpbit] do
+    begin
+
+      iRow := 1;
+      iCol := i + 1;
+      if i > 23 then begin
+        iRow := 3;
+        iCol := i - 24 + 1;
+      end;
+
+      Cells[iCol,iRow]  := FmtString(FPrecision, JungKopi[ekUpbit][i] );
+      Cells[iCol,iRow+1]:= FmtString(FPrecision, JungKopi[ekBithumb][i] ) ;
+
+      if i = 0  then
+      begin
+        SetColor( 0, sgVal, iCol, iRow );
+        SetColor( 0, sgVal, iCol, iRow + 1 );
+      end else
+      begin
+        SetColor( JungKopi[ekUpbit][i] - dPrev[ekUpbit], sgVal, iCol, iRow );
+        SetColor( JungKopi[ekBithumb][i] - dPrev[ekBithumb], sgVal, iCol, iRow+1 );
+      end;
+
+      dPrev[ekUpbit]  := JungKopi[ekUpbit][i];
+      dPrev[ekBithumb]:= JungKopi[ekBithumb][i];
+    end;
+
 
 end;
 
@@ -132,10 +181,20 @@ begin
       aBack := clBtnFace;
     end else
     begin
-      if (ACol = 0 ) and ( ARow in [3..4] ) then
-        aFont := GetColor( StrToFloatDef( stTxt, 0 ) )
-      else if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
-        aFont := GetColor( StrToFloatDef( stTxt, 0 ) );
+//      if (ACol = 0 ) and ( ARow in [3..4] ) then
+//        aFont := GetColor( StrToFloatDef( stTxt, 0 ) )  ;
+      if Objects[ACol, ARow] <> nil  then
+      begin
+        aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
+
+        // 현재가 표시 부분..
+        if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
+        begin
+          aFont := GetColor( 1, Integer( Objects[ACol, ARow] ));
+          aBack := clWhite;
+        end;
+      end ;
+
     end;
 
     Canvas.Font.Color   := aFont;
@@ -160,31 +219,20 @@ end;
 
 procedure TFrmJungKopi.Timer1Timer(Sender: TObject);
 var
-  iCol, i  : integer;
-
-
-  function GetString( a : double ) : string;
-  begin
-    if (a < DOUBLE_EPSILON) and ( a > (DOUBLE_EPSILON  * -1 ))  then
-      Result := ''
-    else
-      Result := Format('%.*n', [ FPrecision,  a ] );
-  end;
+  iCol, idx  : integer;
 
 begin
+
+  FData[ ekUpbit ]   := App.Engine.SymbolCore.MainKimp[ekUpbit];
+  FData[ ekBithumb ] := App.Engine.SymbolCore.MainKimp[ekBithumb];
+
+  if IsZero(  FData[ ekUpbit ] )       or IsZero( FData[ ekBithumb ] ) then Exit;
+
   with sgVal do
   begin
-    Cells[0, 3] := Format('%.*n', [ FPrecision, App.Engine.SymbolCore.MainKimp[ekUpbit] ]);
-    Cells[0, 4] := Format('%.*n', [ FPrecision, App.Engine.SymbolCore.MainKimp[ekBithumb] ]);
+    Cells[0, 3] := FmtString( FPrecision, FData[ekUpbit]);
+    Cells[0, 4] := FmtString( FPrecision, FData[ekBithumb]);
 
-    for I := 1 to ColCount-1 do
-    begin
-      Cells[i,1] := GetString(App.Engine.SymbolCore.JungKopi[ekUpbit][i-1 ] );
-      Cells[i,2] := GetString(App.Engine.SymbolCore.JungKopi[ekBithumb][i-1] ) ;
-
-      Cells[i,3] := GetString(App.Engine.SymbolCore.JungKopi[ekUpbit][i-1 + 24 ] );
-      Cells[i,4] := GetString(App.Engine.SymbolCore.JungKopi[ekBithumb][i-1 + 24 ] );
-    end;
 
     with App.Engine.SymbolCore do
       iCol := JKIdx[ekUpbit];
@@ -196,6 +244,25 @@ begin
       FCol := iCol - 24 + 1;
     end;
 
+    Cells[FCol, FRow] := FmtString( FPrecision, FData[ekUpbit]);
+    Cells[FCol, FRow+1] := FmtString( FPrecision, FData[ekBithumb]);
+
+    if ( FCol = 1 ) and ( FRow = 1 ) then
+    begin
+      SetColor( 0, sgVal, iCol, FRow );
+      SetColor( 0, sgVal, iCol, FRow + 1 );
+    end
+    else begin
+      idx := Max( 0, iCol -1 );
+      SetColor( FData[ ekUpbit ]    - App.Engine.SymbolCore.JungKopi[ekUpbit][idx],  sgVal, FCol, FRow );
+      SetColor( FData[ ekBithumb ]  - App.Engine.SymbolCore.JungKopi[ekBithumb][idx],  sgVal, FCol, FRow+1 );
+    end;
+
+    if FLastIdx <> FCol then
+    begin
+      FLastIdx := FCol;
+      Invalidate;
+    end;
   end;
 end;
 

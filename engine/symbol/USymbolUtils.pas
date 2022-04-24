@@ -14,6 +14,7 @@ function CompareBidPrice(Data1, Data2: Pointer): Integer;
 function CompareAskPrice(Data1, Data2: Pointer): Integer;
 function CompareKimpPrice(Data1, Data2: Pointer): Integer;
 function CompareWDCPrice(Data1, Data2: Pointer): Integer;
+function CompareSPrice(Data1, Data2: Pointer): Integer;
 
 // desending
 
@@ -24,6 +25,7 @@ function CompareBidPrice2(Data1, Data2: Pointer): Integer;
 function CompareAskPrice2(Data1, Data2: Pointer): Integer;
 function CompareKimpPrice2(Data1, Data2: Pointer): Integer;
 function CompareWDCPrice2(Data1, Data2: Pointer): Integer;
+function CompareSPrice2(Data1, Data2: Pointer): Integer;
 
 implementation
 
@@ -123,6 +125,21 @@ begin
     Result := 0;
 end;
 
+
+function CompareSPrice(Data1, Data2: Pointer): Integer;
+var
+  Symbol1: TSymbol absolute Data1;
+  Symbol2: TSymbol absolute Data2;
+begin
+  if Symbol1.SPrice < Symbol2.SPrice then
+    Result := 1
+  else if Symbol1.SPrice > Symbol2.SPrice  then
+    Result := -1
+  else
+    Result := 0;
+end;
+
+
 //------------------------------------------------------------------------------
 
 function CompareDailyAmount2(Data1, Data2: Pointer): Integer;
@@ -217,6 +234,21 @@ begin
   else
     Result := 0;
 end;
+
+
+function CompareSPrice2(Data1, Data2: Pointer): Integer;
+var
+  Symbol1: TSymbol absolute Data1;
+  Symbol2: TSymbol absolute Data2;
+begin
+  if Symbol1.SPrice > Symbol2.SPrice then
+    Result := 1
+  else if Symbol1.SPrice < Symbol2.SPrice  then
+    Result := -1
+  else
+    Result := 0;
+end;
+
 
 //-----------------------------------------------------------------------------
 

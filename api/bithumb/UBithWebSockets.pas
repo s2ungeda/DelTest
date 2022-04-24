@@ -57,7 +57,6 @@ begin
   begin
     HeartBeatOptions.Enabled := true;
     HeartBeatOptions.Interval:= 100;
-
   end;
 end;
 destructor TBithWebSocket.Destroy;
@@ -113,6 +112,19 @@ procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
 begin
   inherited OnAfterDisconnect(Sender);
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
+
+  if DisConnCnt < 5 then
+  begin
+    App.Log(llInfo, '%d.th %s ReConnect', [ DisConnCnt, Descript]);
+    reCreate;
+    with WebSocket do
+    begin
+      HeartBeatOptions.Enabled := true;
+      HeartBeatOptions.Interval:= 100;
+    end;
+    DoConnect;
+  end;
+
 end;
 
 procedure TBithWebSocket.OnMessage(const S: string);

@@ -22,6 +22,7 @@ type
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
+    function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
   end;
 
 implementation
@@ -49,6 +50,39 @@ end;
 function TBinanceFutures.ParsePrepareMaster: integer;
 begin
   gBinReceiver.ParsePrepareFuttMaster(MasterData);
+end;
+
+function TBinanceFutures.RequestCandleData(sUnit, sCode: string): boolean;
+var
+  sJson, sOut, sTmp : string;
+  bRes : boolean;
+  aKind : TMajorSymbolKind;
+begin
+
+  bRes := false;
+  try
+    SetParam('symbol', sCode );
+    SetParam('limit', '50' );
+    SetParam('interval', sUnit );
+
+    if Request( rmGET, '/fapi/v1/klines' , '', sJson, sOut ) then
+    begin
+      sTmp := UpperCase(copy( sCode, 1, 3 ));
+      if sTmp = 'BTC' then
+        aKind := msBTC
+      else aKind := msETH;
+      gBinReceiver.ParseCandleData(aKind, sUnit, sJson);
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestCandleData (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit( false );
+    end;
+    bRes := true;
+  except
+  end;
+
+  Result := bRes;
 end;
 
 function TBinanceFutures.RequestFutTicker: boolean;

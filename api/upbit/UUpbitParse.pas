@@ -23,7 +23,10 @@ type
     constructor Create( aObj :TExchangeManager );
     destructor Destroy; override;
 
+    // 처음에만..
     procedure ParseSpotTicker( aData : string );
+    // 주기적 조회
+    procedure ParseSpotTicker2( aData : string );
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseDNWSate( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
@@ -141,8 +144,8 @@ begin
         aSymbol.Bids[0].Price := aSubVal.GetValue<double>('bid_price');
         aSymbol.Bids[0].Volume:= aSubVal.GetValue<double>('bid_size');
 
-        if App.AppStatus > asLoad then
-          App.Engine.SymbolCore.CalcKimp( aSymbol );
+//        if App.AppStatus > asLoad then
+//          App.Engine.SymbolCore.CalcKimp( aSymbol );
         break;
       end;
     end;
@@ -271,11 +274,62 @@ begin
 end;
 
 
+procedure TUpbitParse.ParseSpotTicker2(aData: string);
+var
+  aArr : TJsonArray;
+  aVal : TJsonValue;
+  i : integer;
+  sCode , sTmp : string;
+  aSymbol : TSymbol;
+  sts   : TArray<string>;
+  aQuote : TQuote;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Upbit ParseSpotTicker data is empty') ;
+    Exit;
+  end;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+
+  for I := 0 to aArr.Size-1 do
+  begin
+    aVal := aArr.Get(i);
+    sCode:= aVal.GetValue<string>('market');
+
+    sts := sCode.Split(['-']);
+    aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
+
+    if aSymbol = nil then  continue;
+
+    aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+    aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'high_price' ), 0.0 );
+    aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
+    aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
+    aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
+    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
+    aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
+
+    if App.AppStatus > asLoad then
+    begin
+      aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+      if aQuote = nil then
+      begin
+        App.Engine.SymbolCore.CalcKimp( aSymbol );
+        App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+        App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+      end;
+    end;
+  end;
+
+end;
+
 procedure TUpbitParse.ParseCandleData(sUnit, aData: string);
 var
   aArr : TJsonArray;
   aVal : TJsonValue;
-  I: Integer;
+  I, j: Integer;
+  bStart : boolean;
   d, dd, h, m : word;
   sTmp, sCode : string;
   dTime, dtime2: TDateTime;
@@ -299,6 +353,7 @@ begin
 
       dTime2 := Date;
       accAmt := 0;
+      j      := 0;
 
       for I := 0 to aArr.Size-1 do
       begin
@@ -324,12 +379,19 @@ begin
 
         if sUnit = '240' then begin
 
+          // 봉이 6개 시간은 05:00 ~ 09:00
           accAmt := accAmt + aAmt;
-
-
-          if h = 9 then
+          // 1일 캔들 시작
+          if h = 5 then begin
+             // 24시간 종가가 됨
+            aClose := aPrice;
+            // 1일 캔들 시작 플래그
+            bStart := true;
+          end
+          // 1일 캔들 종료
+          else if h = 9 then
           begin
-            if Dayof(Date) <> dd then
+            if bStart then
             begin
               sTmp := Format('%2.2d00', [ d] );
               aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
@@ -338,14 +400,15 @@ begin
 
               aWcd.Price[ aKind, FParent.ExchangeKind] := aClose;
               aWcd.Amount[aKind, FParent.ExchangeKind] := accAmt;
-//              App.DebugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
-//                sTmp,  App.Engine.SymbolCore.WCDays.Count,  aClose, accAmt ]);
+         //     App.DebugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+         //      sTmp,  App.Engine.SymbolCore.WCDays.Count,  aClose, accAmt ]);
+              bStart := false;
+              inc(j);
             end;
-            if App.Engine.SymbolCore.WCDays.Count >= 24 then break;
             accAmt := 0;
-          end else
-          if h = 5 then
-            aClose := aPrice;
+            if j >= 25 then break;
+          end;
+
           dd := d;
         end
         else if sUnit = '30' then begin
@@ -359,8 +422,8 @@ begin
 
           aWcd.Price[ aKind, FParent.ExchangeKind] := aPrice;
           aWcd.Amount[aKind, FParent.ExchangeKind] := aAmt;
-//          App.DebugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
-//            sTmp,  App.Engine.SymbolCore.WCD30s.Count,  aPrice, aAmt ]);
+       //ugLog('%s %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+       //     sTmp,  App.Engine.SymbolCore.WCD30s.Count,  aPrice, aAmt ]);
         end;
 
       end;

@@ -171,7 +171,7 @@ begin
       j := 0;
       for i := aArr.Size-1 downto 0 do
       begin
-        if ( sUnit = '24h' ) and ( j >= 24 ) then break;
+        if ( sUnit = '24h' ) and ( j >= 25 ) then break;
 
         aSubArr := aArr.Get(i) as TJsonArray;
 
@@ -330,6 +330,7 @@ var
   aSymbol : TSymbol;
   bNew : boolean;
   j: Integer;
+  aQuote : TQuote;
 begin
   master := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
   aObj := master.GetValue('data') as TJsonObject;
@@ -352,10 +353,22 @@ begin
           aSymbol.DayHigh     := StrToFloatDef( aVal.GetValue<string>( 'max_price' ), 0.0 );
           aSymbol.DayLow      := StrToFloatDef( aVal.GetValue<string>( 'min_price' ), 0.0 );
           aSymbol.DayOpen     := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+          aSymbol.Last        := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
 
           aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
           aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_value_24H' ), 0.0 ) / 100000000;
           aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
+
+          if App.AppStatus > asLoad then
+          begin
+            aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+            if aQuote = nil then
+            begin
+              App.Engine.SymbolCore.CalcKimp( aSymbol );
+              App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+              App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+            end;
+          end;
         end;
 
       end;

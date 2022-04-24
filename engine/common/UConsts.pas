@@ -29,6 +29,12 @@ const
   LONG_COLOR = $E4E2FC;
   SHORT_COLOR = $F5E2DA;
 
+
+  LONG_FLAG = 100;
+  SHORT_FLAG = 200;
+  NONE_FLAG = 10;
+
+
     // data ID
   DNW_EVENT = 100;
 

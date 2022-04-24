@@ -212,7 +212,7 @@ procedure TApiManager.MakeCloseData;
 var
   i : TExchangeKind;
 begin
-  for I := ekUpbit to High(TExchangeKind) do
+  for I := ekBinance to High(TExchangeKind) do
   begin
     if not FExManagers[i].MakeCloseData then
       Exit;

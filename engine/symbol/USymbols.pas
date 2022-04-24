@@ -148,6 +148,7 @@ type
     FDnwCount: integer;
     FWDCPrice: double;
     FDnwTime: TDateTime;
+    FSPrice: double;
     procedure OnTermAddEvent(Sender: TObject);
   public
     constructor Create( aColl : TCollection ); override;
@@ -181,6 +182,7 @@ type
 
     property KimpPrice : double read FKimpPrice write FKimpPrice;
     property WDCPrice  : double read FWDCPrice  write FWDCPrice;
+    property SPrice    : double read FSPrice    write FSPrice;  // 현재가 기준
     // 호가 기준 김프는 안 쓸듯...
     property KimpAskPrice : double read FKimpAskPrice write FKimpAskPrice;
     property KimpBidPrice : double read FKimpBidPrice write FKimpBidPrice;

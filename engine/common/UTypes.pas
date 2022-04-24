@@ -18,6 +18,7 @@ type
   TWinParam = record
     FontName : string;
     FontSize : integer;
+    FTerm    : integer;
   end;
 
 const

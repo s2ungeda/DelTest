@@ -17,6 +17,11 @@ type
     sgKimp: TStringGrid;
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
+    plLeftTop: TPanel;
+    Refresh: TButton;
+    cbAuto: TCheckBox;
+    edtSec: TLabeledEdit;
+    refreshTimer: TTimer;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -26,6 +31,9 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure sgKimpKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure N1Click(Sender: TObject);
+    procedure refreshTimerTimer(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure cbAutoClick(Sender: TObject);
 
   private
     FWinParam: TWinParam;
@@ -33,6 +41,7 @@ type
     FPrecision : integer;
     FFontSize: integer;
     FFontName: string;
+    FTerm    : integer;
     { Private declarations }
     procedure initControls;
     procedure InitObject;
@@ -99,6 +108,7 @@ procedure TFrmPriceTable.DefaultParam;
 begin
   FWinParam.FontName  := 'Arial';
   FWinParam.FontSize  := 11;
+  FWinParam.FTerm     := StrToInt( edtSec.Text );
 end;
 
 procedure TFrmPriceTable.UpdateParam( bRefresh : boolean );
@@ -107,6 +117,9 @@ begin
   begin
     Canvas.Font.Name := FWinParam.FontName;
     Canvas.Font.Size := FwinParam.FontSize;
+    FWinParam.FTerm  := StrToInt( edtSec.Text );
+    refreshTimer.Interval := FWinParam.FTerm;
+
     if bRefresh then
       Invalidate;
   end;
@@ -125,6 +138,13 @@ begin
     SetSymbolToGrid(TMajorSymbolCode[i], true );
   end;
   FSaveRow := -1;
+end;
+
+procedure TFrmPriceTable.cbAutoClick(Sender: TObject);
+begin
+  FWinParam.FTerm := StrToInt( edtSec.Text );
+  refreshTimer.Interval := FWinParam.FTerm;
+  refreshTimer.Enabled  := cbAuto.Checked;
 end;
 
 procedure TFrmPriceTable.ClearGrid;
@@ -174,7 +194,9 @@ begin
     if j = ekBinance then
       sgKimp.Objects[ExCol, iRow] := Pointer(100);
 
-    App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol, QuoteEvnet);
+    App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
+      App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
+     );
   end;
 
   if bLoad then
@@ -215,9 +237,6 @@ begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+1] );   // Upbit
         SetData( 2, iRow+1 , aSymbol2 );
         SetData( 3, iRow+1 , aSymbol2 );
-
-//        Cells[ 2, iRow+1] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpPrice ]);
-//        Cells[ 3, iRow+1] := Format('%.*n %%', [ 1, aSymbol2.WDCPrice ]);
       end;
 
       if Objects[CoinCol, iRow+2] <> nil then
@@ -225,19 +244,18 @@ begin
         aSymbol2 := TSymbol( Objects[CoinCol, iRow+2] );   // Upbit
         SetData( 2, iRow+2 , aSymbol2 );
         SetData( 3, iRow+2 , aSymbol2 );
-//        Cells[ 2, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpAskPrice ]);
-//        Cells[ 3, iRow+2] := Format('%.*n %%', [ FPrecision, aSymbol2.KimpBidPrice ]);
       end;
 
-      if aSymbol is TFuture then
-      begin
-        aUnder := ( aSymbol as TFuture).Underlying;
-        if aUnder <> nil  then
-        begin
-          Cells[ CurCol - 3, iRow] := ifThenStr( aUnder.IsFuture, '○', 'X');
-          Cells[ CurCol - 2, iRow] := ifThenStr( aUnder.IsMargin, '○', 'X');
-        end;
-      end;
+      // 선물, 마진 다 있으므로 표시 무의..
+//      if aSymbol is TFuture then
+//      begin
+//        aUnder := ( aSymbol as TFuture).Underlying;
+//        if aUnder <> nil  then
+//        begin
+//          Cells[ CurCol - 3, iRow] := ifThenStr( aUnder.IsFuture, '○', 'X');
+//          Cells[ CurCol - 2, iRow] := ifThenStr( aUnder.IsMargin, '○', 'X');
+//        end;
+//      end;
 
 //      Cells[ CurCol - 3, iRow] := ifThenStr( aSymbol.IsFuture, '○', 'X');
 //      Cells[ CurCol - 2, iRow] := ifThenStr( aSymbol.IsMargin, '○', 'X');
@@ -274,24 +292,18 @@ begin
     Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
     Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
 
-//    iBRow := FindBinRow( iRow );
-//
-//    if Objects[CoinCol, iBRow] <> nil then
-//    begin
-//      aSymbol2 := TSymbol( Objects[CoinCol, iBRow] );   // 바이낸스.
-//      if aSymbol2.DayOpen <= 0 then  dTmp := 1
-//      else dTmp := aSymbol2.DayOpen;
-//
-//      case aSymbol.Spec.ExchangeType of
-//        ekBinance: dVal := (aSymbol2.DayHigh - aSymbol2.DayOpen) / dTmp * 100;
-//        ekUpbit:   dVal := (aSymbol2.Last   - aSymbol2.DayOpen) / dTmp * 100;
-//        ekBithumb: dVal := (aSymbol2.DayLow - aSymbol2.DayOpen) / dTmp * 100;
-//      end;
-//
-//      Cells[CurCol+1, iRow] := Format('%.1f%%', [ dVal ]);
-//
-//      // 당일고가 - 전일종가 / 전일종가
-//    end;
+
+    if Cells[ CurCol , iRow] = Cells[ CurCol - 3, iRow] then
+      Objects[ CurCol-3, iRow] := Pointer( 100 )
+    else
+      Objects[ CurCol-3, iRow] := Pointer( -100 );
+
+    if Cells[ CurCol , iRow] = Cells[ CurCol - 2, iRow] then
+      Objects[ CurCol-2, iRow] := Pointer( 100 )
+    else
+      Objects[ CurCol-2, iRow] := Pointer( -100 );
+
+
   end;
 end;
 
@@ -315,6 +327,10 @@ begin
 
   FWinParam.FontName := aStorage.FieldByName('FontName').AsStringDef( FWinParam.FontName );
   FWinParam.FontSize := aStorage.FieldByName('FontSize').AsIntegerDef( FWinParam.FontSize );
+
+  edtSec.Text        := aStorage.FieldByName('Second' ).AsStringDef('1');
+  cbAuto.Checked     := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
+
   UpdateParam;
 
   FSaveRow := -1;
@@ -358,6 +374,9 @@ begin
   aStorage.FieldByName('FontName').AsString := FWinParam.FontName;
   aStorage.FieldByName('FontSize').AsInteger:= FWinParam.FontSize;
 
+  aStorage.FieldByName('Second' ).AsString := edtSec.Text;
+  aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
+
 end;
 
 
@@ -368,7 +387,7 @@ procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
     aRect : TRect;
     aFont, aBack : TColor;
     dFormat : Word;
-    iRow2, iMode : integer;
+    iRow2, iVal, iMode : integer;
 
 begin
 
@@ -398,6 +417,20 @@ begin
         if Objects[ExCol, ARow] <> nil then
           if ACol <> CurCol then
             dFormat := DT_CENTER;
+        // 매도/매수 하이라이트
+        if ACol in [CurCol-3 .. CurCol -2] then
+          if Objects[ ACol, ARow] <> nil then
+          begin
+            iVal := integer( Objects[ACol, ARow] );
+            if iVal > 0 then begin
+              if ACol = CurCol-3 then
+                aBack := Short_COLOR
+              else
+                aBack := LONG_COLOR;
+            end;
+          end;
+
+
       end else
       begin
 
@@ -419,7 +452,7 @@ begin
 
 //    if GetMajorRow( ARow ) > 3  then
 //      stTxt := IntTostr(  GetMajorRow( ARow ) );
-    aRect.Top := Rect.Top + 4;
+    aRect.Top := Rect.Top + 2;
     if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
       aRect.Right := aRect.Right - 2;
     dFormat := dFormat or DT_VCENTER;
@@ -436,6 +469,14 @@ begin
       Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
                        Point(Rect.Left,  Rect.Top),
                        Point(Rect.Right, Rect.Top)]);
+    end else
+    if ARow mod 3 = 0 then
+    begin
+      Canvas.Pen.Color := clSilver;
+      Canvas.Pen.Width := 1;
+      Canvas.Pen.Style := psSolid;
+      Canvas.MoveTo( rect.left-1, rect.bottom-1 );
+      Canvas.Lineto( rect.right, rect.bottom -1);
     end;
   end;
 end;
@@ -448,11 +489,17 @@ begin
   if Key = VK_RETURN then
   begin
 
+    refreshTimer.Enabled := false;
+
     sText := sgKimp.Cells[FSaveCol, FSaveRow];
     if sText <> '' then
-      SetSymbolToGrid( sText, true );
+      SetSymbolToGrid( sText, true )
+    else if sText = '' then
+      ClearGrid;
 
     EnableEdit(false );
+
+    refreshTimer.Enabled := true;
   end;
 end;
 
@@ -479,6 +526,20 @@ begin
 end;
 
 
+procedure TFrmPriceTable.refreshTimerTimer(Sender: TObject);
+var
+  i : integer;
+  aSymbol : TSymbol;
+begin
+  for I := 1 to sgKimp.RowCount-1 do
+  begin
+    aSymbol := TSymbol( sgKimp.Objects[ CoinCol, i] );
+    if aSymbol <> nil then
+       UpdateSymbol( asymbol, i );
+  end;
+
+end;
+
 procedure TFrmPriceTable.EnableEdit(bAble: boolean);
 begin
   if bAble then
@@ -496,8 +557,14 @@ begin
   end;
 end;
 
+procedure TFrmPriceTable.FormActivate(Sender: TObject);
+begin
+  refreshTimer.Enabled := true;
+end;
+
 procedure TFrmPriceTable.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  refreshTimer.Enabled := false;
   Action := caFree;
 end;
 
@@ -514,6 +581,7 @@ procedure TFrmPriceTable.QuoteEvnet(Sender, Receiver: TObject; DataID: Integer;
     iRow :  integer;
     aSymbol : TSymbol;
 begin
+  // 타이머 처리..
   if (Receiver <> Self) or (DataObj = nil) then Exit;
 
   aSymbol := (DataObj as TQuote).Symbol;

@@ -37,6 +37,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FSubData: string;
     FSubList: TStrings;
     FDone: boolean;
+    FDisConnCnt: integer;
 
     function Desc : string;
   protected
@@ -61,6 +62,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     constructor Create( iSockDiv, iSeq : integer; aExKind : TExchangeKind );
     destructor Destroy; override;
 
+    procedure reCreate ;
     procedure SubscribeAll; virtual; abstract;
     procedure MakeSubData; virtual; abstract;
 
@@ -85,6 +87,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     property ExchangeKind   : TExchangeKind read FExchangeKind;
 
     property ConnectTry : integer read FConnectTry write FConnectTry;
+    property DisConnCnt : integer read FDisConnCnt write FDisConnCnt;
     property OnNotify   : TGetStrProc read FOnNotify write FOnNotify;
     property Done      : boolean read FDone;
 
@@ -108,20 +111,20 @@ constructor TWebsocket.Create( iSockDiv, iSeq : integer; aExKind : TExchangeKind
 begin
   FWebSocket  :=   TScWebSocketClient.Create( nil );//TComponent( aOwner) );
   FConnectTry := 0;
+  FDisConnCnt := 0;
   FSockDiv    := iSockDiv;
 
   with FWebSocket do
   begin
     EventsCallMode := ecAsynchronous;
-    WatchDogOptions.Enabled := true;
-    WatchDogOptions.Interval:= 1;
-    WatchDogOptions.Attempts:= 5;
+//    WatchDogOptions.Enabled := true;
+//    WatchDogOptions.Interval:= 1;
+//    WatchDogOptions.Attempts:= 5;
   end;
 
 //  FEvent  := TEvent.Create( nil, False, False, '');
 //  FQueue  := TList.Create;
   FSeq    := iSeq;
-
   FExchangeKind := aExKind;
 //  FReceiveMutex := CreateMutex( nil, False, PChar( Format('Recv_%s_%d_%d'
 //    , [ TExchangeKindDesc[FExchangeKind],iSockDiv, FSeq ]) ) );
@@ -139,12 +142,28 @@ begin
 //  FEvent.SetEvent;
 //  Resume;
 
-//  WebSocketClient.HeartBeatOptions.Enabled := True;
-//  WebSocketClient.Options.Credentials.UserName := 'Peter';
-//  WebSocketClient.Options.Credentials.Password := '12345';
-//  WebSocketClient.Options.UserAgent := 'devart_chat_client';
-//  WebSocketClient.Options.RequestHeaders['Content-Language'] := 'en-US';
 end;
+
+procedure TWebsocket.reCreate;
+begin
+  if ( FWebSocket <> nil ) and
+    (( FWebSocket.State = sClosed ) or ( FWebSocket.State = sAborted )) then
+  begin
+    FWebSocket.Free;
+    FWebSocket  :=   TScWebSocketClient.Create( nil );
+    with  FWebSocket do
+    begin
+      AfterConnect     := OnAfterconnect;
+      AfterDisconnect  := OnAfterDisconnect;
+      OnConnectFail    := OnConnectFail;
+      OnControlMessage := OnControlMessage;
+      OnMessage        := OnMessage;
+      BeforeConnect    := OnBeforeConnect;
+    end;
+  end;
+end;
+
+
 function TWebsocket.Desc: string;
 begin
   Result := Format('%s_%d', [ TExchangeKindDesc[FExchangeKind], FSeq ]);
@@ -155,7 +174,8 @@ begin
 //  if FWebSocket.State = sOpen then
 //    FWebSocket.Close;
   FSubList.Free;
-  FwebSocket.Free;
+  if FWebSocket <> nil then
+    FwebSocket.Free;
 //  FQueue.Free;
 //  CloseHandle(FReceiveMutex);
 //  FEvent.Free;
@@ -214,10 +234,12 @@ begin
 end;
 procedure TWebsocket.OnAfterDisconnect(Sender: TObject);
 begin
-  if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
-    App.Log(llError, '%s was closed with error %s ',
-      [ TExchangeKindDesc[FExchangeKind], TScWebSocketClient(Sender).CloseStatusDescription ] );
 
+  if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
+    App.Log(llError, '%d %s was closed with error %s ',
+      [ FDisConnCnt, TExchangeKindDesc[FExchangeKind],
+      TScWebSocketClient(Sender).CloseStatusDescription ] );
+  inc( FDisConnCnt );
 end;
 procedure TWebsocket.OnBeforeConnect(Sender: TObject);
 begin
@@ -269,6 +291,7 @@ begin
 //    PushQueue( Length(sData), sData );
 //    PushQueue( Length(sData), PChar(sData) );
 end;
+
 
 
 procedure TWebsocket.SendData(sData: string);

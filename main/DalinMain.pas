@@ -105,6 +105,8 @@ begin
   if App.AppStatus > asLoad then
     App.Engine.FormBroker.Save( ComposeFilePath( [App.DataDir, App.Config.DATA_FILE] ) );
 
+  App.Engine.SymbolCore.PreUnSubscribe;
+
   for i := ComponentCount-1 downto 0 do
     if Components[i] is TForm then
       Components[i].Free;
@@ -180,14 +182,7 @@ begin
   App.Engine.QuoteBroker.SetEvent;
 end;
 
-procedure TFrmDalinMain.Start;
-begin
 
- // Exit;
-  App.AppStatus := asinit;
-//  App.AppStatus := asload;
-  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
-end;
 
 procedure TFrmDalinMain.QryTimerTimer(Sender: TObject);
 var
@@ -321,5 +316,15 @@ begin
   finally
     CloseFile(f);
   end;
+end;
+
+
+procedure TFrmDalinMain.Start;
+begin
+
+ // Exit;
+  App.AppStatus := asinit;
+//  App.AppStatus := asload;
+//  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 end.

@@ -22,6 +22,7 @@ function Get30TermIdx : integer;
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 function IfThenFloat(AValue: Boolean; const ATrue: double): string;
+function FmtString( iPre : integer; dVal : double ): string;
 //---------------------------------------- file
 
 function GetTimestamp(len: Integer = 13): string;
@@ -35,12 +36,19 @@ procedure CloseApp( sClassName : string );
 procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
 procedure InsertLine( aGrid : TStringGrid; iline: Integer);
 procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer = 0);
+procedure SetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
+// 0 : back,  1 : font
+function  GetColor(iType, iColorFlag : integer) : TColor; overload;
+function GetColor( d : double ) : TColor; overload;
+//procedure GetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
 procedure ComboBox_AutoWidth(const theComboBox: TCombobox);
 
 function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;
 
-function IsZero(dZero : Double) : Boolean;
-function GetColor( d : double ) : TColor;
+
+
+
+
 
 
 implementation
@@ -99,6 +107,13 @@ begin
     Result := ''
 end;
 
+function FmtString( iPre : integer; dVal : double ): string;
+begin
+  if IsZero( dVal ) then
+    Result := '0'
+  else
+    Result := Format('%.*n', [ iPre, dVal ]);
+end;
 
 function GetPrecision( aText : string ) : integer;
 var
@@ -219,6 +234,33 @@ begin
     aGrid.RowCount := FixedCnt;
 end;
 
+procedure SetColor(dVal: double; aGrid: TStringGrid; iCol,
+  iRow: integer);
+begin
+  with aGrid do
+    if dVal > 0  then
+      Objects[ iCol, iRow] := Pointer( LONG_FLAG )
+    else if dVal < 0 then
+      Objects[ iCol, iRow] := Pointer( SHORT_FLAG )
+    else
+      Objects[ iCol, iRow] := Pointer(NONE_FLAG);
+//    if dVal > 0  then
+//      Objects[ iCol, iRow] := Pointer( TColor( LONG_COLOR ))
+//    else if dVal < 0 then
+//      Objects[ iCol, iRow] := Pointer( TColor( SHORT_COLOR ))
+//    else
+//      Objects[ iCol, iRow] := Pointer(TColor( clBlack ));
+end;
+
+function  GetColor(iType, iColorFlag : integer) : TColor;
+begin
+  case iColorFlag of
+    LONG_FLAG :  if iType = 0 then  Result := LONG_COLOR else Result := clRed;
+    SHORT_FLAG :  if iType = 0 then  Result := SHORT_COLOR else Result := clBlue;
+    else if iType = 0 then Result := clWhite else Result := clBlack;
+  end;
+end;
+
 function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;
 begin
   with lplf^ do // 한글 폰트와 @붙지 않은 폰트만 검색
@@ -259,11 +301,7 @@ begin
 end;
 
 
-function IsZero(dZero : Double) : Boolean;
-begin
-  dZero := Abs(dZero);
-  Result := dZero < EPSILON;
-end;
+
 
 function GetColor( d : double ) : TColor;
 begin

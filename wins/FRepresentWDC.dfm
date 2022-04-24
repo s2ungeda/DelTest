@@ -3,7 +3,7 @@ object FrmRprsntWDC: TFrmRprsntWDC
   Top = 0
   Caption = #45824#54364' WCD'
   ClientHeight = 197
-  ClientWidth = 1188
+  ClientWidth = 1210
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,15 +18,16 @@ object FrmRprsntWDC: TFrmRprsntWDC
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 1188
+    Width = 1210
     Height = 67
     Align = alTop
     Caption = 'Panel1'
     TabOrder = 0
+    ExplicitWidth = 1188
     object sgWDC1: TStringGrid
       Left = 1
       Top = 1
-      Width = 1186
+      Width = 1208
       Height = 65
       Align = alClient
       ColCount = 25
@@ -42,21 +43,23 @@ object FrmRprsntWDC: TFrmRprsntWDC
       ParentFont = False
       TabOrder = 0
       OnDrawCell = sgWDC1DrawCell
+      ExplicitWidth = 1186
     end
   end
   object Panel2: TPanel
     Left = 0
     Top = 67
-    Width = 1188
+    Width = 1210
     Height = 130
     Align = alClient
     Caption = 'Panel1'
     TabOrder = 1
+    ExplicitWidth = 1188
     object sgWDC2: TStringGrid
       Tag = 1
       Left = 1
       Top = 1
-      Width = 1186
+      Width = 1208
       Height = 128
       Align = alClient
       ColCount = 25
@@ -72,6 +75,7 @@ object FrmRprsntWDC: TFrmRprsntWDC
       ParentFont = False
       TabOrder = 0
       OnDrawCell = sgWDC1DrawCell
+      ExplicitWidth = 1186
     end
   end
   object Timer1: TTimer

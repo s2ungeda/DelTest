@@ -90,6 +90,7 @@ begin
 //  end;
 
   Timer.OnTimer := OnTimer;
+  Timer.Interval:= 500;
   Result := true;
 end;
 

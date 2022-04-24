@@ -12,6 +12,7 @@ object FrmPriceTable: TFrmPriceTable
   Font.Style = []
   OldCreateOrder = False
   Position = poDesigned
+  OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -43,9 +44,9 @@ object FrmPriceTable: TFrmPriceTable
       TabOrder = 0
       object sgKimp: TStringGrid
         Left = 0
-        Top = 0
+        Top = 32
         Width = 1009
-        Height = 506
+        Height = 474
         Align = alClient
         ColCount = 13
         DefaultRowHeight = 19
@@ -64,6 +65,58 @@ object FrmPriceTable: TFrmPriceTable
         OnDrawCell = sgKimpDrawCell
         OnKeyDown = sgKimpKeyDown
         OnMouseDown = sgKimpMouseDown
+        ExplicitTop = 0
+        ExplicitHeight = 506
+      end
+      object plLeftTop: TPanel
+        Left = 0
+        Top = 0
+        Width = 1009
+        Height = 32
+        Align = alTop
+        BevelOuter = bvLowered
+        ParentBackground = False
+        TabOrder = 1
+        ExplicitTop = 8
+        DesignSize = (
+          1009
+          32)
+        object Refresh: TButton
+          Left = 941
+          Top = 4
+          Width = 75
+          Height = 25
+          Anchors = [akRight, akBottom]
+          Caption = 'Refresh'
+          TabOrder = 0
+        end
+        object cbAuto: TCheckBox
+          Left = 783
+          Top = 7
+          Width = 41
+          Height = 17
+          Anchors = [akRight, akBottom]
+          Caption = 'Auto'
+          Checked = True
+          State = cbChecked
+          TabOrder = 1
+          OnClick = cbAutoClick
+        end
+        object edtSec: TLabeledEdit
+          Left = 830
+          Top = 5
+          Width = 39
+          Height = 21
+          Alignment = taRightJustify
+          Anchors = [akRight, akBottom]
+          EditLabel.Width = 65
+          EditLabel.Height = 13
+          EditLabel.Caption = '('#45800#50948' : '#48128#47532' )'
+          LabelPosition = lpRight
+          NumbersOnly = True
+          TabOrder = 2
+          Text = '200'
+        end
       end
     end
   end
@@ -74,5 +127,11 @@ object FrmPriceTable: TFrmPriceTable
       Caption = #49444#51221
       OnClick = N1Click
     end
+  end
+  object refreshTimer: TTimer
+    Enabled = False
+    OnTimer = refreshTimerTimer
+    Left = 208
+    Top = 144
   end
 end

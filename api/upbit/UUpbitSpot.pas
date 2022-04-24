@@ -265,7 +265,7 @@ var
 begin
   sJson :=  Req[2].GetResponse;
   if sJson = '' then Exit;
-  gUpReceiver.ParseSpotTicker( sJson );
+  gUpReceiver.ParseSpotTicker2( sJson );
 end;
 
 procedure TUpbitSpot.parseAssetsstatus;
@@ -327,7 +327,7 @@ begin
 
     SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
     SetParam('market', sCode );
-    SetParam('count', '142' );
+    SetParam('count', '150' );
 
     if Request( rmGET, 'v1/candles/minutes/'+sUnit, '', sJson, sOut ) then
     begin

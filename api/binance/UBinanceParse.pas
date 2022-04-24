@@ -32,6 +32,7 @@ type
     procedure ParseFuttTicker( aData : string );
 
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
+    procedure ParseCandleData( aKind: TMajorSymbolKind; sUnit, aData : string );
 
     property Parent : TExchangeManager read FParent;
 
@@ -43,6 +44,7 @@ uses
   GApp   , UApiConsts,  UConsts
   , GLibs  , UTypes
   , UQuoteBroker
+  , UOtherData
   , USymbols
   ;
 { TBinanceParse }
@@ -116,6 +118,7 @@ var
   aObj : TJsonObject;
   sCode, sTmp : string;
   aSymbol : TSymbol;
+  aQuote  : TQuote;
 begin
   for I := 0 to aArr.Size-1 do
   begin
@@ -133,9 +136,100 @@ begin
       aSymbol.DayLow   := StrToFloat( aObj.GetValue('l').Value );
       aSymbol.DayVolume:= StrToFloat( aObj.GetValue('v').Value );
       aSymbol.DayAmount:= StrToFloat( aObj.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
+
+      if App.AppStatus > asLoad then
+      begin
+        aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+        if aQuote = nil then
+        begin
+          App.Engine.SymbolCore.CalcKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+        end;
+      end;
     end;
   end;
 
+end;
+
+procedure TBinanceParse.ParseCandleData(aKind: TMajorSymbolKind; sUnit, aData: string);
+var
+  aArr, aSubArr : TJsonArray;
+  aVal : TJsonValue;
+  I, j, iCnt: Integer;
+  d, dd, h, m : word;
+  sTmp, sCode : string;
+  aNum : TJSONNumber;
+  dTime, dtime2: TDateTime;
+  aSymbol : TSymbol;
+  accAmt, aAmt, aPrice, aClose : double;
+  aWcd : TWCDData;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseCandleData data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aArr := nil;
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  if aArr = nil then Exit;
+  try
+    try
+      j := 0;
+      for I :=aArr.Size-1 downto 0 do
+      begin
+        if ( sUnit = '1d' ) and ( j >= 25 ) then break;
+
+        aSubArr := aArr.Get(i) as TJsonArray;
+        aNum    := aSubArr.Get(0) as TJSONNumber;
+        dTime   := UnixTimeToDateTime( aNum.GetValue<int64> );
+        sTmp    := aSubArr.Get(4).Value;      // Á¾°¡
+        aPrice  := StrToFloat( sTmp );
+        aAmt    := StrToFloat( aSubArr.Get(7).Value );      // quote volume
+
+        inc(j);
+
+        if (sUnit = '30m') and ( not IsToday( dTime )) then
+          break;
+
+        aWcd := nil;
+
+        d := Dayof(  dTime );
+        h := Hourof( dTime );
+        m := MinuteOf(dTime);
+
+        if (sUnit = '1d') and ( not IsToday( dTime )) then begin
+          sTmp := Format('%2.2d00', [ d] );
+          aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
+          if aWcd = nil then
+            aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+          iCnt := App.Engine.SymbolCore.WCDays.Count;
+        end else
+        if (sUnit = '30m') and (( m = 30 ) or ( m = 0)) then
+        begin
+          sTmp := Format('%2.2d%2.2d', [ h, m] );
+          aWcd := App.Engine.SymbolCore.WCD30s.Find( sTmp );
+          if aWcd = nil then
+            aWcd := App.Engine.SymbolCore.WCD30s.New( sTmp );
+          iCnt := App.Engine.SymbolCore.WCD30s.Count;
+        end;
+
+        if aWcd <> nil then
+        begin
+          aWcd.Price[ aKind, FParent.ExchangeKind] := aPrice;
+          aWcd.Amount[aKind, FParent.ExchangeKind] := aAmt;
+//          App.DebugLog('%s, %s %s %s %d -> %f, %f', [ sUnit, TExchangeKindDesc[ FParent.ExchangeKind], TMajorSymbolCode[aKind],
+//            sTmp, iCnt ,  aPrice, aAmt  ]);
+        end;
+
+      end;
+    except
+    end;
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
 end;
 
 procedure TBinanceParse.ParseFutMarketDepth(aJson: TJsonObject);

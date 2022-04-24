@@ -58,7 +58,7 @@ type
 
     FWCDays: TWCDDataList;
     FWCD30s: TWCDDataList;
-    procedure SetMainWDC(aExKind: TExchangeKind; Value: double; sLog : string);
+
 
   public
 
@@ -83,7 +83,8 @@ type
     function  IsKRMain( aSymbol : TSymbol ) : boolean;
 
     procedure Log;
-    procedure PreSubscribe;   // 한종목씩
+    procedure PreSubscribe;   // 주요종목 구독
+    procedure PreUnSubscribe;   // 주요종목 구독
     procedure SubscribeSymbols; // 모든종목 한방에
     procedure RepresentCoin;
     procedure MakePrevData;
@@ -96,8 +97,10 @@ type
     procedure CalcMainKimp( aSymbol : TSymbol );  overload;
     procedure CalcMainKimp( aExKind: TExchangeKind ) ;   overload;
     procedure CalcMainWDC( aSymbol : TSymbol );
+    procedure CalcSP(aPrice : double; aSymbol: TSymbol );
 
     procedure SetMainKimp( aExKind : TExchangeKind; Value : double; sLog : string );
+    procedure SetMainWDC(aExKind: TExchangeKind; Value: double; sLog : string);
     procedure SymbolArrange;
 
     property Specs: TMarketSpecs read FSpecs;
@@ -170,6 +173,14 @@ begin
 
 end;
 
+procedure TSymbolCore.CalcSP(aPrice : double; aSymbol: TSymbol);
+begin
+  if not IsZero( aPrice ) then
+    aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice
+  else
+    aSymbol.SPrice := 0;
+end;
+
 procedure TSymbolCore.CalcKimp( aSymbol : TSymbol );
 var
   dEx : double;
@@ -202,8 +213,10 @@ begin
   end else
   begin
     pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FMainExKind, FMainExMarket  );
-    if aSymbol <> nil then
+    if aSymbol <> nil then begin
       CalcKimp( pSymbol.Last, aSymbol );
+      CalcSP( pSymbol.Last, aSymbol );
+    end;
   end;
 
 end;
@@ -296,6 +309,8 @@ begin
     SetMainWDC( aMainSymbol.Spec.ExchangeType, dVal, sLog );
   end;
 end;
+
+
 
 constructor TSymbolCore.Create;
 var
@@ -502,20 +517,36 @@ var
   aWcd : TWCDData;
   dAmt, dVAl : double;
 begin
+
   for I := 0 to FWCDays.Count-1 do
   begin
     aWcd := FWCDays.WCDs[i];
-    dAmt  := aWcd.Amount[msBTC][ekUpbit] + aWcd.Amount[msETH][ekUpbit];
-
-//    if dAmt > EPSILON then
-//      dVal := aWcd.Amount[msBTC][ekUpbit] *
-
-
-//    dAmt := aWcd[msBTC, .DayAmount + aSubSymbol.DayAmount ;
-//    if dAmt > EPSILON then begin
-//      dVal := ( aMainSymbol.DayAmount * aMainSymbol.WDCPrice + aSubSymbol.DayAmount * aSubSymbol.WDCPrice ) / dAmt;
-
+    aWcd.CalcWCD;
+    aWcd.CalcRpsntWCD( ekUpbit);
+    aWcd.CalcRpsntWCD( ekBithumb);
   end;
+
+  for I := 0 to FWCD30s.Count-1 do
+  begin
+    aWcd := FWCD30s.WCDs[i];
+    aWcd.CalcWCD;
+    aWcd.CalcRpsntWCD( ekUpbit);
+    aWcd.CalcRpsntWCD( ekBithumb);
+
+    aWcd.CalcKIP;
+    aWcd.CalcRpsntKIP(ekUpbit);
+    aWcd.CalcRpsntKIP(ekBithumb);
+
+    RprsntWDC[ekUpbit][FWCD30s.Count-1 - i] := aWcd.RpsntWCD[ekUpbit];
+    RprsntWDC[ekBithumb][FWCD30s.Count-1 - i] := aWcd.RpsntWCD[ekBithumb];
+    JungKopi [ekUpbit][FWCD30s.Count-1 - i] := aWcd.RpsntKIP[ekUpbit];
+    JungKopi [ekBithumb][FWCD30s.Count-1 - i] := aWcd.RpsntKIP[ekBithumb];
+  end;
+
+  JKIdx[ekUpbit] :=  FWCD30s.Count-1;
+  WDCIdx[ekUpbit]:=  FWCD30s.Count-1;
+  JKIdx[ekBithumb] :=  FWCD30s.Count-1;
+  WDCIdx[ekBithumb]:=  FWCD30s.Count-1;
 end;
 
 procedure TSymbolCore.PreSubscribe;
@@ -527,28 +558,6 @@ var
 begin
   // 선구독 종목들...BTC, ETH, XRP
 
-//  for I := msBTC to High(TMajorSymbolKind) do
-//  begin
-//      for j := ekBinance to High(TExchangeKind) do
-//      begin
-//        aSymbol := nil;
-//        if j= ekBinance then
-//          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j, FMainExMarket)
-//        else
-//          aSymbol := FBaseSymbols.FindSymbol( TMajorSymbolCode[i], j );
-//
-//        if aSymbol <> nil then
-//        begin
-//          FMainSymbols[i][j] := aSymbol;
-//
-//          App.Engine.QuoteBroker.Brokers[j].Subscribe(Self, aSymbol,
-//            App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
-//            );
-//        end;
-//
-//      end;
-//  end;
-
   for I := msBTC to High(TMajorSymbolKind) do
     for j := ekBinance to High(TExchangeKind) do
       if FMainSymbols[i][j] <> nil then
@@ -556,6 +565,11 @@ begin
             App.Engine.QuoteBroker.Brokers[j].DummyEventHandler
             );
         //App.DebugLog('Main Symbol [%s][%s] : %s', [ TMajorSymbolCode[i], TExchangeKindDesc[j], FMainSymbols[i][j].Code]   );
+end;
+
+procedure TSymbolCore.PreUnSubscribe;
+begin
+  App.Engine.QuoteBroker.Cancel( Self );
 end;
 
 procedure TSymbolCore.SubscribeSymbols;
@@ -621,6 +635,7 @@ end;
 procedure TSymbolCore.SetMainKimp(aExKind: TExchangeKind; Value: double; sLog : string);
 var
   iPrev, idx : Integer;
+  aWcd : TWCDData;
 begin
   FMainKimp[aExKind] := Value;
   idx  := Get30TermIdx;

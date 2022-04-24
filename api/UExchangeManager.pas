@@ -188,7 +188,7 @@ end;
 procedure TExchangeManager.init;
 begin
   FTimer  := App.Engine.QuoteBroker.Timers.New;
-  FTimer.Interval := 2000;
+  FTimer.Interval := 1000;
   FTimer.OnTimer  := nil;
   FTimer.Enabled  := false;
 end;
