@@ -464,11 +464,11 @@ begin
       ,  FmtString( 2, aSymbol.SPrice ), '') );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
-    if aSymbol.DayOpen <= 0 then  dTmp := 1
-    else dTmp := aSymbol.DayOpen;
+    if aSymbol.Last <= 0 then  dTmp := 1
+    else dTmp := aSymbol.Last;
 
-    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ] ) );
     PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ] ) );
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ] ) );
     PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ] ) );
 
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );

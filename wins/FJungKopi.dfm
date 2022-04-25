@@ -1,7 +1,7 @@
 object FrmJungKopi: TFrmJungKopi
   Left = 0
   Top = 0
-  Caption = #45824#54364' KIP'
+  Caption = 'INDEX KIP'
   ClientHeight = 141
   ClientWidth = 1227
   Color = clBtnFace

@@ -259,6 +259,12 @@ begin
     SHORT_FLAG :  if iType = 0 then  Result := SHORT_COLOR else Result := clBlue;
     else if iType = 0 then Result := clWhite else Result := clBlack;
   end;
+
+//  case iColorFlag of
+//    LONG_FLAG :  if iType = 0 then  Result := LONG_COLOR else Result := clRed;
+//    SHORT_FLAG :  if iType = 0 then  Result := SHORT_COLOR else Result := clBlue;
+//    else if iType = 0 then Result := clWhite else Result := clBlack;
+//  end;
 end;
 
 function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;

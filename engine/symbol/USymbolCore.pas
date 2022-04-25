@@ -175,6 +175,12 @@ end;
 
 procedure TSymbolCore.CalcSP(aPrice : double; aSymbol: TSymbol);
 begin
+  if aSymbol.Spec.ExchangeType = FSubExKind2 then
+  begin
+    aSymbol.SPrice := 0;
+    Exit;
+  end;
+
   if not IsZero( aPrice ) then
     aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice
   else

@@ -167,6 +167,7 @@ begin
     begin         //App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
 
       gUpReceiver.ParseSpotTicker( sJson );
+      sleep(100);
     end else
     begin
       App.Log( llError, '', 'Failed %s RequestMaster (%s, %s)',
