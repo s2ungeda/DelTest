@@ -36,9 +36,10 @@ procedure CloseApp( sClassName : string );
 procedure DeleteLine( aGrid : TStringGrid; iline: Integer);
 procedure InsertLine( aGrid : TStringGrid; iline: Integer);
 procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer = 0);
+procedure InvalidateRow( aGrid : TStringGrid; iline : integer );
 procedure SetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
 // 0 : back,  1 : font
-function  GetColor(iType, iColorFlag : integer) : TColor; overload;
+function GetColor(iType, iColorFlag : integer) : TColor; overload;
 function GetColor( d : double ) : TColor; overload;
 //procedure GetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
 procedure ComboBox_AutoWidth(const theComboBox: TCombobox);
@@ -223,6 +224,11 @@ begin
   end;
 end;
 
+procedure InvalidateRow( aGrid : TStringGrid; iline : integer );
+begin
+  TmpGrid( aGrid ).InvalidateRow( iline );
+end;
+
 procedure InitGrid( aGrid : TStringGrid; bClear : boolean; FixedCnt : integer );
 var
   i : integer;
@@ -252,18 +258,41 @@ begin
 //      Objects[ iCol, iRow] := Pointer(TColor( clBlack ));
 end;
 
+// 0 : back,  1 : font  , 2 :  red or blue 만 선택되는..
 function  GetColor(iType, iColorFlag : integer) : TColor;
 begin
-  case iColorFlag of
-    LONG_FLAG :  if iType = 0 then  Result := LONG_COLOR else Result := clRed;
-    SHORT_FLAG :  if iType = 0 then  Result := SHORT_COLOR else Result := clBlue;
-    else if iType = 0 then Result := clWhite else Result := clBlack;
-  end;
-
 //  case iColorFlag of
 //    LONG_FLAG :  if iType = 0 then  Result := LONG_COLOR else Result := clRed;
 //    SHORT_FLAG :  if iType = 0 then  Result := SHORT_COLOR else Result := clBlue;
 //    else if iType = 0 then Result := clWhite else Result := clBlack;
+//  end;
+
+  case iColorFlag of
+    LONG_FLAG :  if iType = 0 then  Result :=  clRed  else Result := clRed;
+    SHORT_FLAG :  if iType = 0 then  Result := $00F0B000 else Result := clBlue;
+    else if iType = 0 then Result := clWhite else Result := clBlack;
+  end;
+
+
+//  case iColorFlag of
+//    LONG_FLAG :
+//      case iType of
+//        0 : Result := clWhite;
+//        1 : Result := clGray;
+//        2 : Result := clRed;
+//      end;
+//    SHORT_FLAG :
+//       case iType of
+//        0 : Result := clGray;
+//        1 : Result := clWhite;
+//        2 : Result := clBlue;
+//      end;
+//    else
+//      case iType of
+//        0 : Result := clWhite;
+//        1 : Result := clBlack;
+//        2 : Result := clBlack;
+//      end;
 //  end;
 end;
 

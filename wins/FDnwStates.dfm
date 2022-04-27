@@ -85,9 +85,9 @@ object FrmDnwStates: TFrmDnwStates
       object btnSort: TButton
         Left = 7
         Top = 4
-        Width = 42
+        Width = 50
         Height = 25
-        Caption = 'Sort'
+        Caption = 'Reload'
         TabOrder = 3
         OnClick = btnSortClick
       end

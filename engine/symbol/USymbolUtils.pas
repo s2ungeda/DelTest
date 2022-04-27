@@ -131,6 +131,7 @@ var
   Symbol1: TSymbol absolute Data1;
   Symbol2: TSymbol absolute Data2;
 begin
+
   if Symbol1.SPrice < Symbol2.SPrice then
     Result := 1
   else if Symbol1.SPrice > Symbol2.SPrice  then

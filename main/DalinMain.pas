@@ -325,6 +325,6 @@ begin
  // Exit;
   App.AppStatus := asinit;
 //  App.AppStatus := asload;
-//  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
+  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 end.

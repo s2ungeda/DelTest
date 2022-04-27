@@ -264,8 +264,12 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         RowCount = 25
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         PopupMenu = PopupMenu1
+        ScrollBars = ssVertical
         TabOrder = 0
         OnDrawCell = sgQuoteDrawCell
+        OnMouseDown = sgQuoteMouseDown
+        OnMouseWheelDown = sgQuoteMouseWheelDown
+        OnMouseWheelUp = sgQuoteMouseWheelUp
       end
       object SpinButton1: TSpinButton
         Left = 45

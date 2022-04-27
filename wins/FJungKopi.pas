@@ -186,7 +186,9 @@ begin
       if Objects[ACol, ARow] <> nil  then
       begin
         aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-
+        aFont := clWhite;
+        if (ACol = 1) and (( ARow = 1) or (ARow = 2))  then
+          aFont := clBlack;
         // 현재가 표시 부분..
         if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
         begin

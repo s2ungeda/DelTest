@@ -130,15 +130,18 @@ begin
     Cells[ ColCount-1-I , 2] := FmtString( 1,  aWcd.RpsntWCD[ekBithumb] );
   end;
 
+  j := 1;
   for I := App.Engine.SymbolCore.WCDays.Count-1 downto 0 do
   begin
     aWcd  := App.Engine.SymbolCore.WCDays.WCDs[i];
-    if i > 0 then begin
-      SetColor( aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit], sgWDC1, i+1, 1 );
-      SetColor( aWcd.RpsntWCD[ekBithumb] - dPrev[ekBithumb], sgWDC1, i+1, 2 );
+    if i < App.Engine.SymbolCore.WCDays.Count-1 then begin
+      SetColor( aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit], sgWDC1, j, 1 );
+      SetColor( aWcd.RpsntWCD[ekBithumb] - dPrev[ekBithumb], sgWDC1, j, 2 );
+      sgWDC1.Cells[j, 0] := FmtString( 1, aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit] );
     end ;
     dPrev[ekUpbit]  := aWcd.RpsntWCD[ekUpbit];
     dPrev[ekBithumb]:= aWcd.RpsntWCD[ekBithumb];
+    inc(j);
   end;
 
 
@@ -220,7 +223,7 @@ begin
         if Objects[ACol, ARow] <> nil  then
         begin
           aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-          //aFont := clWhite;
+          aFont := clWhite;//GetColor( 1, Integer( Objects[ACol, ARow] ));
 
           // 현재가 표시 부분..
           if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
@@ -236,7 +239,7 @@ begin
         if Objects[ACol, ARow] <> nil  then
         begin
           aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-          //aFont := clWhite;
+          aFont := clWhite;
         end;
       end;
 

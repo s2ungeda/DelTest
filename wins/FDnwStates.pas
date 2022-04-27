@@ -247,10 +247,10 @@ begin
   case iCol of
     9  : Result := aSymbol.KimpPrice;
     10 : REsult := aSymbol.WDCPrice;
-    12 : if aSymbol.DayOpen <= 0 then
+    12 : if aSymbol.PrevClose <= 0 then
            Result := 0.0
          else
-          Result := ((aSymbol.DayHigh - aSymbol.DayOpen) / aSymbol.DayOpen ) * 100 ;
+           Result := ((aSymbol.DayHigh - aSymbol.PrevClose) / aSymbol.PrevClose ) * 100 ;
 
   end;
 end;
@@ -294,7 +294,11 @@ begin
       Cells[iCol, i] := GetData(aSymbol[j], iCol, i = iRow);       inc(iCol) ;
 
       if i = iRow then
-        Cells[iCol, i] := Format('%.1f %%', [ GetPriceData(aSymbol[0], iCol, i = iRow) ]);       inc(iCol);
+        Cells[iCol, i] := Format('%.1f %%', [ GetPriceData(aSymbol[1], iCol, i = iRow) ])
+      else
+        Cells[iCol, i] := Format('%.1f %%', [ GetPriceData(aSymbol[2], iCol, i = iRow) ]);
+
+       inc(iCol);
       Cells[iCol, i] := GetData(aSymbol[j], iCol, i = iRow);       inc(iCol) ;
     end;
   except on e : exception do

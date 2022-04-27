@@ -64,12 +64,18 @@ type
     procedure cbAutoClick(Sender: TObject);
     procedure Font1Click(Sender: TObject);
     procedure cbKREx1Change(Sender: TObject);
+    procedure sgQuoteMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure sgQuoteMouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure sgQuoteMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FSubList: TList;
     FDataList: TList;
     FPrecision : integer;
     FShowSubEx : array [0..1] of TExchangeKind;
-
+    FRow  : integer;
     FWinParam: TWinParam;
     { Private declarations }
     procedure initControls;
@@ -198,7 +204,7 @@ begin
   FDataList:= TList.Create;
   FPrecision  := App.GetPrecision;
 
-
+  FRow  := -1;
 
   for i := ComponentCount-1 downto 0 do
     if Components[i] is TSpinButton then
@@ -255,6 +261,9 @@ begin
 
   FWinParam.FontName := aStorage.FieldByName('FontName').AsStringDef( FWinParam.FontName );
   FWinParam.FontSize := aStorage.FieldByName('FontSize').AsIntegerDef( FWinParam.FontSize );
+
+  cbKREx1Change( cbKREx1 );
+  cbKREx1Change( cbKREx2 );
 
   UpdateParam( false );
 
@@ -357,6 +366,7 @@ procedure TFrmQuoteMonitors.RefreshData;
 var
   I: Integer;
   aSymbol : TSymbol;
+//  info: TScrollInfo;
 begin
 //  App.Engine.QuoteBroker.Cancel( Self );
   InitGrid( sgQuote, true, 1 );
@@ -389,6 +399,17 @@ begin
 
   if sgQuote.RowCount > 1 then
     sgQuote.FixedRows := 1;
+
+// FillChar(info, Sizeof(info), 0);
+//  with info do
+//  begin
+//    cbsize := Sizeof(info);
+//    fmask  := SIF_ALL;
+//    GetScrollInfo(sgQuote.handle, SB_VERT, info);
+//    fmask  := fmask or SIF_PAGE;
+//    nPage  := 5 * (nmax-nmin) div sgQuote.RowCount;
+//  end;
+//  SetScrollInfo(sgQuote.handle, SB_VERT, info, True);
 end;
 
 procedure TFrmQuoteMonitors.SimpleRefreshData;
@@ -464,12 +485,14 @@ begin
       ,  FmtString( 2, aSymbol.SPrice ), '') );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
-    if aSymbol.Last <= 0 then  dTmp := 1
-    else dTmp := aSymbol.Last;
+    // 전일종가 대신 오픈...
+    if aSymbol.PrevClose <= 0 then  dTmp := 1
+    else dTmp := aSymbol.PrevClose;
 
-    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ] ) );
-    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayHigh - aSymbol.DayOpen) / dTmp * 100 ] ) );
-    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ] ) );
+    // 등락/ 고/ 저
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.Last    - aSymbol.PrevClose) / dTmp * 100 ] ) );
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayHigh - aSymbol.PrevClose) / dTmp * 100 ] ) );
+    PutData( iCol, iRow, Format('%.1f %%', [ (aSymbol.DayLow  - aSymbol.PrevClose) / dTmp * 100 ] ) );
 
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
 
@@ -536,6 +559,11 @@ begin
       aRect.Right := aRect.Right - 2;
     dFormat := dFormat or DT_VCENTER;
 
+    if ARow = FRow then
+    begin
+      aBack := clRed;//$00F2BEB9;
+    end;
+
     Canvas.FillRect( Rect);
     DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
 
@@ -565,6 +593,37 @@ begin
 
 end;
 
+
+procedure TFrmQuoteMonitors.sgQuoteMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  var
+    aCol, aRow : integer;
+    aPoint : TPoint;
+begin
+  //
+  aRow := FRow;
+
+  sgQuote.MouseToCell( X, Y, aCol, FRow);
+
+  sgQuote.Repaint;
+
+//  if aRow > 0 then InvalidateRow( sgQuote, aRow );
+//  if FRow > 0 then InvalidateRow( sgQuote, FRow );
+
+end;
+
+procedure TFrmQuoteMonitors.sgQuoteMouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+//  sgQuote.TopRow  := sgQuote.TopRow - 1;
+end;
+
+procedure TFrmQuoteMonitors.sgQuoteMouseWheelUp(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+
+//  sgQuote.TopRow  := sgQuote.TopRow + 1;
+end;
 
 procedure TFrmQuoteMonitors.SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean);
 var
