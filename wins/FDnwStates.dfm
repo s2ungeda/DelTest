@@ -3,7 +3,7 @@ object FrmDnwStates: TFrmDnwStates
   Top = 0
   Caption = #51077#52636#44552#54788#54889
   ClientHeight = 411
-  ClientWidth = 1030
+  ClientWidth = 804
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,33 +20,36 @@ object FrmDnwStates: TFrmDnwStates
   object StatusBar1: TStatusBar
     Left = 0
     Top = 392
-    Width = 1030
+    Width = 804
     Height = 19
     Panels = <>
+    ExplicitWidth = 1030
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 1030
+    Width = 804
     Height = 392
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
+    ExplicitWidth = 1030
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 1030
+      Width = 804
       Height = 32
       Align = alTop
       BevelOuter = bvLowered
       ParentBackground = False
       TabOrder = 0
+      ExplicitWidth = 1030
       DesignSize = (
-        1030
+        804
         32)
       object Refresh: TButton
-        Left = 941
+        Left = 715
         Top = 4
         Width = 75
         Height = 25
@@ -54,9 +57,10 @@ object FrmDnwStates: TFrmDnwStates
         Caption = 'Refresh'
         TabOrder = 0
         OnClick = RefreshClick
+        ExplicitLeft = 941
       end
       object cbAuto: TCheckBox
-        Left = 791
+        Left = 565
         Top = 7
         Width = 41
         Height = 17
@@ -66,9 +70,10 @@ object FrmDnwStates: TFrmDnwStates
         State = cbChecked
         TabOrder = 1
         OnClick = cbAutoClick
+        ExplicitLeft = 791
       end
       object edtSec: TLabeledEdit
-        Left = 838
+        Left = 612
         Top = 5
         Width = 39
         Height = 21
@@ -81,6 +86,7 @@ object FrmDnwStates: TFrmDnwStates
         NumbersOnly = True
         TabOrder = 2
         Text = '10'
+        ExplicitLeft = 838
       end
       object btnSort: TButton
         Left = 7
@@ -95,15 +101,16 @@ object FrmDnwStates: TFrmDnwStates
     object plLeftClient: TPanel
       Left = 0
       Top = 32
-      Width = 1030
+      Width = 804
       Height = 360
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 1030
       object sgDnw: TStringGrid
         Left = 0
         Top = 0
-        Width = 1030
+        Width = 804
         Height = 360
         Align = alClient
         ColCount = 14
@@ -120,6 +127,7 @@ object FrmDnwStates: TFrmDnwStates
         ParentFont = False
         TabOrder = 0
         OnDrawCell = sgDnwDrawCell
+        ExplicitWidth = 1030
       end
     end
   end

@@ -24,6 +24,8 @@ type
     RpsntWCD: array [TExchangeKind] of double;
     RpsntKIP: array [TExchangeKind] of double;
 
+    m, d : word;
+
     procedure CalcWCD;
     procedure CalcKIP;
     procedure CalcRpsntWCD( aExKind : TExchangeKind );

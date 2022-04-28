@@ -21,10 +21,10 @@ const
     ,'거래소','KIP', 'WCD', '현재가','등락'
     ,'일거래액(억)');
 
-  prcTbll2_Width : array [0..prcTbl2_TitleCnt-1] of integer = ( 50, 40,
+  prcTbll2_Width : array [0..prcTbl2_TitleCnt-1] of integer = ( 70, 40,
     30,  65,  30, 65, 30, 65,
-    40,  80,  80, 100, 60,
-    80 );
+    40,  60,  65, 90, 60,
+    70 );
 
 
   quoteMon_TitleCnt = 10;
@@ -32,8 +32,8 @@ const
     ,'KIP', 'WCD','SP','현재가','등락'
     ,'고','저', '일거래액(억)');
   quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (70, 40
-    , 80, 80, 80, 100, 80
-    , 80, 80, 80 );
+    , 60, 60, 65, 90, 60
+    , 60, 60, 70 );
 
   CoinCol = 0;
   ExCol   = 1;

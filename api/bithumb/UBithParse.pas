@@ -146,7 +146,7 @@ var
   aNum : TJSONNumber;
   sTmp, sTmp2 : string;
   aWcd : TWCDData;
-  d, h, m : word;
+  d, h, m, mt : word;
   aPrice, amt : double;
 begin
   if aData = '' then
@@ -184,6 +184,7 @@ begin
         aPrice:= StrToFloat( sTmp );
         amt   := StrToFloat( sTmp2 );
 
+        mt:= MonthOf(dTime);
         d := Dayof(  dTime );
         h := Hourof( dTime );
         m := MinuteOf(dTime);
@@ -198,8 +199,10 @@ begin
         if (sUnit = '24h') and ( not IsToday( dTime )) then begin
           sTmp := Format('%2.2d00', [ d] );
           aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
-          if aWcd = nil then
+          if aWcd = nil then begin
             aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+            aWcd.m := mt;  aWcd.d := d;
+          end;
           iCnt := App.Engine.SymbolCore.WCDays.Count;
         end else
         if (sUnit = '30m') and (( m = 30 ) or ( m = 0)) then

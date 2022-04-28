@@ -4,7 +4,7 @@ object FrmRprsntWDC: TFrmRprsntWDC
   Caption = 'INDEX WCD'
   ClientHeight = 204
   ClientWidth = 1231
-  Color = clRed
+  Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11

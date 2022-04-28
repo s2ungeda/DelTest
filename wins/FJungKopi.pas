@@ -186,14 +186,18 @@ begin
       if Objects[ACol, ARow] <> nil  then
       begin
         aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-        aFont := clWhite;
+        aFont := GetColor( 1, Integer( Objects[ACol, ARow] )); //clWhite;
         if (ACol = 1) and (( ARow = 1) or (ARow = 2))  then
           aFont := clBlack;
         // 현재가 표시 부분..
-        if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
+        if (( ACol = FCol ) and ( ARow in [ FRow..FRow+1])) or
+         ((ACol = 0 ) and ( ARow in [3..4] ) ) then
         begin
-          aFont := GetColor( 1, Integer( Objects[ACol, ARow] ));
-          aBack := clWhite;
+//          aFont := GetColor( 2, Integer( Objects[ACol, ARow] ));
+//          aBack := clWhite;
+
+          aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
+          aFont := GetColor( 1, Integer( Objects[ACol, ARow] )); //clWhite;
         end;
       end ;
 
@@ -246,19 +250,21 @@ begin
       FCol := iCol - 24 + 1;
     end;
 
-    Cells[FCol, FRow] := FmtString( FPrecision, FData[ekUpbit]);
+    Cells[FCol, FRow]   := FmtString( FPrecision, FData[ekUpbit]);
     Cells[FCol, FRow+1] := FmtString( FPrecision, FData[ekBithumb]);
 
     if ( FCol = 1 ) and ( FRow = 1 ) then
     begin
       SetColor( 0, sgVal, iCol, FRow );
       SetColor( 0, sgVal, iCol, FRow + 1 );
-    end
-    else begin
-      idx := Max( 0, iCol -1 );
-      SetColor( FData[ ekUpbit ]    - App.Engine.SymbolCore.JungKopi[ekUpbit][idx],  sgVal, FCol, FRow );
-      SetColor( FData[ ekBithumb ]  - App.Engine.SymbolCore.JungKopi[ekBithumb][idx],  sgVal, FCol, FRow+1 );
-    end;
+    end   ;
+
+    idx := Max( 0, iCol -1 );
+    SetColor( FData[ ekUpbit ]    - App.Engine.SymbolCore.JungKopi[ekUpbit][idx],  sgVal, FCol, FRow );
+    SetColor( FData[ ekBithumb ]  - App.Engine.SymbolCore.JungKopi[ekBithumb][idx],  sgVal, FCol, FRow+1 );
+
+    Objects[0,3] := Objects[ FCol, FRow];
+    Objects[0,4] := Objects[ FCol, FRow+1];
 
     if FLastIdx <> FCol then
     begin

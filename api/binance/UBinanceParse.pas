@@ -157,7 +157,7 @@ var
   aArr, aSubArr : TJsonArray;
   aVal : TJsonValue;
   I, j, iCnt: Integer;
-  d, dd, h, m : word;
+  d, dd, h, m, mt : word;
   sTmp, sCode : string;
   aNum : TJSONNumber;
   dTime, dtime2: TDateTime;
@@ -196,6 +196,7 @@ begin
 
         aWcd := nil;
 
+        mt:= MonthOf(dTime);
         d := Dayof(  dTime );
         h := Hourof( dTime );
         m := MinuteOf(dTime);
@@ -203,8 +204,10 @@ begin
         if (sUnit = '1d') and ( not IsToday( dTime )) then begin
           sTmp := Format('%2.2d00', [ d] );
           aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
-          if aWcd = nil then
+          if aWcd = nil then begin
             aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+            aWcd.m := mt;  aWcd.d := d;
+          end;
           iCnt := App.Engine.SymbolCore.WCDays.Count;
         end else
         if (sUnit = '30m') and (( m = 30 ) or ( m = 0)) then

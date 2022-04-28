@@ -70,6 +70,7 @@ type
       MousePos: TPoint; var Handled: Boolean);
     procedure sgQuoteMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FormResize(Sender: TObject);
   private
     FSubList: TList;
     FDataList: TList;
@@ -160,6 +161,11 @@ begin
   FDataList.Free;
   FSubList.Free;
 //  App.Engine.QuoteBroker.Cancel( self );
+end;
+
+procedure TFrmQuoteMonitors.FormResize(Sender: TObject);
+begin
+//  sgQuote.VisibleRowCount := sgQuote.rowc
 end;
 
 function TFrmQuoteMonitors.GetExchangeKind( iTag : integer ): TExchangeKind;
@@ -547,12 +553,11 @@ begin
       aBack := clMoneyGreen;
     end else
     begin
-      if ACol in [3..5, 9] then
+      if ACol in [3..9] then
         dFormat := DT_RIGHT;
     end;
 
-    Canvas.Font.Color   := aFont;
-    Canvas.Brush.Color  := aBack;
+
 
     aRect.Top := Rect.Top + 4;
     if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
@@ -561,8 +566,11 @@ begin
 
     if ARow = FRow then
     begin
-      aBack := clRed;//$00F2BEB9;
+      aBack := $00F2BEB9;
     end;
+
+    Canvas.Font.Color   := aFont;
+    Canvas.Brush.Color  := aBack;
 
     Canvas.FillRect( Rect);
     DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
@@ -615,14 +623,13 @@ end;
 procedure TFrmQuoteMonitors.sgQuoteMouseWheelDown(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
-//  sgQuote.TopRow  := sgQuote.TopRow - 1;
+//  Handled:= True;
 end;
 
 procedure TFrmQuoteMonitors.sgQuoteMouseWheelUp(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
-
-//  sgQuote.TopRow  := sgQuote.TopRow + 1;
+//  Handled:= True;
 end;
 
 procedure TFrmQuoteMonitors.SortGrid(Grid: TStringGrid; SortCol: Integer; bAsc : boolean);

@@ -3,7 +3,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   Top = 0
   Caption = #49884#49464#47784#45768#53552#47553
   ClientHeight = 481
-  ClientWidth = 845
+  ClientWidth = 665
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,35 +14,39 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
     Top = 462
-    Width = 845
+    Width = 665
     Height = 19
     Panels = <>
+    ExplicitWidth = 845
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 845
+    Width = 665
     Height = 462
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
+    ExplicitWidth = 845
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 845
+      Width = 665
       Height = 51
       Align = alTop
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
+      ExplicitWidth = 845
       DesignSize = (
-        845
+        665
         51)
       object cbOSEx: TComboBox
         Left = 80
@@ -152,13 +156,14 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         TabOrder = 6
       end
       object Panel4: TPanel
-        Left = 656
+        Left = 476
         Top = 2
         Width = 177
         Height = 47
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
+        ExplicitLeft = 656
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -246,15 +251,16 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     object plLeftClient: TPanel
       Left = 0
       Top = 51
-      Width = 845
+      Width = 665
       Height = 411
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 845
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
-        Width = 845
+        Width = 665
         Height = 411
         Align = alClient
         ColCount = 10
@@ -262,7 +268,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         DefaultDrawing = False
         FixedCols = 0
         RowCount = 25
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goFixedRowDefAlign]
         PopupMenu = PopupMenu1
         ScrollBars = ssVertical
         TabOrder = 0
@@ -270,6 +275,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnMouseDown = sgQuoteMouseDown
         OnMouseWheelDown = sgQuoteMouseWheelDown
         OnMouseWheelUp = sgQuoteMouseWheelUp
+        ExplicitWidth = 845
       end
       object SpinButton1: TSpinButton
         Left = 45

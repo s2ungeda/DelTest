@@ -57,6 +57,7 @@ implementation
 uses
   GApp , GLibs ,
   UDalinStatusEvent
+  , UApiTypes
 ;
 
 
@@ -199,15 +200,27 @@ begin
 
   App.Engine.ApiManager.CheckCount;
 
-  sTmp := '';
-  for I := 0 to App.Engine.ApiManager.SockState.Count-1 do
-    if sTmp = '' then
-      sTmp := App.Engine.ApiManager.SockState[i]
-    else
-      sTmp := sTmp + ',' + App.Engine.ApiManager.SockState[i];
+//  sTmp := '';
+//  for I := 0 to App.Engine.ApiManager.SockState.Count-1 do
+//    if sTmp = '' then
+//      sTmp := App.Engine.ApiManager.SockState[i]
+//    else
+//      sTmp := sTmp + ',' + App.Engine.ApiManager.SockState[i];
+
+  if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
+    Self.Canvas.TextOut(5,4 ,Format( 'BN(%d):%d', [App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvRat,
+       App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvCnt]));
+
+  if App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0] <> nil  then
+    Self.Canvas.TextOut(5,24 ,Format( 'UP(%d):%d', [App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvRat,
+       App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvCnt]));
+
+  if App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0] <> nil  then
+    Self.Canvas.TextOut(5,44 ,Format( 'BT(%d):%d', [App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].RcvRat,
+       App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].RcvCnt]));
 
   stsBar.Panels[1].Text := FormatDateTime('hh:nn:ss', now) ;
-  stsBar.Panels[2].Text := stmp;
+ // stsBar.Panels[2].Text := stmp;
 end;
 
 function TFrmDalinMain.GetInterval : integer;
@@ -325,6 +338,6 @@ begin
  // Exit;
   App.AppStatus := asinit;
 //  App.AppStatus := asload;
-  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
+//  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 end.

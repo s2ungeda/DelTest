@@ -331,7 +331,7 @@ var
   aVal : TJsonValue;
   I, j: Integer;
   bStart : boolean;
-  d, dd, h, m : word;
+  d, dd, h, m, mt : word;
   sTmp, sCode : string;
   dTime, dtime2: TDateTime;
   aSymbol : TSymbol;
@@ -374,6 +374,7 @@ begin
         aAmt   := aVal.GetValue<double>('candle_acc_trade_price');
         aPrice := aVal.GetValue<double>('trade_price');
 
+        mt:= MonthOf(dTime);
         d := Dayof(  dTime );
         h := Hourof( dTime );
         m := MinuteOf(dTime);
@@ -396,8 +397,10 @@ begin
             begin
               sTmp := Format('%2.2d00', [ d] );
               aWcd := App.Engine.SymbolCore.WCDays.Find( sTmp );
-              if aWcd = nil then
+              if aWcd = nil then begin
                 aWcd := App.Engine.SymbolCore.WCDays.New( sTmp );
+                aWcd.m := mt;  aWcd.d := d;
+              end;
 
               aWcd.Price[ aKind, FParent.ExchangeKind] := aClose;
               aWcd.Amount[aKind, FParent.ExchangeKind] := accAmt;

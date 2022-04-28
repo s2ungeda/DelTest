@@ -140,7 +140,7 @@ begin
 //      sgWDC1.Cells[j, 0] := FmtString( 1, aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit] );
 
     end ;
-          sgWDC1.Cells[j, 0] := Format('%s:%s', [ Copy( aWcd.TimStr, 1,2), Copy( aWcd.TimStr, 3,2 )]);
+    sgWDC1.Cells[j, 0] := Format('%2.2d.%2.2d', [ aWcd.m, aWcd.d]);
     dPrev[ekUpbit]  := aWcd.RpsntWCD[ekUpbit];
     dPrev[ekBithumb]:= aWcd.RpsntWCD[ekBithumb];
     inc(j);
@@ -225,23 +225,27 @@ begin
         if Objects[ACol, ARow] <> nil  then
         begin
           aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-          aFont := clWhite;//GetColor( 1, Integer( Objects[ACol, ARow] ));
+          aFont := GetColor( 1, Integer( Objects[ACol, ARow] ));
 
           // 현재가 표시 부분..
-          if ( ACol = FCol ) and ( ARow in [ FRow..FRow+1]) then
+          if (( ACol = FCol ) and ( ARow in [ FRow..FRow+1]))  or
+            (( ACol = 0 ) and ( ARow in [3..4] ))  then
           begin
+//            aFont := GetColor( 2, Integer( Objects[ACol, ARow] ));
+//            aBack := clWhite;
+            aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
             aFont := GetColor( 1, Integer( Objects[ACol, ARow] ));
-            aBack := clWhite;
           end;
-        end ;
 
+        end ;
       end else
       if Tag = 0 then
       begin
         if Objects[ACol, ARow] <> nil  then
         begin
           aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
-          aFont := clWhite;
+          aFont := GetColor( 1, Integer( Objects[ACol, ARow] ));
+//          aFont := clWhite;
         end;
       end;
 
@@ -319,6 +323,9 @@ begin
 
     SetColor( FWCD[ ekUpbit ] - App.Engine.SymbolCore.RprsntWDC[ekUpbit][idx],  sgWDC2, FCol, FRow );
     SetColor( FWCD[ ekBithumb ] - App.Engine.SymbolCore.RprsntWDC[ekBithumb][idx],  sgWDC2, FCol, FRow+1 );
+
+    Objects[0,3] := Objects[ FCol, FRow];
+    Objects[0,4] := Objects[ FCol, FRow+1];
 
     if FLastIdx <> FCol then
     begin

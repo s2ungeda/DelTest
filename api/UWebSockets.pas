@@ -38,6 +38,8 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     FSubList: TStrings;
     FDone: boolean;
     FDisConnCnt: integer;
+    FRcvCnt: int64;
+    FRcvRat: int64;
 
     function Desc : string;
   protected
@@ -82,6 +84,8 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     property Port      : integer read FPort;
     property SockDiv  : integer read FSockDiv;
     property Seq      : integer read FSeq;
+    property RcvCnt   : int64 read FRcvCnt ;
+    property RcvRat   : int64 read FRcvRat ;
 
     property LiveTime : TDateTime read FLiveTime;
     property ExchangeKind   : TExchangeKind read FExchangeKind;
@@ -113,6 +117,9 @@ begin
   FConnectTry := 0;
   FDisConnCnt := 0;
   FSockDiv    := iSockDiv;
+
+  FRcvRat := 0;
+  FRcvCnt := 0;
 
   with FWebSocket do
   begin
@@ -286,6 +293,12 @@ begin
   if ( sData <> '') and ( Assigned(FOnNotify)) then begin
     FLiveTime := now;
     FOnNotify( sData );
+    inc(FRcvCnt);
+    if ( High(int64) - FRcvCnt ) < 100 then
+    begin
+      FRcvCnt := 0;
+      inc(FRcvRat);
+    end;
   end;
 
 //    PushQueue( Length(sData), sData );
