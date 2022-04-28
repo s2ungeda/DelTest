@@ -137,8 +137,10 @@ begin
     if i < App.Engine.SymbolCore.WCDays.Count-1 then begin
       SetColor( aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit], sgWDC1, j, 1 );
       SetColor( aWcd.RpsntWCD[ekBithumb] - dPrev[ekBithumb], sgWDC1, j, 2 );
-      sgWDC1.Cells[j, 0] := FmtString( 1, aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit] );
+//      sgWDC1.Cells[j, 0] := FmtString( 1, aWcd.RpsntWCD[ekUpbit] - dPrev[ekUpbit] );
+
     end ;
+          sgWDC1.Cells[j, 0] := Format('%s:%s', [ Copy( aWcd.TimStr, 1,2), Copy( aWcd.TimStr, 3,2 )]);
     dPrev[ekUpbit]  := aWcd.RpsntWCD[ekUpbit];
     dPrev[ekBithumb]:= aWcd.RpsntWCD[ekBithumb];
     inc(j);

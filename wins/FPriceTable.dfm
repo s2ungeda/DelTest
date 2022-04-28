@@ -65,8 +65,6 @@ object FrmPriceTable: TFrmPriceTable
         OnDrawCell = sgKimpDrawCell
         OnKeyDown = sgKimpKeyDown
         OnMouseDown = sgKimpMouseDown
-        ExplicitTop = 0
-        ExplicitHeight = 506
       end
       object plLeftTop: TPanel
         Left = 0
@@ -77,18 +75,18 @@ object FrmPriceTable: TFrmPriceTable
         BevelOuter = bvLowered
         ParentBackground = False
         TabOrder = 1
-        ExplicitTop = 8
         DesignSize = (
           1009
           32)
         object Refresh: TButton
           Left = 941
           Top = 4
-          Width = 75
+          Width = 47
           Height = 25
           Anchors = [akRight, akBottom]
-          Caption = 'Refresh'
+          Caption = #51201#50857
           TabOrder = 0
+          OnClick = RefreshClick
         end
         object cbAuto: TCheckBox
           Left = 783

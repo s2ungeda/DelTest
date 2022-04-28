@@ -34,6 +34,7 @@ type
     procedure refreshTimerTimer(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure cbAutoClick(Sender: TObject);
+    procedure RefreshClick(Sender: TObject);
 
   private
     FWinParam: TWinParam;
@@ -142,8 +143,6 @@ end;
 
 procedure TFrmPriceTable.cbAutoClick(Sender: TObject);
 begin
-  FWinParam.FTerm := StrToInt( edtSec.Text );
-  refreshTimer.Interval := FWinParam.FTerm;
   refreshTimer.Enabled  := cbAuto.Checked;
 end;
 
@@ -593,5 +592,22 @@ begin
 
 end;
 
+
+procedure TFrmPriceTable.RefreshClick(Sender: TObject);
+var
+  iTmp : integer;
+begin
+
+  iTmp :=  StrToInt( edtSec.Text );
+
+  if iTmp < 100 then
+  begin
+    ShowMessage('100 보다 작으면 안돼');
+    Exit;
+  end;
+
+  FWinParam.FTerm := iTmp;
+  refreshTimer.Interval := FWinParam.FTerm;
+end;
 
 end.

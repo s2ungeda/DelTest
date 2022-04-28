@@ -361,13 +361,14 @@ begin
 
           if App.AppStatus > asLoad then
           begin
-            aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
-            if aQuote = nil then
-            begin
+//  웹소켓이 불안해서 일단 실시간 구독한 종목도 계산한다. - 웹소켓 안정화 되면..빼야 됨.
+//            aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+//            if aQuote = nil then
+//            begin
               App.Engine.SymbolCore.CalcKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainWDC(aSymbol);
-            end;
+//            end;
           end;
         end;
 
