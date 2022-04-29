@@ -289,7 +289,7 @@ begin
   begin
     if not FExManagers[i].SubscribeAll then
       Exit (false);
-    sleep(10);
+    sleep(100);
   end;
 
 

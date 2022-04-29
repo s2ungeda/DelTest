@@ -399,6 +399,7 @@ begin
 
   FKimpPrice := 0.0;
   FWDCPrice  := 0.0;
+  FSPrice    := 0.0;
 
 end;
 

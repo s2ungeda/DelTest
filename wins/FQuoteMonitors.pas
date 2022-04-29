@@ -477,6 +477,7 @@ var
   iCol : integer;
   dTmp : double;
   bSymbol : TSymbol;
+  sTmp : string;
 begin
   iCol := 0;
   with sgQuote do
@@ -487,8 +488,11 @@ begin
     PutData( iCol, iRow, Format('%.*n %%', [ FPrecision, aSymbol.KimpPrice] ) );
 
     PutData( iCol, iRow, format('%.1f', [ aSymbol.WDCPrice] ) );
-    PutData( iCol, iRow, ifThenStr( aSymbol.Spec.ExchangeType = ekUpbit
-      ,  FmtString( 2, aSymbol.SPrice ), '') );
+
+    sTmp := ifThenStr( aSymbol.Spec.ExchangeType = ekUpbit,  Format('%.*n %%', [ 2, aSymbol.SPrice] ) , '' );
+    PutData( iCol, iRow, sTmp);
+//    PutData( iCol, iRow, ifThenStr( aSymbol.Spec.ExchangeType = ekUpbit
+//      ,  FmtString( 2, aSymbol.SPrice ), '') );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
     // 전일종가 대신 오픈...

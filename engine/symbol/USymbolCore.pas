@@ -182,7 +182,7 @@ begin
   end;
 
   if not IsZero( aPrice ) then
-    aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice
+    aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice * 100
   else
     aSymbol.SPrice := 0;
 end;
@@ -219,10 +219,41 @@ begin
   end else
   begin
     pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FMainExKind, FMainExMarket  );
-    if aSymbol <> nil then begin
+    if pSymbol <> nil then begin
       CalcKimp( pSymbol.Last, aSymbol );
-      CalcSP( pSymbol.Last, aSymbol );
     end;
+
+    if aSymbol.Spec.ExchangeType = FSubExKind1 then begin
+      pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FSubExKind2  );
+      if pSymbol <> nil then
+        CalcSP( pSymbol.Last, aSymbol );
+    end  else
+    if aSymbol.Spec.ExchangeType = FSubExKind2 then begin
+      pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FSubExKind1  );
+      if pSymbol <> nil then
+        CalcSP( aSymbol.Last, pSymbol );
+    end;
+
+
+//    aList := FBaseSymbols.FindSymbolList( aSymbol.Spec.BaseCode );
+//    if aList = nil then Exit;
+//
+//    for I := 0 to aList.Count-1 do
+//    begin
+//      pSymbol := aList.Symbols[i];
+//      if pSymbol = nil then Continue;
+//
+//      if (pSymbol.Spec.ExchangeType = FSubExKind1) or
+//         (pSymbol.Spec.ExchangeType = FSubExKind2) then
+//         CalcKimp( aSymbol.Last, pSymbol );
+//
+//      if (aSymbol.Spec.ExchangeType = FSubExKind1) and
+//         (pSymbol.Spec.ExchangeType = FSubExKind2) then
+//         CalcSP( pSymbol.Last, aSymbol );
+//
+//    end;
+
+
   end;
 
 end;

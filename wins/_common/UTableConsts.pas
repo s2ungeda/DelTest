@@ -30,10 +30,10 @@ const
   quoteMon_TitleCnt = 10;
   quoteMon_Title : array [0..quoteMon_TitleCnt-1] of string = ('코인', '거래소'
     ,'KIP', 'WCD','SP','현재가','등락'
-    ,'고','저', '일거래액(억)');
+    ,'고','저', '일거래액');
   quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (70, 40
-    , 60, 60, 65, 90, 60
-    , 60, 60, 70 );
+    , 60, 60, 60, 80, 60
+    , 60, 60, 60 );
 
   CoinCol = 0;
   ExCol   = 1;
