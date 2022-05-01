@@ -71,6 +71,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
     procedure init(sAddr : string; iPort : integer = 443);
     procedure DoConnect;
     procedure DoDissConnect( bStart : boolean = false );
+    procedure DoDisConnect;
     procedure SendData( sData : string );
     procedure SetIndex( i, j : integer );
 //    procedure PushQueue(Size: Integer; msg: string);
@@ -195,6 +196,18 @@ begin
   FWebSocket.Connect( 'wss://'+FEndPoint);
 
 end;
+procedure TWebsocket.DoDisConnect;
+begin
+  try
+
+    //if FWebSocket.State = sOpen then
+      FWebSocket.Close;
+  except on e : WebSocketException do
+    App.Log(llError, '%s DisConnect Error : %s, %s, %d:%s',[Desc, e.Message,  e.ToString,
+      integer(FWebSocket.State),  FWebSocket.CloseStatusDescription ] );
+  end;
+end;
+
 procedure TWebsocket.DoDissConnect( bStart : boolean );
 begin
   try
@@ -239,12 +252,26 @@ begin
   inc( FConnectTry );
 
 end;
+
+{
+ TScWebSocketCloseStatus = (csNormalClosure, csEndpointUnavailable, csProtocolError,
+
+   csUnsupportedData, csEmpty,  csAbnormalClosure, csInvalidPayloadData,
+
+   csPolicyViolation, csMessageTooBig, csMandatoryExtension,
+
+   csInternalServerError, csTLSHandshakeError,
+
+   csUnknown);
+}
+
 procedure TWebsocket.OnAfterDisconnect(Sender: TObject);
 begin
 
   if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
-    App.Log(llError, '%d %s was closed with error %s ',
+    App.Log(llError, '%d %s was closed with error %d %s ',
       [ FDisConnCnt, TExchangeKindDesc[FExchangeKind],
+      integer( TScWebSocketClient(Sender).CloseStatus ) ,
       TScWebSocketClient(Sender).CloseStatusDescription ] );
   inc( FDisConnCnt );
 end;

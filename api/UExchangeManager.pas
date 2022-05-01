@@ -22,6 +22,7 @@ type
 
     QuoteSock : array of TWebSocket;
     TradeSock : array [TMarketType] of TWebSocket;
+    TopAmtSymbols : array [0..1] of TSymbol;
 
     Constructor Create( aExType : TExchangeKind ); overload;
     Destructor  Destroy; override;
@@ -86,6 +87,9 @@ begin
   QuoteSock := nil;
   TradeSock[mtSpot] := nil;
   TradeSock[mtFutures] := nil;
+
+  TopAmtSymbols[0] := nil;
+  TopAmtSymbols[1] := nil;
 
   FDone := false;
 

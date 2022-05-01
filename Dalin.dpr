@@ -86,7 +86,9 @@ uses
   URestRequests in 'api\URestRequests.pas',
   FWinConfig in 'FWinConfig.pas' {FrmWinConfig},
   FRepresentWDC in 'wins\FRepresentWDC.pas' {FrmRprsntWDC},
-  UOtherData in 'engine\symbol\UOtherData.pas';
+  UOtherData in 'engine\symbol\UOtherData.pas',
+  FDataTest in 'wins\FDataTest.pas' {FrmTest},
+  UDataLogs in 'engine\common\UDataLogs.pas';
 
 {$R *.res}
 begin
@@ -96,6 +98,7 @@ begin
   Application.CreateForm(TFrmDalinMain, FrmDalinMain);
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TFrmWinConfig, FrmWinConfig);
+  Application.CreateForm(TFrmTest, FrmTest);
   FrmDalinMain.Start;
   Application.Run;
 

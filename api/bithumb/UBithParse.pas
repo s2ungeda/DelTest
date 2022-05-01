@@ -45,6 +45,7 @@ uses
   GApp, GLibs, Math , UTypes
   , UApiConsts
   , UQuoteBroker
+  , USymbolUtils
   ;
 
 { TBithParse }
@@ -264,6 +265,9 @@ begin
       iw := aPair.JsonValue.GetValue<integer>('withdrawal_status');
       id := aPair.JsonValue.GetValue<integer>('deposit_status');
 
+      if sTmp = 'XEM' then
+        sTmp := 'XEM';
+
       var iRes : integer;
       iRes := aSymbol.CheckDnwState( id = 1, iw = 1 ) ;
       if iRes > 0 then
@@ -334,13 +338,21 @@ var
   bNew : boolean;
   j: Integer;
   aQuote : TQuote;
+  dtTime : TDateTime;
+  bCalc : boolean;
+  dTmp  : double;
+  aList : TList;
 begin
   master := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
   aObj := master.GetValue('data') as TJsonObject;
 
+  aList := TList.Create;
   try
 
     try
+
+      dtTime  := UnixTimeToDateTime( aObj.GetValue<int64>('date') );
+
       for I := 0 to aObj.Size-1 do
       begin
         aPair := aObj.Get(i);
@@ -351,16 +363,30 @@ begin
         if aSymbol <> nil then
         begin
 
+          bCalc := false;
           aVal := aPair.JsonValue;
 
           aSymbol.DayHigh     := StrToFloatDef( aVal.GetValue<string>( 'max_price' ), 0.0 );
           aSymbol.DayLow      := StrToFloatDef( aVal.GetValue<string>( 'min_price' ), 0.0 );
           aSymbol.DayOpen     := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
-          aSymbol.Last        := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
 
           aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
           aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_value_24H' ), 0.0 ) / 100000000;
           aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
+          dTmp                := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
+
+          if dtTime > aSymbol.LastEventTime then
+          begin
+            aSymbol.Last          := dTmp ;
+            aSymbol.LastEventTime := dtTime;
+            aSymbol.LastTime      := now;
+            bCalc := true;
+          end;
+
+//            App.DebugLog( 'ticker not up : %s -> (%s)%s, %s', [ aSymbol.Code, aSymbol.PriceToStr(aSymbol.Last),
+//              aSymbol.PriceToStr( dTmp )
+//              , FormatDateTime('hh:nn:ss', dtTime)] );
+
 
           if App.AppStatus > asLoad then
           begin
@@ -368,21 +394,38 @@ begin
 //            aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
 //            if aQuote = nil then
 //            begin
+            if bCalc then begin
+
               App.Engine.SymbolCore.CalcKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+            end;
 //            end;
           end;
-        end;
 
+          if ( App.Engine.SymbolCore.MainSymbols[msBTC][ekBithumb] <> aSymbol ) and
+            ( App.Engine.SymbolCore.MainSymbols[msETH][ekBithumb] <> aSymbol ) and
+            ( App.Engine.SymbolCore.MainSymbols[msXRP][ekBithumb] <> aSymbol ) then
+            aList.Add( aSymbol );
+
+        end;
       end;
+
+      aList.Sort(CompareDailyAmount);
+      if aList.Count > 2 then
+      begin
+        App.Engine.ApiManager.ExManagers[ekBithumb].TopAmtSymbols[0] := TSymbol( aList.Items[0] );
+        App.Engine.ApiManager.ExManagers[ekBithumb].TopAmtSymbols[1] := TSymbol( aList.Items[1] );
+      end;
+
     except on e : exception do
       App.log( llError,  ' %s ParseTicker Error', [  TExchangeKindDesc[ FParent.ExchangeKind], aData ] ) ;
     end;
   //  if ( GetCodeIndex( sCode ) < 0 ) then Continue;
 
   finally
-    if aObj <> nil then aObj.Free
+    if aObj <> nil then aObj.Free ;
+    aList.Free;
   end;
 
 

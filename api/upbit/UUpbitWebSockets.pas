@@ -110,8 +110,8 @@ begin
   inherited OnAfterConnect(Sender);
   App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
-  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
-    SubscribeAll;
+ // if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
+ //   SubscribeAll;
 end;
 
 procedure TUpbitWebSocket.OnAfterDisconnect(Sender: TObject);

@@ -635,6 +635,7 @@ procedure TQuote.checkHoga;
 var
   bLog : boolean;
 begin
+  Exit;
   try
 
     if FSymbol.Spec.ExchangeType = ekBithumb then Exit;

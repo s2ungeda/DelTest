@@ -45,6 +45,7 @@ uses
   GApp, GLibs  , Math , UTypes
   , UApiConsts
   , UOtherData
+  , USymbolUtils
   ;
 
 { TUpbitParse }
@@ -283,44 +284,96 @@ var
   aSymbol : TSymbol;
   sts   : TArray<string>;
   aQuote : TQuote;
+  dtTime : TDateTime;
+  bCalc : boolean;
+  aList : TList;
+  dPrice : double;
+
 begin
+  aList := nil;
   if aData = '' then
   begin
     App.Log(llError, 'Upbit ParseSpotTicker data is empty') ;
     Exit;
   end;
 
+  aList:= TList.Create;
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
 
-  for I := 0 to aArr.Size-1 do
-  begin
-    aVal := aArr.Get(i);
-    sCode:= aVal.GetValue<string>('market');
+  try
 
-    sts := sCode.Split(['-']);
-    aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
-
-    if aSymbol = nil then  continue;
-
-    aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
-    aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'high_price' ), 0.0 );
-    aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
-    aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
-    aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
-    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
-    aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
-
-    if App.AppStatus > asLoad then
+    for I := 0 to aArr.Size-1 do
     begin
-//  웹소켓이 불안해서 일단 실시간 구독한 종목도 계산한다. - 웹소켓 안정화 되면..빼야 됨.
-//      aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
-//      if aQuote = nil then
+      aVal := aArr.Get(i);
+      sCode:= aVal.GetValue<string>('market');
+
+      sts := sCode.Split(['-']);
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
+
+      if aSymbol = nil then  continue;
+
+      dtTime := UnixTimeToDateTime( aVal.GetValue<int64>( 'trade_timestamp') );
+
+      aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+      aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'high_price' ), 0.0 );
+      aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
+
+      aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
+      aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
+      aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
+
+      dPrice   := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
+      bCalc    := false;
+      if dtTime > aSymbol.LastEventTime then
+      begin
+        aSymbol.Last := dPrice;
+        aSymbol.LastEventTime := dtTime;
+        aSymbol.LastTime      := now;
+        bCalc   := true;
+      end;
+//      else
+//        App.DebugLog( 'ticker not up : %s -> (%s)%s, %s, %.0f', [ aSymbol.Code, aSymbol.PriceToStr(aSymbol.Last),
+//              aSymbol.PriceToStr( dPrice )
+//              , FormatDateTime('hh:nn:ss', dtTime), dtTime] );
+
+
+      if App.AppStatus > asLoad then
+      begin
+  //  웹소켓이 불안해서 일단 실시간 구독한 종목도 계산한다. - 웹소켓 안정화 되면..빼야 됨.
+  //      aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+  //      if aQuote = nil then
+  //      begin
+        if bCalc then begin
+
+          App.Engine.SymbolCore.CalcKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+        end;
+  //      end;
+      end;
+
+      if ( App.Engine.SymbolCore.MainSymbols[msBTC][ekUpbit] <> aSymbol ) and
+        ( App.Engine.SymbolCore.MainSymbols[msETH][ekUpbit] <> aSymbol ) and
+        ( App.Engine.SymbolCore.MainSymbols[msXRP][ekUpbit] <> aSymbol ) then
+        aList.Add( aSymbol );
+    end;
+
+    aList.Sort(CompareDailyAmount);
+    if aList.Count > 2 then
+    begin
+      App.Engine.ApiManager.ExManagers[ekUpbit].TopAmtSymbols[0] := TSymbol( aList.Items[0] );
+      App.Engine.ApiManager.ExManagers[ekUpbit].TopAmtSymbols[1] := TSymbol( aList.Items[1] );
+
+//      with App.Engine.ApiManager.ExManagers[ekUpbit] do
 //      begin
-        App.Engine.SymbolCore.CalcKimp( aSymbol );
-        App.Engine.SymbolCore.CalcMainKimp( aSymbol );
-        App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+//        App.DebugLog('first : %s , %f',[ TopAmtSymbols[0].Code, TopAmtSymbols[0].DayAmount  ] );
+//        App.DebugLog('first : %s , %f',[ TopAmtSymbols[1].Code, TopAmtSymbols[1].DayAmount  ] );
 //      end;
     end;
+
+  finally
+    if aArr <> nil then aArr.Free;
+    if aList <> nil then aList.Free;
   end;
 
 end;
@@ -524,13 +577,14 @@ begin
   aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
   if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
 
-  if sCode = 'BTC' then
-    sCode := 'BTC';
-
   with aQuote do
   begin
 
-    dtTime  := UnixTimeToDateTime( aJson.GetValue<int64>('tms') );
+    dtTime  := UnixTimeToDateTime( aJson.GetValue<int64>('ttms') );
+
+    if Symbol.Code = 'BTC' then
+      App.DebugLog( 'BTC time : %s %.0f', [ FormatDateTime('hh:nn:ss', dtTime), dtTime] )   ;
+
 
     aSale := Symbol.Sales.New;
     aSale.LocalTime := now;

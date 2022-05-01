@@ -23,6 +23,7 @@ type
     nExchange: TMenuItem;
     N2: TMenuItem;
     MainWDC1: TMenuItem;
+    test2: TMenuItem;
     procedure Kimp1Click(Sender: TObject);
     procedure nExchangeClick(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
@@ -46,7 +47,7 @@ uses
   GApp, GAppForms ,
 
   DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors,
-  FRepresentWDC
+  FRepresentWDC, FDataTest
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -140,6 +141,7 @@ begin
     ID_DNW_STATE :  aForm := TFrmDnwStates.Create( FrmDalinMain );
     ID_QUOTE_MONITOR :  aForm := TFrmQuoteMonitors.Create( FrmDalinMain );
     ID_RPRSNT_WDC : aForm :=  TFrmRprsntWDC.Create( FrmDalinMain);
+    ID_TEST : aForm := TFrmTest.Create( FrmDalinMain );
   end;
 end;
 
@@ -161,6 +163,7 @@ begin
     1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
     2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
     3 : App.Engine.FormBroker.Open(ID_RPRSNT_WDC, 0);
+    4 : App.Engine.FormBroker.Open(ID_TEST, 0);
   end;
 
 

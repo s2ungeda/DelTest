@@ -104,7 +104,7 @@ var
   iState, i : integer;
 begin
   // 1초에 한번
-  //Exchanges[mtSpot].RequestDNWState;
+  Exchanges[mtSpot].RequestDNWState;
 
 end;
 

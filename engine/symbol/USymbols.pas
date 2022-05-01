@@ -8,7 +8,7 @@ uses
 
   UFQN , UApiTypes, UMarketSpecs ,
 
-  UTicks
+  UTicks, UDataLogs
   ;
 
 type
@@ -16,6 +16,7 @@ type
   TSymbol = class;
 
   TSymbolFindEvent = function(stCode: String): TSymbol of object;
+
 
   TMarketDepth = class(TCollectionItem)
   private
@@ -151,6 +152,8 @@ type
     FSPrice: double;
     procedure OnTermAddEvent(Sender: TObject);
   public
+
+    DataTrace : TDataTrace;
     constructor Create( aColl : TCollection ); override;
     Destructor Destroy ; override;
 
@@ -235,6 +238,7 @@ type
     function FindCode2( stCode : string ) : TSymbol;
     procedure AddSymbol(aSymbol: TSymbol);
     procedure AddSymbol2(aSymbol: TSymbol);
+    procedure DeleteSymbol( aSymbol : TSymbol );
     procedure GetList( aList: TStrings); overload;
     procedure GetList( aList: TStrings; aMarket : TMarketType ); overload;
     procedure GetLists( aList : TSTrings; aMarkets : TMarketTypes );
@@ -344,23 +348,32 @@ begin
   Result := 0;
   if FWithdrawlState then
     if not withdraw then
-      b1 := false;           
-  FWithdrawlState := withdraw;       
+      b1 := false;
+
 
   if FDepositState then
     if not depoit then
-      b2 := false;            
-  FDepositState := depoit;
+      b2 := false;
 
-  if (not b1) and ( not b2 ) then
+  FWithdrawlState := withdraw;
+  FDepositState   := depoit;
+
+  if (not depoit) and ( not withdraw ) then
     Result := DNW_BOTH_FALE
-  else if not b1 then
+  else if not withdraw then
     Result := DWN_WITHDRAW_FALSE
-  else if not b2 then
+  else if not depoit then
     Result := DWN_DEPOSIT_FALSE;
 
-  if Result > 0 then
-    App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self );
+  if Result > 0 then begin
+    if App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].FindCode( Code ) = nil then
+      App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self )
+    else
+      Result := 0;
+  end
+  else if Result = 0 then
+    App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
+
 
   if FDnwCount = 0 then
   begin
@@ -388,6 +401,8 @@ begin
 
   FTerms    := TSTerms.Create;
   FTerms.OnAdd  := OnTermAddEvent;
+
+  DataTrace := TDataTrace.Create;
 
   FAddTerm  := false;
 
@@ -418,6 +433,7 @@ end;
 destructor TSymbol.Destroy;
 begin
 
+  DataTrace.Free;
   FTicks.free;
   FBids.Free;
   FAsks.Free;
@@ -463,6 +479,15 @@ begin
   inherited Create;
 
   Sorted := True;
+end;
+
+procedure TSymbolList.DeleteSymbol(aSymbol: TSymbol);
+var
+  idx : Integer;
+begin
+  idx := IndexOf( aSymbol.Code );
+  if idx >= 0 then
+    Delete(idx);
 end;
 
 function TSymbolList.FindCode(stCode: String): TSymbol;

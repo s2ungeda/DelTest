@@ -114,6 +114,7 @@ begin
 //    sgQuote.Cells[i,0] := prcTbll2_Title[i];
 //
 //  end;
+  FSymbols := TList.Create;
 end;
 
 procedure TFrmDnwStates.InitObject;
@@ -142,10 +143,10 @@ var
   end;
 begin
 
-  FSymbols := TList.Create;
 
-  for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Count-1 do
+  for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Count-1 do begin
     FSymbols.Add( App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Symbols[i] );
+  end;
 
 
   for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekUpbit].Count-1 do
@@ -509,8 +510,12 @@ begin
   if cbAuto.Checked then
     refreshTimer.Enabled := false;
 
-  FSymbols.Sort( CompareDailyAmount );
-  RefreshClick( nil );
+  FSymbols.Clear;
+  InitGrid( sgDnw, true, 1 );
+  InitObject;
+
+//  FSymbols.Sort( CompareDailyAmount );
+//  RefreshClick( nil );
 
   refreshTimer.Enabled := cbAuto.Checked;
 end;

@@ -16,7 +16,7 @@ const
   ID_QUOTE_MONITOR  = 30001;
   ID_JUNG_KOPI      = 30002;
   ID_RPRSNT_WDC     = 30003;
-
+  ID_TEST           = 30004;
 
 
   ID_DALIN_SUMUL  = 99999;

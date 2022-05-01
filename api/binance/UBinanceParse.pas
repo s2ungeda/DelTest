@@ -137,16 +137,18 @@ begin
       aSymbol.DayVolume:= StrToFloat( aObj.GetValue('v').Value );
       aSymbol.DayAmount:= StrToFloat( aObj.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
 
-//      if App.AppStatus > asLoad then
-//      begin
-//        aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
-//        if aQuote = nil then
-//        begin
+      if App.AppStatus > asLoad then
+      begin
+        aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+        if aQuote = nil then
+        begin
+          aSymbol.Last := StrToFloat( aObj.GetValue('c').Value );
+
           App.Engine.SymbolCore.CalcKimp( aSymbol );
           App.Engine.SymbolCore.CalcMainKimp( aSymbol );
           App.Engine.SymbolCore.CalcMainWDC(aSymbol);
-//        end;
-//      end;
+        end;
+      end;
     end;
   end;
 

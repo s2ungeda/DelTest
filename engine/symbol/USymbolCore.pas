@@ -157,10 +157,15 @@ begin
 
   dEx :=  Max( aPrice * App.Engine.ApiManager.ExRate.Value , 1 );
 
-  if dEx > EPSILON then
+  if dEx > EPSILON then begin
     aSymbol.KimpPrice     := ( aSymbol.Last - dEx) / dEx * 100;
-  if aPrice > EPSILON then
+    aSymbol.DataTrace.Kip.SetData( App.Engine.ApiManager.ExRate.Value,
+      aPrice, aSymbol.Last, aSymbol.KimpPrice );
+  end;
+  if aPrice > EPSILON then begin
     aSymbol.WDCPrice      := ( 1/ aPrice) * aSymbol.Last;
+    aSymbol.DataTrace.WCD.SetData( aPrice, aSymbol.Last, aSymbol.WDCPrice );
+  end;
 
 //  if aSymbol.KimpPrice > 99999 then
 //    App.DebugLog('%s, %s, %.3f =  %s, %s, %.1f', [ TExchangeKindDesc[ aSymbol.Spec.ExchangeType ],
@@ -181,8 +186,10 @@ begin
     Exit;
   end;
 
-  if not IsZero( aPrice ) then
-    aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice * 100
+  if not IsZero( aPrice ) then begin
+    aSymbol.SPrice := (aSymbol.Last - aPrice) / aPrice * 100  ;
+    aSymbol.DataTrace.SP.SetData( aPrice, aSymbol.Last, aSymbol.SPrice);
+  end
   else
     aSymbol.SPrice := 0;
 end;

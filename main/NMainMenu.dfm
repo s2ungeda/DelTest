@@ -43,6 +43,11 @@ object DataModule1: TDataModule1
         Caption = #45824#54364' WCD'
         OnClick = Kimp1Click
       end
+      object test2: TMenuItem
+        Tag = 4
+        Caption = 'test'
+        OnClick = Kimp1Click
+      end
     end
   end
 end

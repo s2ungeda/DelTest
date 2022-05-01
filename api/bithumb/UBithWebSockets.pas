@@ -42,6 +42,7 @@ uses
   , UTypes
   , UApiConsts
   , UBithParse
+  , ScSSLTypes
   ;
 { TBithWebSocket }
 constructor TBithWebSocket.Create(iSockDiv, iSeq: Integer; aMtType: TMarketType);
@@ -57,6 +58,7 @@ begin
   begin
     HeartBeatOptions.Enabled := true;
     HeartBeatOptions.Interval:= 100;
+//    WebSocket.SSLOptions.Protocols :=  WebSocket.SSLOptions.Protocols +  [spTls13];
   end;
 end;
 destructor TBithWebSocket.Destroy;
@@ -88,7 +90,7 @@ begin
 
 //    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
   SubList.Add( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
-  SubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
+//  SubList.Add( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
 
   App.DebugLog( '========== bithumb sub ===========');
   for I := 0 to SubList.Count-1 do
@@ -102,8 +104,8 @@ begin
   inherited OnAfterConnect(Sender);
   App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
-  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
-    SubscribeAll;
+//  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
+//    SubscribeAll;
 //  if (FSubList.Count > 0 ) then
 //    SubScribe( true );
 
@@ -113,17 +115,18 @@ begin
   inherited OnAfterDisconnect(Sender);
   App.Log(llInfo, ' %s Disconnected', [ Descript]);
 
-  if DisConnCnt < 5 then
-  begin
-    App.Log(llInfo, '%d.th %s ReConnect', [ DisConnCnt, Descript]);
-    reCreate;
-    with WebSocket do
-    begin
-      HeartBeatOptions.Enabled := true;
-      HeartBeatOptions.Interval:= 100;
-    end;
-    DoConnect;
-  end;
+  //
+//  if DisConnCnt < 5 then
+//  begin
+//    App.Log(llInfo, '%d.th %s ReConnect', [ DisConnCnt, Descript]);
+//    reCreate;
+//    with WebSocket do
+//    begin
+//      HeartBeatOptions.Enabled := true;
+//      HeartBeatOptions.Interval:= 100;
+//    end;
+//    DoConnect;
+//  end;
 
 end;
 
@@ -206,7 +209,7 @@ begin
 
 //    SendData( Format('{"type":"orderbookdepth", "symbols":[%s]}', [ sParam ]) );
   SendData( Format('{"type":"transaction", "symbols":[%s]}', [ sParam ] ));
-  SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
+//  SendData( Format('{"type":"ticker", "symbols":[%s],"tickTypes":["24H"] }', [ sParam ] ));
 end;
 
 //procedure TBithWebSocket.SubscribeAll;
