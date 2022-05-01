@@ -324,17 +324,17 @@ begin
 
       dPrice   := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
       bCalc    := false;
-      if dtTime > aSymbol.LastEventTime then
+      if dtTime > aSymbol.LastTradeTime then
       begin
         aSymbol.Last := dPrice;
-        aSymbol.LastEventTime := dtTime;
+        aSymbol.LastTradeTime := dtTime;
         aSymbol.LastTime      := now;
         bCalc   := true;
-      end;
+      end                                                         ;
 //      else
-//        App.DebugLog( 'ticker not up : %s -> (%s)%s, %s, %.0f', [ aSymbol.Code, aSymbol.PriceToStr(aSymbol.Last),
+//        App.DebugLog( 'ticker not up : %s -> (%s)%s, %s, %.6f', [ aSymbol.Code, aSymbol.PriceToStr(aSymbol.Last),
 //              aSymbol.PriceToStr( dPrice )
-//              , FormatDateTime('hh:nn:ss', dtTime), dtTime] );
+//              , FormatDateTime('hh:nn:ss.zzz', dtTime), dtTime] );
 
 
       if App.AppStatus > asLoad then
@@ -582,8 +582,8 @@ begin
 
     dtTime  := UnixTimeToDateTime( aJson.GetValue<int64>('ttms') );
 
-    if Symbol.Code = 'BTC' then
-      App.DebugLog( 'BTC time : %s %.0f', [ FormatDateTime('hh:nn:ss', dtTime), dtTime] )   ;
+//    if Symbol.Code = 'BTC' then
+//      App.DebugLog( 'BTC time : %s %.6f', [ FormatDateTime('hh:nn:ss.zzz', dtTime), dtTime] )   ;
 
 
     aSale := Symbol.Sales.New;

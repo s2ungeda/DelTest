@@ -150,6 +150,7 @@ type
     FWDCPrice: double;
     FDnwTime: TDateTime;
     FSPrice: double;
+    FLastTradeTime: TDateTime;
     procedure OnTermAddEvent(Sender: TObject);
   public
 
@@ -220,6 +221,7 @@ type
 
     property LastTime : TDateTime read FLastTime write FLastTime;
     property LastEventTime  : TDateTime read FLastEventTime write FLastEventTime;
+    property LastTradeTime  : TDateTime read FLastTradeTime write FLastTradeTime;
   end;
 
   TSymbols = class(TCollection)

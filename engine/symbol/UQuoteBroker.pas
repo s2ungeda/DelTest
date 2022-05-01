@@ -616,6 +616,8 @@ begin
     App.Engine.SymbolCore.CalcMainKimp( FSymbol );
     App.Engine.SymbolCore.CalcMainWDC(FSymbol);
 
+    FSymbol.LastTradeTime := dtTime;
+
   end else
   if FLastEvent = qtMarketDepth then
   begin
