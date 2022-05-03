@@ -50,6 +50,7 @@ implementation
 uses
   GApp   , UApiConsts
   , UBithParse
+  , USymbolUtils
   ;
 
 { TBinanceSpotNMargin }
@@ -130,10 +131,13 @@ var
   sBase, sCode, sTmp : string;
   aSymbol : TSymbol;
   bNew : boolean;
+  aList: TList;
 begin
+  aList := nil;
   master := TJsonObject.ParseJSONValue( MasterData ) as TJsonObject;
   aObj := master.GetValue('data') as TJsonObject;
 
+  aList := TList.Create;
   try
 
     for I := 0 to aObj.Size-1 do
@@ -176,11 +180,23 @@ begin
       if bNew then
         App.Engine.SymbolCore.RegisterSymbol( GetExKind, aSymbol );
 
+      if ( sCode <> 'BTC' ) and ( sCode <> 'ETH') and ( sCode <> 'XRP') then
+        aList.Add( aSymbol );
+
     end;
     Result := App.Engine.SymbolCore.Spots[GetExKind].Count > 0 ;
+
+    aList.Sort(CompareDailyAmount);
+    if aList.Count > 2 then
+    begin
+      App.Engine.ApiManager.ExManagers[ekBithumb].TopAmtSymbols[0] := TSymbol( aList.Items[0] );
+      App.Engine.ApiManager.ExManagers[ekBithumb].TopAmtSymbols[1] := TSymbol( aList.Items[1] );
+    end;
   finally
     if aObj <> nil then
       aObj.Free;
+    if aList <> nil then aList.Free;
+
   end;
 end;
 

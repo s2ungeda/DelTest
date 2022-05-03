@@ -179,6 +179,13 @@ begin
     if (ARow = 0 ) or  ( ARow = RowCount-1 ) then
     begin
       aBack := clBtnFace;
+
+      if (ACol = FCol) and ((( FRow-1 ) = ARow) or ((FRow+2)=ARow)) then
+      begin
+        aBack := clBlack;
+        aFont := clWhite;
+      end;
+
     end else
     begin
 //      if (ACol = 0 ) and ( ARow in [3..4] ) then

@@ -394,12 +394,12 @@ begin
 //            aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
 //            if aQuote = nil then
 //            begin
-            if bCalc then begin
+//            if bCalc then begin
 
               App.Engine.SymbolCore.CalcKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainKimp( aSymbol );
               App.Engine.SymbolCore.CalcMainWDC(aSymbol);
-            end;
+//            end;
 //            end;
           end;
 

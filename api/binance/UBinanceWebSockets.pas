@@ -4,6 +4,7 @@ uses
   System.Classes, System.SysUtils, System.DateUtils
   , UWebSockets, USymbols
   , UApiTypes
+  , UQuoteTimers
   ;
 type
   TBinanceWebSocket = class( TWebSocket )
@@ -11,6 +12,8 @@ type
     FMarketType: TMarketType;
     FUnSubList: TStrings;
     FSubIndex: integer;
+    FTimer   : TQuoteTimer;
+    FSendList: TStrings;
     procedure OnAfterConnect(Sender: TObject); override;
     procedure OnAfterDisconnect(Sender: TObject);  override;
 
@@ -20,6 +23,10 @@ type
     procedure OnMessage( const S : string );
     procedure MakeSubList( var aList : TStrings ); overload;
     function MakeSubString: string;
+
+    procedure OnSubTimer( Sender : TObject );
+    procedure AddSendData( aData : string );
+    procedure DelSendData( aData : string );
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
@@ -44,6 +51,7 @@ uses
   , UBinanceParse
   ;
 { TBinanceWebSocket }
+
 procedure TBinanceWebSocket.AllMarketTicker( bSub : boolean );
 var
   sTmp, sData : string;
@@ -67,9 +75,28 @@ begin
   FUnSubList    := TStringList.Create;
   FSubIndex   := 0;
   OnNotify    := OnMessage;
+
+  FSendList:= TStringList.Create;
+
+  FTimer  := App.Engine.QuoteBroker.Timers.New;
+  FTimer.Interval := 1000;
+  FTimer.OnTimer  := OnSubTimer;
 end;
+
+procedure TBinanceWebSocket.AddSendData(aData: string);
+begin
+  FSendList.Add( aData );
+end;
+
+
+procedure TBinanceWebSocket.DelSendData(aData: string);
+begin
+
+end;
+
 destructor TBinanceWebSocket.Destroy;
 begin
+  FSendList.Free;
   FUnSubList.Free;
   inherited;
 end;
@@ -220,7 +247,11 @@ begin
     sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
     inc(FSubIndex);
     sData := Format('{"method": "%s","params":[%s],"id": %d}', [ sTmp, sParam, FSubIndex ] );
-    SendData(sData);
+
+    if FTimer.Enabled then
+      AddSendData( sData )
+    else
+      SendData(sData);
 
   finally
     aList.Free;
@@ -276,7 +307,6 @@ begin
       end ;
     end;
 
-
     for I := 0 to aList.Count-1 do
     begin
       Result := Result + Format('"%s"', [aList[i]]);
@@ -302,6 +332,9 @@ begin
   end;
   //  바이낸스는..추가로 구독
   AllMarketTicker(true);
+  //
+  FTimer.Enabled := true;
+
 end;
 
 procedure TBinanceWebSocket.UnSubScribeAll;
@@ -342,6 +375,16 @@ begin
 end;
 
 
+procedure TBinanceWebSocket.OnSubTimer(Sender: TObject);
+var
+  sTmp : string;
+begin
+  if FSendList.Count <= 0 then Exit;
 
+  sTmp := FSendList[0];
+  FSendList.Delete(0);
+  SendData( sTmp );
+
+end;
 
 end.

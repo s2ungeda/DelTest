@@ -304,6 +304,8 @@ end;
 
 procedure TFrmTest.wsTimerTimer(Sender: TObject);
 begin
+  if ( App.Engine.ApiManager.ExManagers[ekUpbit] = nil ) then Exit;
+  if ( App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock = nil ) then Exit;
   if App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0] <> nil  then
     lbUp.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].GetSockState,
        App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvCnt ] );

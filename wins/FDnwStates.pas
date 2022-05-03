@@ -251,7 +251,7 @@ begin
     12 : if aSymbol.PrevClose <= 0 then
            Result := 0.0
          else
-           Result := ((aSymbol.DayHigh - aSymbol.PrevClose) / aSymbol.PrevClose ) * 100 ;
+           Result := ((aSymbol.Last - aSymbol.PrevClose) / aSymbol.PrevClose ) * 100 ;
 
   end;
 end;

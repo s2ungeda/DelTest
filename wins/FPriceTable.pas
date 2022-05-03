@@ -9,6 +9,12 @@ uses
   , UApiTypes, UDistributor
   , UTypes, Vcl.Menus
   ;
+const
+  up1 = 11;
+  up2 = 14;
+  bt1 = 18;
+  bt2 = 21;
+  
 type
   TFrmPriceTable = class(TForm)
     StatusBar1: TStatusBar;
@@ -57,6 +63,7 @@ type
     procedure SetData(iCol, iRow: integer; aSymbol: TSymbol);
     procedure UpdateParam(bRefresh: boolean = true);
     procedure DefaultParam;
+    procedure SetTotAmtSymbol(aKind: TExchangeKind; i: integer);
 
   public
     { Public declarations }
@@ -129,15 +136,29 @@ end;
 procedure TFrmPriceTable.InitObject;
 var
   i : TMajorSymbolKind;
+  j, iRow : integer;
 //  iRow : integer;
-//  j : TExchangeKind;
+  e : TExchangeKind;
 //  aSymbol : TSymbol;
 begin
+
   for I := msBTC to High(TMajorSymbolKind) do
   begin
     FSaveRow := GetMajorRow( integer(i) );
     SetSymbolToGrid(TMajorSymbolCode[i], true );
   end;
+
+  iRow := integer(i);
+  for e := ekUpbit to High(TExchangeKind) do
+    with App.Engine.ApiManager.ExManagers[e] do
+      for j := 0 to High(TopAmtSymbols) do
+      begin
+        FSaveRow := GetMajorRow( iRow ); inc(iRow);
+        if TopAmtSymbols[j] = nil then continue;
+        SetSymbolToGrid(TopAmtSymbols[j].Spec.BaseCode, true );
+        sgKimp.Cells[ 0, FSaveRow +1] := Format('%s%d', [ TExchangeKindShortDesc[ e ], j+1]);
+      end;
+
   FSaveRow := -1;
 end;
 
@@ -314,7 +335,7 @@ begin
   if aStorage = nil  then Exit;
 
 
-  for I := 10 to sgKimp.RowCount-1 do
+  for I := 22 to sgKimp.RowCount-1 do
   begin
     sCode := aStorage.FieldByName('Coin_'+inttostr(i) ).AsString;
     if sCode <> '' then
@@ -362,7 +383,7 @@ var
 begin
   if aStorage = nil  then Exit;
 
-  for I := 10 to sgKimp.RowCount-1 do
+  for I := 22 to sgKimp.RowCount-1 do
   begin
     if (i Mod 3) <> 1 then continue;
     aSymbol := TSymbol( sgKimp.Objects[CoinCol, i ]);
@@ -512,7 +533,7 @@ begin
 
     MouseToCell(X,y, aCol, FRow );
 
-    if (FRow > 9) and  ((( FRow-1) mod 3 ) = 0 ) and  ( aCol = CoinCol ) then
+    if (FRow > 21) and  ((( FRow-1) mod 3 ) = 0 ) and  ( aCol = CoinCol ) then
     begin
       FSaveRow   := FRow;
       FSaveCol   := aCol;
@@ -525,11 +546,62 @@ begin
 end;
 
 
+procedure TFrmPriceTable.SetTotAmtSymbol( aKind : TExchangeKind; i : integer );
+var
+  aSymbol, bSymbol : TSymbol;
+    im, idx : integer;
+begin
+
+  bSymbol := App.Engine.ApiManager.ExManagers[aKind].TopAmtSymbols[i];
+  if bSymbol = nil then Exit;
+  idx := -1;
+  case aKind of
+    ekUpbit : begin
+      case i of
+        0 : idx := up1;
+        1 : idx := up2
+      end;
+      im := 1;
+    end;
+    ekBithumb : begin
+      case i of
+        0 : idx := bt1;
+        1 : idx := bt2;
+      end;
+      im := 2;
+    end;
+  end;
+
+  if idx < 0 then Exit;
+
+  aSymbol := TSymbol( sgKimp.Objects[ CoinCol, idx] );
+  if aSymbol = nil then Exit;
+  if aSymbol = bSymbol then Exit;
+
+  FSaveRow := idx - im;
+  SetSymbolToGrid( bSymbol.Spec.BaseCode, true );
+  sgKimp.Cells[ 0, FSaveRow +1] := Format('%s%d', [ TExchangeKindShortDesc[ aKind ], i+1]);
+
+  App.DebugLog('%s change : %s, %.0n -> %s , %.0n', [
+    TExchangeKindShortDesc[aKind], aSymbol.Code, aSymbol.DayAmount,
+    bSymbol.Code, bSymbol.DayAmount
+    ] );
+
+end;
+
+
 procedure TFrmPriceTable.refreshTimerTimer(Sender: TObject);
 var
-  i : integer;
+  i, j : integer;
   aSymbol : TSymbol;
+  e : TExchangeKind;
 begin
+
+  for e := ekUpbit to High(TExchangeKind) do
+    with App.Engine.ApiManager.ExManagers[e] do
+      for j := 0 to High(TopAmtSymbols) do
+        SetTotAmtSymbol( e, j );
+
   for I := 1 to sgKimp.RowCount-1 do
   begin
     aSymbol := TSymbol( sgKimp.Objects[ CoinCol, i] );

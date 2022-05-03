@@ -216,10 +216,21 @@ begin
 
     stTxt := Cells[ ACol, ARow];
 
-    if (ARow = 0 )  then
-      aBack := clBtnFace
-    else if  ( ARow = RowCount-1 ) and ( Tag = 1) then
-      aBack := clBtnFace
+    if (ARow = 0 )  then begin
+      aBack := clBtnFace;
+      if (Tag = 1) and ( ACol = FCol ) and ( ACol = FRow-1) then begin
+        aBack := clBlack;
+        aFont := clWhite;
+      end;
+    end
+    else if  ( ARow = RowCount-1 ) and ( Tag = 1) then begin
+      aBack := clBtnFace;
+      if (ACol = FCol) and ( FRow+2=ARow) then
+      begin
+        aBack := clBlack;
+        aFont := clWhite;
+      end;
+    end
     else  begin
       if Tag = 1 then begin
         if Objects[ACol, ARow] <> nil  then

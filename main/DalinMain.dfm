@@ -3,7 +3,7 @@ object FrmDalinMain: TFrmDalinMain
   Top = 0
   HelpType = htKeyword
   Caption = 'Dalin'
-  ClientHeight = 98
+  ClientHeight = 78
   ClientWidth = 350
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object FrmDalinMain: TFrmDalinMain
   TextHeight = 13
   object stsBar: TStatusBar
     Left = 0
-    Top = 79
+    Top = 59
     Width = 350
     Height = 19
     Panels = <
@@ -33,7 +33,6 @@ object FrmDalinMain: TFrmDalinMain
       item
         Width = 50
       end>
-    ExplicitTop = 40
   end
   object Panel1: TPanel
     Left = 8

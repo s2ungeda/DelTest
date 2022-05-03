@@ -224,53 +224,69 @@ var
   aSymbol : TSymbol;
   bNew : boolean;
   sts   : TArray<string>;
+  aList : TList;
 begin
   if aData = '' then
   begin
     App.Log(llError, 'Upbit ParseSpotTicker data is empty') ;
     Exit;
   end;
-
+  aList := nil;
+  aList:= TList.Create;
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  try
 
-  for I := 0 to aArr.Size-1 do
-  begin
-    aVal := aArr.Get(i);
-    sCode:= aVal.GetValue<string>('market');
-
-    sts := sCode.Split(['-']);
-    aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
-
-    if aSymbol = nil then
+    for I := 0 to aArr.Size-1 do
     begin
-      bNew := true;
-      aSymbol := App.Engine.SymbolCore.RegisterSymbol(ekUpbit, mtSpot, sts[1] );
-      if aSymbol = nil then Exit;
-    end else
-      bNew := false;
+      aVal := aArr.Get(i);
+      sCode:= aVal.GetValue<string>('market');
 
-    with aSymbol do
-    begin
-      OrgCode     := sCode;
-      Spec.BaseCode    := sts[1];   // BTC ...
-      Spec.QuoteCode   := sts[0];   // KRW ...
-      Spec.SettleCode  := sts[0];
+      sts := sCode.Split(['-']);
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
+
+      if aSymbol = nil then
+      begin
+        bNew := true;
+        aSymbol := App.Engine.SymbolCore.RegisterSymbol(ekUpbit, mtSpot, sts[1] );
+        if aSymbol = nil then Exit;
+      end else
+        bNew := false;
+
+      with aSymbol do
+      begin
+        OrgCode     := sCode;
+        Spec.BaseCode    := sts[1];   // BTC ...
+        Spec.QuoteCode   := sts[0];   // KRW ...
+        Spec.SettleCode  := sts[0];
+      end;
+
+      aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
+      aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'high_price' ), 0.0 );
+      aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
+      aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
+      aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
+      aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
+      aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
+
+  //    aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'date' ) );
+      aSymbol.LocalTime := now;
+
+      if bNew then
+        App.Engine.SymbolCore.RegisterSymbol( ekUpbit, aSymbol );
+
+      if ( sts[1] <> 'BTC' ) and ( sts[1] <> 'ETH') and ( sts[1] <> 'XRP') then
+        aList.Add( aSymbol );
     end;
 
-    aSymbol.DayOpen := StrToFloatDef( aVal.GetValue<string>( 'opening_price' ), 0.0 );
-    aSymbol.DayHigh := StrToFloatDef( aVal.GetValue<string>( 'high_price' ), 0.0 );
-    aSymbol.DayLow  := StrToFloatDef( aVal.GetValue<string>( 'low_price' ), 0.0 );
-    aSymbol.Last    := StrToFloatDef( aVal.GetValue<string>( 'trade_price' ), 0.0 );
-    aSymbol.PrevClose   := StrToFloatDef( aVal.GetValue<string>( 'prev_closing_price' ), 0.0 );
-    aSymbol.DayAmount   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_price_24h' ), 0.0 ) / 100000000;
-    aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'acc_trade_volume_24h' ), 0.0 );
-
-//    aSymbol.Time  := UnixToDateTime(  aVal.GetValue<int64>( 'date' ) );
-    aSymbol.LocalTime := now;
-
-    if bNew then
-      App.Engine.SymbolCore.RegisterSymbol( ekUpbit, aSymbol );
-
+    aList.Sort(CompareDailyAmount);
+    if aList.Count > 2 then
+    begin
+      App.Engine.ApiManager.ExManagers[ekUpbit].TopAmtSymbols[0] := TSymbol( aList.Items[0] );
+      App.Engine.ApiManager.ExManagers[ekUpbit].TopAmtSymbols[1] := TSymbol( aList.Items[1] );
+    end;
+  finally
+    if aArr <> nil then aArr.Free;
+    if aList <> nil then aList.Free;
   end;
 end;
 

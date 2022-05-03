@@ -52,7 +52,7 @@ object FrmPriceTable: TFrmPriceTable
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
-        RowCount = 25
+        RowCount = 34
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
