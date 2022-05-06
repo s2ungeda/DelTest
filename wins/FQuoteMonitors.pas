@@ -228,6 +228,8 @@ begin
 
     end;
 
+  if cbAuto.Checked then
+    cbAutoClick( nil );
 end;
 
 procedure TFrmQuoteMonitors.DefaultParam;

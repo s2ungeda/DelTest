@@ -23,7 +23,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     Width = 637
     Height = 19
     Panels = <>
-    ExplicitWidth = 665
   end
   object plLeft: TPanel
     Left = 0
@@ -34,7 +33,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitWidth = 665
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -44,7 +42,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 665
       DesignSize = (
         637
         51)
@@ -163,7 +160,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
-        ExplicitLeft = 476
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -256,7 +252,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 665
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
@@ -275,7 +270,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnMouseDown = sgQuoteMouseDown
         OnMouseWheelDown = sgQuoteMouseWheelDown
         OnMouseWheelUp = sgQuoteMouseWheelUp
-        ExplicitWidth = 665
       end
       object SpinButton1: TSpinButton
         Left = 45
