@@ -14,7 +14,7 @@ type
     FSendQueue: TStrings;
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
-    procedure OnAfterDisconnect(Sender: TObject);  override;
+//    procedure OnAfterDisconnect(Sender: TObject);  override;
 
     procedure OnMessage( const S : string );
 
@@ -104,31 +104,32 @@ begin
   inherited OnAfterConnect(Sender);
   App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
-//  if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
-//    SubscribeAll;
+  // 재접속은 10 회로 제한...
+  if ( ConnectTry > 1 ) and  ( ConnectTry < 10 ) and  ( GetSockState = 'Open' ) then
+    SubscribeAll;
 //  if (FSubList.Count > 0 ) then
 //    SubScribe( true );
 
 end;
-procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
-begin
-  inherited OnAfterDisconnect(Sender);
-  App.Log(llInfo, ' %s Disconnected', [ Descript]);
-
-  //
-//  if DisConnCnt < 5 then
-//  begin
-//    App.Log(llInfo, '%d.th %s ReConnect', [ DisConnCnt, Descript]);
-//    reCreate;
-//    with WebSocket do
-//    begin
-//      HeartBeatOptions.Enabled := true;
-//      HeartBeatOptions.Interval:= 100;
-//    end;
-//    DoConnect;
-//  end;
-
-end;
+//procedure TBithWebSocket.OnAfterDisconnect(Sender: TObject);
+//begin
+//  inherited OnAfterDisconnect(Sender);
+//  App.Log(llInfo, ' %s Disconnected', [ Descript]);
+//
+//  //
+////  if DisConnCnt < 5 then
+////  begin
+////    App.Log(llInfo, '%d.th %s ReConnect', [ DisConnCnt, Descript]);
+////    reCreate;
+////    with WebSocket do
+////    begin
+////      HeartBeatOptions.Enabled := true;
+////      HeartBeatOptions.Interval:= 100;
+////    end;
+////    DoConnect;
+////  end;
+//
+//end;
 
 procedure TBithWebSocket.OnMessage(const S: string);
 begin

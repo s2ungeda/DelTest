@@ -324,6 +324,7 @@ begin
   begin
     if not FExManagers[i].ConnectAll then
       Exit (false);
+    sleep(200);
   end;
 
   Result := true;

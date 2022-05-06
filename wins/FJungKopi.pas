@@ -1,16 +1,12 @@
 unit FJungKopi;
-
 interface
-
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs
-
   , UStorage, Vcl.Grids, Vcl.ExtCtrls
   , UTypes
   , UApiTypes
   ;
-
 type
   TFrmJungKopi = class(TForm)
     sgVal: TStringGrid;
@@ -27,36 +23,28 @@ type
     FCol, FRow : integer;
     FLastIdx   : integer;
     FData     : array [ TExchangeKind ] of double;
-
     procedure initData;
   public
     { Public declarations }
     procedure SaveEnv( aStorage : TStorage );
     procedure LoadEnv( aStorage : TStorage );
   end;
-
 var
   FrmJungKopi: TFrmJungKopi;
-
 implementation
-
 uses
   GApp  , GLibs , UConsts
   , Math
   , UOtherData
   , UTableConsts
   ;
-
 {$R *.dfm}
-
 { TFrmJungKopi }
-
 procedure TFrmJungKopi.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Timer1.Enabled := false;
   Action := caFree;
 end;
-
 procedure TFrmJungKopi.FormCreate(Sender: TObject);
 var
   I, iMod: Integer;
@@ -69,22 +57,18 @@ begin
         ColWidths[i] := 60
       else
         ColWidths[i] := RPSNT_COL_WID;
-
       if i > 0  then  begin
         iMod := i Mod 2;
         if iMod = 0 then
           s := '30'
         else
           s := '00';
-
         Cells[i, 0 ]  := Format('%d:%s', [ (i-1) div 2, s] );
         Cells[i, 5 ] := Format('%d:%s', [ (i-1) div 2 + 12, s ]);
-
 //        cells[i,1]    := intToStr( i-1 );
 //        cells[i,3]    := intToStr( (i-1)+24 );
       end;
     end;
-
   with sgVal do
   begin
     Cells[0,0]  := '°Å·¡¼Ò';
@@ -92,31 +76,23 @@ begin
     Cells[0,2]  := 'Bithumb';
     Cells[0,5]  := 'RealTime';
   end;
-
   FCol  := -1;
   FRow  := -1;
   FLastIdx  := -1;
-
   sgVal.Canvas.Font.Name := 'Arial';
   sgVal.Canvas.Font.Size := 9;
   FPrecision:= App.GetPrecision;
-
   initData;
 end;
-
 procedure TFrmJungKopi.FormDestroy(Sender: TObject);
 begin
   //
 end;
-
 procedure TFrmJungKopi.LoadEnv(aStorage: TStorage);
 begin
-
 end;
-
 procedure TFrmJungKopi.SaveEnv(aStorage: TStorage);
 begin
-
 end;
 procedure TFrmJungKopi.initData;
 var
@@ -125,21 +101,17 @@ var
   dPrev : array [TExchangeKind] of double;
   dVal : double;
 begin
-
   with sgVal, App.Engine.SymbolCore do
     for i := 0 to JKIdx[ekUpbit] do
     begin
-
       iRow := 1;
       iCol := i + 1;
       if i > 23 then begin
         iRow := 3;
         iCol := i - 24 + 1;
       end;
-
       Cells[iCol,iRow]  := FmtString(FPrecision, JungKopi[ekUpbit][i] );
       Cells[iCol,iRow+1]:= FmtString(FPrecision, JungKopi[ekBithumb][i] ) ;
-
       if i = 0  then
       begin
         SetColor( 0, sgVal, iCol, iRow );
@@ -149,14 +121,11 @@ begin
         SetColor( JungKopi[ekUpbit][i] - dPrev[ekUpbit], sgVal, iCol, iRow );
         SetColor( JungKopi[ekBithumb][i] - dPrev[ekBithumb], sgVal, iCol, iRow+1 );
       end;
-
       dPrev[ekUpbit]  := JungKopi[ekUpbit][i];
       dPrev[ekBithumb]:= JungKopi[ekBithumb][i];
     end;
 
-
 end;
-
 procedure TFrmJungKopi.sgValDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
   var
@@ -170,22 +139,17 @@ begin
   dFormat := DT_CENTER ;
   aRect   := Rect;
   aBack   := clWhite;
-
   with sgVal do
   begin
-
     stTxt := Cells[ ACol, ARow];
-
     if (ARow = 0 ) or  ( ARow = RowCount-1 ) then
     begin
       aBack := clBtnFace;
-
       if (ACol = FCol) and ((( FRow-1 ) = ARow) or ((FRow+2)=ARow)) then
       begin
         aBack := clBlack;
         aFont := clWhite;
       end;
-
     end else
     begin
 //      if (ACol = 0 ) and ( ARow in [3..4] ) then
@@ -202,21 +166,16 @@ begin
         begin
 //          aFont := GetColor( 2, Integer( Objects[ACol, ARow] ));
 //          aBack := clWhite;
-
           aBack := GetColor( 0, Integer( Objects[ACol, ARow] ));
           aFont := GetColor( 1, Integer( Objects[ACol, ARow] )); //clWhite;
         end;
       end ;
-
     end;
-
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
-
     aRect.Top := Rect.Top + 4;
     Canvas.FillRect( Rect);
     DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
-
     if ( ARow = 0 ) or  ( ARow = RowCount-1 ) then begin
       Canvas.Pen.Color := clBlack;
       Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
@@ -229,50 +188,38 @@ begin
     end;
   end;
 end;
-
 procedure TFrmJungKopi.Timer1Timer(Sender: TObject);
 var
   iCol, idx  : integer;
-
 begin
-
   FData[ ekUpbit ]   := App.Engine.SymbolCore.MainKimp[ekUpbit];
   FData[ ekBithumb ] := App.Engine.SymbolCore.MainKimp[ekBithumb];
-
   if IsZero(  FData[ ekUpbit ] )       or IsZero( FData[ ekBithumb ] ) then Exit;
-
   with sgVal do
   begin
     Cells[0, 3] := FmtString( FPrecision, FData[ekUpbit]);
     Cells[0, 4] := FmtString( FPrecision, FData[ekBithumb]);
 
-
     with App.Engine.SymbolCore do
       iCol := JKIdx[ekUpbit];
-
     FRow := 1;
     FCol := iCol + 1;
     if iCol > 23 then begin
       FRow := 3;
       FCol := iCol - 24 + 1;
     end;
-
     Cells[FCol, FRow]   := FmtString( FPrecision, FData[ekUpbit]);
     Cells[FCol, FRow+1] := FmtString( FPrecision, FData[ekBithumb]);
-
     if ( FCol = 1 ) and ( FRow = 1 ) then
     begin
       SetColor( 0, sgVal, iCol, FRow );
       SetColor( 0, sgVal, iCol, FRow + 1 );
     end   ;
-
     idx := Max( 0, iCol -1 );
     SetColor( FData[ ekUpbit ]    - App.Engine.SymbolCore.JungKopi[ekUpbit][idx],  sgVal, FCol, FRow );
     SetColor( FData[ ekBithumb ]  - App.Engine.SymbolCore.JungKopi[ekBithumb][idx],  sgVal, FCol, FRow+1 );
-
     Objects[0,3] := Objects[ FCol, FRow];
     Objects[0,4] := Objects[ FCol, FRow+1];
-
     if FLastIdx <> FCol then
     begin
       FLastIdx := FCol;
@@ -280,5 +227,4 @@ begin
     end;
   end;
 end;
-
 end.

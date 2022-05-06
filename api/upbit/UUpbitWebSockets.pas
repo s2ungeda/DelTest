@@ -13,7 +13,7 @@ type
     FParam, FParam2 : string;
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
-    procedure OnAfterDisconnect(Sender: TObject);  override;
+//    procedure OnAfterDisconnect(Sender: TObject);  override;
 
     procedure OnMessage( const S : string );
     function GetSubData: string;
@@ -110,15 +110,15 @@ begin
   inherited OnAfterConnect(Sender);
   App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
- // if ( ConnectTry > 1 ) and ( GetSockState = 'Open' ) then
- //   SubscribeAll;
+  if ( ConnectTry > 1 ) and  ( ConnectTry < 10 ) and ( GetSockState = 'Open' ) then
+    SubscribeAll;
 end;
 
-procedure TUpbitWebSocket.OnAfterDisconnect(Sender: TObject);
-begin
-  inherited OnAfterDisconnect(Sender);
-  App.Log(llInfo, ' %s Disconnected', [ Descript]);
-end;
+//procedure TUpbitWebSocket.OnAfterDisconnect(Sender: TObject);
+//begin
+//  inherited OnAfterDisconnect(Sender);
+//  App.Log(llInfo, ' %s Disconnected', [ Descript]);
+//end;
 
 procedure TUpbitWebSocket.OnMessage(const S: string);
 begin
