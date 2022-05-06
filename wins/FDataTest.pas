@@ -325,9 +325,9 @@ begin
   Symbol1 := nil;
   Symbol2 := nil;
 
-  cbBT.Checked := true;
-  cbUp.Checked := true;
-  cbBn.Checked := true;
+//  cbBT.Checked := true;
+//  cbUp.Checked := true;
+//  cbBn.Checked := true;
 end;
 
 procedure TFrmTest.kipTimerTimer(Sender: TObject);

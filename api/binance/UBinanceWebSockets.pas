@@ -15,7 +15,7 @@ type
     FTimer   : TQuoteTimer;
     FSendList: TStrings;
     procedure OnAfterConnect(Sender: TObject); override;
-    procedure OnAfterDisconnect(Sender: TObject);  override;
+//    procedure OnAfterDisconnect(Sender: TObject);  override;
 
     function GetDescript: string;
     procedure SubScribe( aSymbol : TSymbol; bSub : boolean ) ; overload;
@@ -356,16 +356,20 @@ end;
 procedure TBinanceWebSocket.OnAfterConnect(Sender: TObject);
 begin
 
-  App.Log(llInfo, ' %s Connected', [ Descript]);
+  inherited OnAfterConnect(Sender);
+  App.Log(llInfo, ' %s  %d.th Connected', [ Descript, ConnectTry ]);
 
+  if ( ConnectTry > 1 ) and  ( ConnectTry < 10 ) and ( GetSockState = 'Open' ) then
+    SubscribeAll;
 end;
-procedure TBinanceWebSocket.OnAfterDisconnect(Sender: TObject);
-begin
-  //inherited;
-  App.Log(llInfo, ' %s Disconnected %d %s', [ Descript , integer(WebSocket.State),
-    WebSocket.CloseStatusDescription ]);
 
-end;
+//procedure TBinanceWebSocket.OnAfterDisconnect(Sender: TObject);
+//begin
+//  //inherited;
+//  App.Log(llInfo, ' %s Disconnected %d %s', [ Descript , integer(WebSocket.State),
+//    WebSocket.CloseStatusDescription ]);
+//
+//end;
 
 
 

@@ -125,9 +125,9 @@ begin
   with FWebSocket do
   begin
     EventsCallMode := ecAsynchronous;
-    WatchDogOptions.Enabled := true;
-    WatchDogOptions.Interval:= 2;
-    WatchDogOptions.Attempts:= 5;
+//    WatchDogOptions.Enabled := true;
+//    WatchDogOptions.Interval:= 2;
+//    WatchDogOptions.Attempts:= 5;
   end;
 
 //  FEvent  := TEvent.Create( nil, False, False, '');
@@ -250,7 +250,6 @@ procedure TWebsocket.OnAfterConnect(Sender: TObject);
 begin
   FLiveTime := now;
   inc( FConnectTry );
-
 end;
 
 {
@@ -269,10 +268,14 @@ procedure TWebsocket.OnAfterDisconnect(Sender: TObject);
 begin
 
   if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
+  begin
     App.Log(llError, '%d %s was closed with error %d %s ',
       [ FDisConnCnt, TExchangeKindDesc[FExchangeKind],
       integer( TScWebSocketClient(Sender).CloseStatus ) ,
       TScWebSocketClient(Sender).CloseStatusDescription ] );
+    if FConnectTry >= 10 then
+      FWebSocket.WatchDogOptions.Enabled := false;
+  end;
   inc( FDisConnCnt );
 end;
 procedure TWebsocket.OnBeforeConnect(Sender: TObject);
