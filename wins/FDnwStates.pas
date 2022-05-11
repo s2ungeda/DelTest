@@ -44,6 +44,7 @@ type
     procedure UpdateSymbol(iRow: integer; bInit : boolean = false);
     function GetData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): string;
     function GetPriceData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): double;
+    function findBase(base: string): boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -117,42 +118,39 @@ begin
   FSymbols := TList.Create;
 end;
 
+function TFrmDnwStates.findBase( base : string ) : boolean;
+var
+  j : integer;
+  pSymbol : TSymbol;
+  bFound  : boolean;
+begin
+  bFound := false;
+  for j := 0 to FSymbols.Count-1 do
+  begin
+    pSymbol := TSymbol( FSymbols.Items[j] );
+    if pSymbol.Spec.BaseCode = base then
+    begin
+      bFound := true;
+      break;
+    end;
+  end;
+
+  Result := bFound;
+end;
+
 procedure TFrmDnwStates.InitObject;
 var
   I, iRow: Integer;
   aSymbol, bSymbol : TSymbol;
-
-  function find( base : string ) : boolean;
-  var
-    j : integer;
-    pSymbol : TSymbol;
-    bFound  : boolean;
-  begin
-    bFound := false;
-    for j := 0 to FSymbols.Count-1 do
-    begin
-      pSymbol := TSymbol( FSymbols.Items[j] );
-      if pSymbol.Spec.BaseCode = base then
-      begin
-        bFound := true;
-        break;
-      end;
-    end;
-
-    Result := bFound;
-  end;
 begin
 
-
-  for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Count-1 do begin
+  for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Count-1 do
     FSymbols.Add( App.Engine.SymbolCore.SymbolDnwStates[ekBinance].Symbols[i] );
-  end;
-
 
   for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekUpbit].Count-1 do
   begin
     aSymbol := App.Engine.SymbolCore.SymbolDnwStates[ekUpbit].Symbols[i];
-    if not find( aSymbol.Spec.BaseCode ) then
+    if not findBase( aSymbol.Spec.BaseCode ) then
     begin
       bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( aSymbol.Spec.BaseCode, ekBinance);
       if bSymbol <> nil then
@@ -163,7 +161,7 @@ begin
   for I := 0 to App.Engine.SymbolCore.SymbolDnwStates[ekBithumb].Count-1 do
   begin
     aSymbol := App.Engine.SymbolCore.SymbolDnwStates[ekBithumb].Symbols[i];
-    if not find( aSymbol.Spec.BaseCode ) then
+    if not findBase( aSymbol.Spec.BaseCode ) then
     begin
       bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbolEx( aSymbol.Spec.BaseCode, ekBinance);
       if bSymbol <> nil then

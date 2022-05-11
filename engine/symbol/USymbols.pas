@@ -373,8 +373,11 @@ begin
     else
       Result := 0;
   end
-  else if Result = 0 then
+  else if Result = 0 then begin
+    if Code = 'BTC' then
+      Code := 'BTC';
     App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
+  end;
 
 
   if FDnwCount = 0 then

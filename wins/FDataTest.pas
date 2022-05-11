@@ -178,6 +178,15 @@ begin
   else if cbWD.Checked then
     iRes := DWN_DEPOSIT_FALSE;
 
+  if iRes > 0 then begin
+    if App.Engine.SymbolCore.SymbolDnwStates[ aKind ].FindCode( aSymbol.Code ) = nil then
+      App.Engine.SymbolCore.SymbolDnwStates[ aKind ].AddSymbol( aSymbol )
+    else
+      iRes := 0;
+  end
+  else if iRes = 0 then
+    App.Engine.SymbolCore.SymbolDnwStates[ aKind ].DeleteSymbol( aSymbol );
+
   if iRes > 0  then
     App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
 
