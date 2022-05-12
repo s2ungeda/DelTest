@@ -543,6 +543,9 @@ begin
         begin
           var iRes : integer ;        iRes := 0;
 
+          if sTmp = 'BTC' then
+            sTmp := 'BTC';
+
           sTmp := aVal.GetValue<string>('wallet_state');
           if sTmp = 'working' then
           begin

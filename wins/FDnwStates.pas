@@ -231,7 +231,11 @@ begin
     0 : Result := aSymbol.Spec.BaseCode;
     2, 4, 6 : Result := ifThenStr( bDpst , ifThenStr( aSymbol.DepositState, 'O', 'X')
       , ifThenStr( aSymbol.WithDrawlState, 'O', 'X') )  ;
-    3, 5, 7 : Result := ifThenStr( aSymbol.DnwTime > 100, FormatDateTime('hh:nn:ss', aSymbol.DnwTime),'');
+    3, 5, 7 :
+        if bDpst then
+          Result := ifThenStr( aSymbol.DepositTime > 100, FormatDateTime('hh:nn:ss', aSymbol.DepositTime),'')
+        else
+          Result := ifThenStr( aSymbol.WithDrawlTime > 100, FormatDateTime('hh:nn:ss', aSymbol.WithDrawlTime),'')  ;
     11 : Result := aSymbol.PriceToStr( aSymbol.Last );
     13 : Result := Format('%.*n', [ 0, aSymbol.DayAmount ]);
   end;

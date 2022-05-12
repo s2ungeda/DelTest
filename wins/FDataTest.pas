@@ -1,16 +1,11 @@
 unit FDataTest;
-
 interface
-
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Grids, Vcl.ExtCtrls
-
   , UApiTypes
-
   , USymbols
   ;
-
 type
   TFrmTest = class(TForm)
     edtCode: TEdit;
@@ -78,25 +73,19 @@ type
     { Public declarations }
     Symbol1 : TSymbol;
     Symbol2 : TSymbol;
-
     LastCnt1 : int64;
     LastCnt2 : int64;
   end;
-
 var
   FrmTest: TFrmTest;
-
 implementation
-
 uses
   GApp , GLibs
   , UConsts
   , UDataLogs
   , UBinanceWebSockets
   ;
-
 {$R *.dfm}
-
 procedure TFrmTest.btnBTConClick(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -107,9 +96,7 @@ begin
   if aKind = ekBinance then i := 1;
   if App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i] <> nil  then
     App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i].DoConnect;
-
 end;
-
 procedure TFrmTest.btnBTDisconClick(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -122,7 +109,6 @@ begin
     if App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i].GetSockState = 'Open' then
       App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i].DoDisConnect;
 end;
-
 procedure TFrmTest.btnBTSubClick(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -131,12 +117,9 @@ begin
   aKind := TExchangeKind((  Sender as TButton).Tag );
   i := 0;
   if aKind = ekBinance then i := 1;
-
   if App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i] <> nil  then
     App.Engine.ApiManager.ExManagers[aKind].QuoteSock[i].SubscribeAll;
-
 end;
-
 procedure TFrmTest.btnBTunsubClick(Sender: TObject);
 begin
   if App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0] <> nil  then
@@ -145,13 +128,11 @@ begin
     App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].DoConnect;
   end;
 end;
-
 procedure TFrmTest.Button6Click(Sender: TObject);
 begin
   if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
     TBinanceWebSocket(App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1]).UnSubScribeAll;
 end;
-
 procedure TFrmTest.Button1Click(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -159,39 +140,33 @@ var
   iRes : integer;
 begin
   aKind := TExchangeKind( ComboBox1.ItemIndex );
-
   aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( edtCode.Text, aKind );
   if aSymbol = nil then
   begin
     ShowMessage('종목없음');
     Exit;
   end;
-
-  aSymbol.DepositState    := not cbDpst.Checked;
-  aSymbol.WithDrawlState  := not cbWD.Checked;
-
-  iRes := 0;
-  if (cbDpst.Checked) and ( cbWD.Checked ) then
-    iRes := DNW_BOTH_FALE
-  else if cbDpst.Checked then
-    iRes := DWN_WITHDRAW_FALSE
-  else if cbWD.Checked then
-    iRes := DWN_DEPOSIT_FALSE;
-
-  if iRes > 0 then begin
-    if App.Engine.SymbolCore.SymbolDnwStates[ aKind ].FindCode( aSymbol.Code ) = nil then
-      App.Engine.SymbolCore.SymbolDnwStates[ aKind ].AddSymbol( aSymbol )
-    else
-      iRes := 0;
-  end
-  else if iRes = 0 then
-    App.Engine.SymbolCore.SymbolDnwStates[ aKind ].DeleteSymbol( aSymbol );
-
+//  aSymbol.DepositState    := not cbDpst.Checked;
+//  aSymbol.WithDrawlState  := not cbWD.Checked;
+//  iRes := 0;
+//  if (cbDpst.Checked) and ( cbWD.Checked ) then
+//    iRes := DNW_BOTH_FALE
+//  else if cbDpst.Checked then
+//    iRes := DWN_WITHDRAW_FALSE
+//  else if cbWD.Checked then
+//    iRes := DWN_DEPOSIT_FALSE;
+//  if iRes > 0 then begin
+//    if App.Engine.SymbolCore.SymbolDnwStates[ aKind ].FindCode( aSymbol.Code ) = nil then
+//      App.Engine.SymbolCore.SymbolDnwStates[ aKind ].AddSymbol( aSymbol )
+//    else
+//      iRes := 0;
+//  end
+//  else if iRes = 0 then
+//    App.Engine.SymbolCore.SymbolDnwStates[ aKind ].DeleteSymbol( aSymbol );
+  iRes := aSymbol.CheckDnwState( not cbDpst.Checked, not cbWD.Checked  )  ;
   if iRes > 0  then
     App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
-
 end;
-
 procedure TFrmTest.Button2Click(Sender: TObject);
 begin
   case ( Sender as TComponent).Tag of
@@ -199,8 +174,6 @@ begin
     1 : mWcd.Clear;
   end;
 end;
-
-
 
 procedure TFrmTest.cbBTClick(Sender: TObject);
 begin
@@ -210,7 +183,6 @@ begin
     0 : panel3.Visible:= cbBn.Checked;
   end;
 end;
-
 procedure TFrmTest.CheckBox4Click(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -218,20 +190,16 @@ var
   iTag, iRes : integer;
   bCheck : boolean;
 begin
-
   bCheck  := ( Sender as TCheckBox).Checked;
   iTag    := ( Sender as TCheckBox).Tag;
-
   if not bCheck then
   begin
     case iTag of
      0 :   kiptimer.Enabled := false;
      1 :   wcdTimer.Enabled := false;
     end;
-
     Exit;
   end;
-
   case iTag of
    0 :
     begin
@@ -244,13 +212,11 @@ begin
        aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( Edit1.Text, aKind );
     end;
   end;
-
   if aSymbol = nil then
   begin
     ShowMessage('종목없음');
     Exit;
   end;
-
   case iTag of
    0 :
     begin
@@ -268,10 +234,7 @@ begin
     end;
   end;
 
-
-
 end;
-
 procedure TFrmTest.kipLog;
 var
   sTmp : string;
@@ -287,7 +250,6 @@ begin
     LastCnt1 := Symbol1.DataTrace.Kip.Cnt;
   end;
 end;
-
 procedure TFrmTest.wcdLog;
 var
   sTmp : string;
@@ -302,15 +264,12 @@ begin
     LastCnt2 := Symbol2.DataTrace.Wcd.Cnt;
   end;
 end;
-
 procedure TFrmTest.wcdTimerTimer(Sender: TObject);
 begin
   if Symbol2 = nil then Exit;
   if Symbol2.DataTrace.Wcd.Cnt = LastCnt2 then Exit;
-
   wcdLog;
 end;
-
 procedure TFrmTest.wsTimerTimer(Sender: TObject);
 begin
   if ( App.Engine.ApiManager.ExManagers[ekUpbit] = nil ) then Exit;
@@ -318,33 +277,26 @@ begin
   if App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0] <> nil  then
     lbUp.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].GetSockState,
        App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvCnt ] );
-
   if App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0] <> nil  then
     lbBT.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].GetSockState,
        App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].RcvCnt ] );
-
   if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
     lbBN.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].GetSockState,
        App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvCnt ] );
 end;
 
-
 procedure TFrmTest.FormCreate(Sender: TObject);
 begin
   Symbol1 := nil;
   Symbol2 := nil;
-
 //  cbBT.Checked := true;
 //  cbUp.Checked := true;
 //  cbBn.Checked := true;
 end;
-
 procedure TFrmTest.kipTimerTimer(Sender: TObject);
 begin
   if Symbol1 = nil then Exit;
   if Symbol1.DataTrace.Kip.Cnt = LastCnt1 then Exit;
-
   kipLog;
 end;
-
 end.

@@ -265,8 +265,8 @@ begin
       iw := aPair.JsonValue.GetValue<integer>('withdrawal_status');
       id := aPair.JsonValue.GetValue<integer>('deposit_status');
 
-      if sTmp = 'XEM' then
-        sTmp := 'XEM';
+      if sTmp = 'BTC' then
+        sTmp := 'BTC';
 
       var iRes : integer;
       iRes := aSymbol.CheckDnwState( id = 1, iw = 1 ) ;

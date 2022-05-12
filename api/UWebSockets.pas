@@ -106,7 +106,7 @@ implementation
  uses
   ScCLRClasses , ScUtils
   , Vcl.Forms
-  , GApp
+  , GApp , GLibs
   , UApiConsts
   ;
 
@@ -125,9 +125,9 @@ begin
   with FWebSocket do
   begin
     EventsCallMode := ecAsynchronous;
-//    WatchDogOptions.Enabled := true;
-//    WatchDogOptions.Interval:= 2;
-//    WatchDogOptions.Attempts:= 5;
+    WatchDogOptions.Enabled := true;
+    WatchDogOptions.Interval:= 3;
+    WatchDogOptions.Attempts:= 5;
   end;
 
 //  FEvent  := TEvent.Create( nil, False, False, '');
@@ -269,8 +269,9 @@ begin
 
   if TScWebSocketClient(Sender).CloseStatus <> csNormalClosure then
   begin
-    App.Log(llError, '%d %s was closed with error %d %s ',
+    App.Log(llError, '%d %s was closed (re:%s)  error : %d %s ',
       [ FDisConnCnt, TExchangeKindDesc[FExchangeKind],
+      ifThenStr(FWebSocket.WatchDogOptions.Enabled, 'O','X'),
       integer( TScWebSocketClient(Sender).CloseStatus ) ,
       TScWebSocketClient(Sender).CloseStatusDescription ] );
     if FConnectTry >= 10 then

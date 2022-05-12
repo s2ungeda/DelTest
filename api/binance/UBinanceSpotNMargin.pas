@@ -22,6 +22,7 @@ type
     function RequestMarginMaster : boolean;
     function RequestMarginTier : boolean;
     procedure ReceiveDNWState;
+    function RequestDNWStateSync : boolean;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -91,7 +92,7 @@ begin
   Result := RequestSpotMaster          
          and RequestMarginMaster
          and RequestSpotTicker
-         and RequestDnwState
+         and RequestDNWStateSync
          ;
 end;
 
@@ -230,20 +231,41 @@ begin
   if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
      App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
 
-//  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
-//  begin
-////    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-//    gBinReceiver.ParseDNWState( sJson );
-//  end else
-//  begin
-//    App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
-//      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-//    Exit(false);
-//  end;
+  Result := true;
+
+end;
+
+function TBinanceSpotNMargin.RequestDNWStateSync: boolean;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+begin
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+//  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
+//     App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
+
+  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseDNWState( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestDNWState (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
 
   Result := true;
 
 end;
+
 
 function TBinanceSpotNMargin.RequestMarginMaster: boolean;
 var

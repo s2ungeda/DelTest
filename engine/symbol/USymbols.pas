@@ -6,7 +6,7 @@ uses
 
   system.Classes, system.SysUtils, system.DateUtils ,
 
-  UFQN , UApiTypes, UMarketSpecs ,
+  GLibs, UFQN , UApiTypes, UMarketSpecs ,
 
   UTicks, UDataLogs
   ;
@@ -146,7 +146,7 @@ type
     FKimpBidPrice: double;
     FWithdrawlState: boolean;
     FDepositState: boolean;
-    FDnwCount: integer;
+    FDnwCount: int64;
     FWDCPrice: double;
 
     FSPrice: double;
@@ -220,7 +220,7 @@ type
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
     property AddTerm: boolean read FAddTerm write FAddTerm;
 
-    property DnwCount : integer read FDnwCount;
+    property DnwCount : int64 read FDnwCount;
 
     property LastTime : TDateTime read FLastTime write FLastTime;
     property LastEventTime  : TDateTime read FLastEventTime write FLastEventTime;
@@ -337,7 +337,7 @@ implementation
 
 uses
   USymbolCore    , USymbolUtils
-  , UConsts
+  , UConsts , UApiConsts
   , GApp
   ;
 
@@ -346,65 +346,73 @@ uses
 
 function TSymbol.CheckDnwState(depoit, withdraw: boolean): integer;
 var
-  bPrevDpst , bPrevWthd : boolean;
+  bPrevDpst , bPrevWthd, bChange : boolean;
 begin
-
-  if FDnwCount = 0 then
-  begin
-    bPrevDpst := depoit;
-    bPrevWthd := withdraw;
-  end else
-  begin
-    bPrevDpst := FDepositState;
-    bPrevWthd := FWithdrawlState;
-  end;
-
-  FDepositState   := depoit;
-  FWithdrawlState := withdraw;
-
-  if FDepositState and FWithdrawlState then
-  begin
-    Result := 0;
-    if FDnwCount > 0 then
-      App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
-  end else
-  begin
-    if (not depoit) and ( not withdraw ) then
-      Result := DNW_BOTH_FALE
-    else if not withdraw then
-      Result := DWN_WITHDRAW_FALSE
-    else if not depoit then
-      Result := DWN_DEPOSIT_FALSE;
-  end;
-
-
-
   Result := 0;
 
+  try
+    if FDnwCount = 0 then
+    begin
+      bPrevDpst := depoit;
+      bPrevWthd := withdraw;
+    end else
+    begin
+      bPrevDpst := FDepositState;
+      bPrevWthd := FWithdrawlState;
+    end;
 
+    FDepositState   := depoit;
+    FWithdrawlState := withdraw;
 
-  if Result > 0 then begin
-    if App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].FindCode( Code ) = nil then
-      App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self )
-    else
-      Result := 0;
-  end
-  else if Result = 0 then begin
-    if Code = 'BTC' then
-      Code := 'BTC';
-    App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
+    if FDepositState and FWithdrawlState then
+    begin
+
+      if FDnwCount = 0 then exit ;
+      if ( bPrevDpst <> FDepositState ) or ( bPrevWthd <> FWithdrawlState ) then
+      begin
+        App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
+        App.Log(llInfo, '[%s] %s  정상화 : %s -> %s, %s ->%s', [ TExchangeKindDesc[ Spec.ExchangeType], Code,
+          ifThenStr( bPrevDpst, '입금가능','입금금지'), ifThenStr( FDepositState, '입금가능','입금금지'),
+          ifThenStr( bPrevWthd, '출금가능','출금금지'), ifThenStr( FWithdrawlState, '출금가능','출금금지')
+          ]   );
+      end;
+    end else
+    begin
+
+      if FDnwCount = 0 then begin
+        bChange := true;
+      end
+      else begin
+        if ( bPrevDpst = FDepositState ) and ( bPrevWthd = FWithdrawlState ) then Exit;
+        bChange := false;
+        if bPrevDpst and ( not FDepositState )  then
+        begin
+           bChange := true;
+           DepositTime := now;
+        end;
+        if bPrevWthd and ( not FWithdrawlState ) then
+        begin
+           bChange := true;
+           WithDrawlTime := now;
+        end;
+        Result := 1;
+      end;
+
+      if bChange then
+      begin
+        if App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].FindCode( Code ) = nil then
+          App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].AddSymbol( Self );
+        App.Log(llInfo, '[%s] %s (%d)  정지 : %s -> %s, %s ->%s', [ TExchangeKindDesc[ Spec.ExchangeType], Code, FDnwCount,
+          ifThenStr( bPrevDpst, '입금가능','입금금지'), ifThenStr( FDepositState, '입금가능','입금금지'),
+          ifThenStr( bPrevWthd, '출금가능','출금금지'), ifThenStr( FWithdrawlState, '출금가능','출금금지')
+          ]   );
+      end;
+    end;
+  finally
+    inc( FDnwCount );
   end;
 
 
-  if FDnwCount = 0 then
-  begin
-    Result   := 0;
-//    FDnwTime := 0;
-  end else
-    if Result > 0  then
-      FDnwTime  := now;
-
-  inc( FDnwCount );
 
 end;
 
