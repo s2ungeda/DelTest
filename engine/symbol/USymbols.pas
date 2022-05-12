@@ -148,9 +148,11 @@ type
     FDepositState: boolean;
     FDnwCount: integer;
     FWDCPrice: double;
-    FDnwTime: TDateTime;
+
     FSPrice: double;
     FLastTradeTime: TDateTime;
+    FDepositTime: TDateTime;
+    FWithDrawlTime: TDateTime;
     procedure OnTermAddEvent(Sender: TObject);
   public
 
@@ -211,7 +213,8 @@ type
     //
     property WithDrawlState : boolean read FWithdrawlState write FWithdrawlState;
     property DepositState   : boolean read FDepositState   write FDepositState;
-    property DnwTime        : TDateTime read FDnwTime      write FDnwTime;
+    property WithDrawlTime  : TDateTime read FWithDrawlTime write FWithDrawlTime;
+    property DepositTime    : TDateTime read FDepositTime   write FDepositTime;
 
     property Terms: TSTerms read FTerms write FTerms;
     property MakeTerm: boolean read FMarkeTerm write FMarkeTerm;
@@ -343,29 +346,42 @@ uses
 
 function TSymbol.CheckDnwState(depoit, withdraw: boolean): integer;
 var
-  b1 , b2 : boolean;
+  bPrevDpst , bPrevWthd : boolean;
 begin
 
-  b1 := true; b2 := true;
-  Result := 0;
-  if FWithdrawlState then
-    if not withdraw then
-      b1 := false;
+  if FDnwCount = 0 then
+  begin
+    bPrevDpst := depoit;
+    bPrevWthd := withdraw;
+  end else
+  begin
+    bPrevDpst := FDepositState;
+    bPrevWthd := FWithdrawlState;
+  end;
 
-
-  if FDepositState then
-    if not depoit then
-      b2 := false;
-
-  FWithdrawlState := withdraw;
   FDepositState   := depoit;
+  FWithdrawlState := withdraw;
 
-  if (not depoit) and ( not withdraw ) then
-    Result := DNW_BOTH_FALE
-  else if not withdraw then
-    Result := DWN_WITHDRAW_FALSE
-  else if not depoit then
-    Result := DWN_DEPOSIT_FALSE;
+  if FDepositState and FWithdrawlState then
+  begin
+    Result := 0;
+    if FDnwCount > 0 then
+      App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].DeleteSymbol( Self );
+  end else
+  begin
+    if (not depoit) and ( not withdraw ) then
+      Result := DNW_BOTH_FALE
+    else if not withdraw then
+      Result := DWN_WITHDRAW_FALSE
+    else if not depoit then
+      Result := DWN_DEPOSIT_FALSE;
+  end;
+
+
+
+  Result := 0;
+
+
 
   if Result > 0 then begin
     if App.Engine.SymbolCore.SymbolDnwStates[ Spec.ExchangeType ].FindCode( Code ) = nil then
@@ -383,7 +399,7 @@ begin
   if FDnwCount = 0 then
   begin
     Result   := 0;
-    FDnwTime := 0;
+//    FDnwTime := 0;
   end else
     if Result > 0  then
       FDnwTime  := now;
@@ -415,7 +431,8 @@ begin
   FDepositState   := true;
 
   FDnwCount := 0;
-  FDnwTime  := 0;
+  FDepositTime  := 0;
+  FWithDrawlTime:= 0;
 
   FKimpPrice := 0.0;
   FWDCPrice  := 0.0;

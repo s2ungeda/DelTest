@@ -546,8 +546,10 @@ begin
           sTmp := aVal.GetValue<string>('wallet_state');
           if sTmp = 'working' then
           begin
-            aSymbol.DepositState  := true;
-            aSymbol.WithDrawlState  := true;
+//            aSymbol.DepositState  := true;
+//            aSymbol.WithDrawlState  := true;
+            aSymbol.CheckDnwState( true,  true );
+            continue;
           end else
           if sTmp = 'withdraw_only' then
             iRes := aSymbol.CheckDnwState( false,  true )
