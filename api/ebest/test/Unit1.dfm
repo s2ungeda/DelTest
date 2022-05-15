@@ -130,15 +130,25 @@ object FrmExRate: TFrmExRate
     TabOrder = 8
     OnClick = Button5Click
   end
+  object cbWeek: TCheckBox
+    Left = 251
+    Top = 70
+    Width = 65
+    Height = 17
+    Caption = #51452#47568#51228#50808
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+  end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
     Visible = True
-    Left = 248
-    Top = 64
+    Left = 256
+    Top = 88
   end
   object PopupMenu1: TPopupMenu
     Left = 288
-    Top = 64
+    Top = 88
     object N2: TMenuItem
       Caption = 'Show'
       OnClick = N2Click
@@ -155,12 +165,12 @@ object FrmExRate: TFrmExRate
     Enabled = False
     Interval = 3000
     OnTimer = Timer1Timer
-    Left = 192
-    Top = 72
+    Left = 200
+    Top = 80
   end
   object Timer2: TTimer
     Enabled = False
-    Left = 216
-    Top = 64
+    Left = 224
+    Top = 80
   end
 end

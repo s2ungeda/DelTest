@@ -30,7 +30,7 @@ type
   public
     Constructor Create( iSockDiv, iSeq : Integer; aMtType : TMarketType ); overload;
     destructor Destroy; override;
-    procedure CheckPingPong;
+
     procedure SubScribe( aSymbol : TSymbol ) ; overload;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
     procedure SubscribeAll; override;
@@ -52,22 +52,19 @@ uses
   ;
 { TBinanceWebSocket }
 
+// 조회로 전환 하므로..주석
 procedure TBinanceWebSocket.AllMarketTicker( bSub : boolean );
 var
   sTmp, sData : string;
 begin
+	Exit;
   sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
   inc(FSubIndex);
-  sData := Format('{"method": "%s","params":["%s"],"id": %d}', [ sTmp, '!miniTicker@arr', FSubIndex ] );
+  sData := Format('{"method": "%s","params":["%s"],"id": %d}', [ sTmp, '!ticker@arr', FSubIndex ] );
   SendData(sData);
 end;
 
-procedure TBinanceWebSocket.CheckPingPong;
-var
-  iGap : integer;
-begin
-//  iGap := SecondsBetween( now, LiveTime );
-end;
+
 constructor TBinanceWebSocket.Create(iSockDiv, iSeq: Integer; aMtType: TMarketType);
 begin
   inherited Create( iSockDiv, iSeq, ekBinance );
@@ -181,9 +178,7 @@ begin
 
   finally
     aList.Free;
-  end;
-
-
+  end;      
 
 end      ;
 
@@ -330,10 +325,11 @@ begin
     sData := Format('{"method": "SUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
     SendData(sData);
   end;
-  //  바이낸스는..추가로 구독
-  AllMarketTicker(true);
+  //  바이낸스는..추가로 구독 --> 조회로 전환
+  if FMarketType = mtFutures then  
+	  AllMarketTicker(true);
   //
-  FTimer.Enabled := true;
+  FTimer.Enabled := true;  		
 
 end;
 
@@ -348,8 +344,9 @@ begin
     sData := Format('{"method": "UNSUBSCRIBE","params":[%s],"id": %d}', [ sParam, FSubIndex ] );
     SendData(sData);
   end;
-  //  바이낸스는..추가로 구독취소
-  AllMarketTicker(false);
+  //  바이낸스는..추가로 구독취소 --> 조회로 전환
+  if FMarketType = mtFutures then    
+	  AllMarketTicker(false);
 end;
 
 

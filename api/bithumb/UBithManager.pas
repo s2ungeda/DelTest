@@ -58,9 +58,10 @@ begin
 end;
 
 destructor TBithManager.Destroy;
-begin
-  if FDepTimer <> nil then
+begin                                    
+	if FDepTimer <> nil then
     FDepTimer.Enabled := false;
+
   FParse.Free;
   inherited;
 end;

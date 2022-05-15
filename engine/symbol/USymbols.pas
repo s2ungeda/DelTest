@@ -153,6 +153,8 @@ type
     FLastTradeTime: TDateTime;
     FDepositTime: TDateTime;
     FWithDrawlTime: TDateTime;
+    FLastID: int64;
+    FTrnsTime: int64;
     procedure OnTermAddEvent(Sender: TObject);
   public
 
@@ -225,6 +227,10 @@ type
     property LastTime : TDateTime read FLastTime write FLastTime;
     property LastEventTime  : TDateTime read FLastEventTime write FLastEventTime;
     property LastTradeTime  : TDateTime read FLastTradeTime write FLastTradeTime;
+
+    // only binance future trade sequence
+    property LastID : int64 read FLastID write FLastID;
+    property TrnsTime : int64 read FTrnsTime write FTrnsTime;
   end;
 
   TSymbols = class(TCollection)
@@ -441,6 +447,8 @@ begin
   FDnwCount := 0;
   FDepositTime  := 0;
   FWithDrawlTime:= 0;
+  FLastID := 0;
+  FTrnsTime	:= 0;
 
   FKimpPrice := 0.0;
   FWDCPrice  := 0.0;

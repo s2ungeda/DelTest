@@ -4,8 +4,12 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  System.DateUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, XA_SESSIONLib_TLB,
   Vcl.StdCtrls, XA_DATASETLib_TLB, Vcl.Menus, Vcl.ExtCtrls, Vcl.Buttons;
+
+const
+	WM_EXRATE_MESSAGE = WM_USER + $0001;
 
 type
   TFrmExRate = class(TForm)
@@ -29,6 +33,7 @@ type
     lbLog: TLabel;
     lbTimer: TLabel;
     Button5: TButton;
+    cbWeek: TCheckBox;
     procedure xasDisconnect(Sender: TObject);
     procedure xasLogin(ASender: TObject; const szCode, szMsg: WideString);
     procedure xasLogout(Sender: TObject);
@@ -57,11 +62,13 @@ type
     FInterval : integer;
     FTRCode   : string;
     FSymbolCode : string;
+    FClassName  : string;
 
     FReady : boolean;
     procedure DoLog( sData : string; iType : integer = 0);
     function LoadConfig: boolean;
     procedure SaveFile(sData: string);
+    procedure SendExMessage(iType: integer; sData: string);
   public
     { Public declarations }
   end;
@@ -113,10 +120,15 @@ procedure TFrmExRate.Button4Click(Sender: TObject);
 var
   n : Integer;
   sBlockName : string;
+  iD : word;
+  
 begin
 
   if not FReady then Exit;
-
+  
+  iD := DayOfTheWeek( now ) ;
+  // 주말엔 조회 하지 말자..
+  if ( cbWeek.Checked ) and ( iD in [6..7] ) then Exit;
   n := 0;
   sBlockName := FTRCode + 'InBlock';
   xaq.SetFieldData( sBlockName, 'kind', n, 'R');
@@ -191,7 +203,7 @@ procedure TFrmExRate.Timer1Timer(Sender: TObject);
 begin
   Button4Click(nil);
 end;
-
+                                
 procedure TFrmExRate.xaqReceiveData(ASender: TObject; const szTrCode: WideString);
 var
   n , I: Integer;
@@ -206,6 +218,7 @@ begin
     sData := xaq.GetFieldData( sBlockName, 'price', i) ;
     DoLog( Format('%s', [ sData ]), 1 );
     SaveFile( sData );
+    SendExMessage( 0, sData );
   end;
 
 end;
@@ -308,6 +321,7 @@ begin
       FInterval := pIniFile.ReadInteger('EBEST', 'Interval', 3);
       FTRCode   := pIniFile.ReadString('EBEST', 'TRCode', 'Sauri');
       FSymbolCode   := pIniFile.ReadString('EBEST', 'SymbolCode', 'Sauri');
+      FClassName		:= pIniFile.ReadString('EBEST', 'ClassName', 'Sauri');
       /////////////////////////////////////////////////////////////
 
     except
@@ -315,8 +329,25 @@ begin
     end;
   finally
     pIniFile.Free;
-  end;
+  end;       
+end;
 
+procedure TFrmExRate.SendExMessage( iType : integer; sData : string );
+var
+  aH : THandle;
+  DataStruct: CopyDataStruct;
+begin
+	Exit;
+  
+  aH := FindWindow( PChar(FClassName), nil );
+  if aH > 0 then
+  begin
+		DataStruct.dwData := 0;   
+    DataStruct.cbData := (Length(sData) * SizeOf(Char)) +1;
+    DataStruct.lpData := PChar(sData); 
+    SendMessage( aH, WM_CopyData, 100, Integer(@DataStruct) );
+  end;                                                      	
+    
 end;
 
 end.

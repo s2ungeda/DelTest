@@ -22,7 +22,8 @@ type
   end;
 
 const
-  WM_LOGARRIVED     = WM_USER + $0002;
+	WM_EXRATE_MESSAGE = WM_USER + $0001;
+  WM_LOGARRIVED     = WM_USER + $0002;  
 
 
 implementation

@@ -14,8 +14,16 @@ uses
 type
   TBinanceFutures = class( TExchange )
   private
+    FIndex  : integer;
+    FLastIndex : integer;
+      
     function RequestFuttMaster : boolean;
     function RequestFutTicker  : boolean;
+
+    // async proc
+    procedure AsyncFutAllTicker;
+    procedure AsyncFutAllOrderBook;
+    
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -23,6 +31,8 @@ type
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
+
+    procedure RequestData( iMod : integer );
   end;
 
 implementation
@@ -35,9 +45,14 @@ uses
 
 { TBinanceSpotNMargin }
 
+
+
 constructor TBinanceFutures.Create(aObj: TObject; aMarketType: TMarketType);
 begin
   inherited Create( aObj, aMarketType );
+
+  FIndex  := 0;
+  FLastIndex := -1;  
 
 end;
 
@@ -83,6 +98,73 @@ begin
   end;
 
   Result := bRes;
+end;
+
+procedure TBinanceFutures.RequestData( iMod : integer );
+begin
+
+	case iMod of
+      0 : begin
+        RestResult := Req[iMod].RequestAsync( AsyncFutAllOrderBook, rmGET, '/fapi/v1/ticker/bookTicker');
+      end;
+      1 : begin
+        RestResult := Req[iMod].RequestAsync( AsyncFutAllTicker, rmGET, '/fapi/v1/ticker/24hr');
+      end;    
+  end;
+
+//  if ( FIndex <> FLastIndex )
+//    or ( RestResult = nil )
+//    or (( RestResult <> nil ) and ( RestResult.Finished )) then
+//  begin
+//    FLastIndex := FIndex;
+//
+//    case FIndex of
+//      0 : begin
+//        RestResult := Req[0].RequestAsync( AsyncFutAllOrderBook, rmGET, '/fapi/v1/ticker/bookTicker');
+//      end;
+//      1 : begin
+//        RestResult := Req[1].RequestAsync( AsyncFutAllTicker, rmGET, '/fapi/v1/ticker/24hr');
+//      end;
+////      3 :begin  
+////        RestResult := Req[2].RequestAsync( parseTicker, rmGET, '/public/ticker/ALL_KRW', true);
+////      end;
+//      else exit;
+//    end;
+//
+//    if RestResult = nil then
+//      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
+//    else begin
+//      inc( FIndex );
+//      if FIndex >= 2 then
+//        FIndex := 0;
+//    end;
+//
+//  end else
+//  begin
+//    var s : string;
+//    if RestResult.Finished then s := 'fin' else s := 'not fin';
+//    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
+//  end;
+end;
+
+procedure TBinanceFutures.AsyncFutAllOrderBook;
+var
+  sJson : string;
+begin
+  sJson :=  Req[0].GetResponse;
+  if sJson = '' then Exit;
+  gBinReceiver.ParseFutAllOrderBook( sJson );
+
+end;
+
+procedure TBinanceFutures.AsyncFutAllTicker;
+var
+  sJson : string;
+begin
+  sJson :=  Req[1].GetResponse;
+  if sJson = '' then Exit;
+  gBinReceiver.ParseFutAllTicker( sJson );
+
 end;
 
 function TBinanceFutures.RequestFutTicker: boolean;
@@ -133,7 +215,16 @@ end;
 //end;
 
 function TBinanceFutures.RequestMaster: boolean;
+var
+	i : integer;
 begin
+
+  for I := 0 to High(Req) do
+  begin
+    Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures ));
+    Req[i].Req.OnHTTPProtocolError := OnHTTPProtocolError;
+  end;
+  
   Result := RequestFuttMaster
          and RequestFutTicker;
 end;

@@ -47,6 +47,7 @@ type
     procedure SetValue;
     procedure LoadEnv(aStorage: TStorage);
     procedure SaveEnv(aStorage: TStorage);
+		procedure OnExRateMessage(var msg: TMessage); message wm_CopyData;
   end;
 
 var
@@ -266,6 +267,8 @@ begin
 end;
 
 
+
+
 procedure TFrmDalinMain.ReadExRate( bInit : boolean );
 var
   f : TextFile;  bOK : boolean;
@@ -340,4 +343,14 @@ begin
 //  App.AppStatus := asload;
   ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
+
+procedure TFrmDalinMain.OnExRateMessage(var msg: TMessage);
+var Filename: String;
+	copyDataStruct : PCopyDataStruct;
+begin 
+	copyDataStruct := Pointer(Msg.LParam);  	
+	Filename := PChar(copyDataStruct.lpData);
+  caption  := FileName + ' ' + intTostr(msg.WParam);
+end;
+
 end.

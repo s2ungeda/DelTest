@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils,
 
-  UExchangeManager, USymbols, UBinanceParse
+  UExchangeManager, USymbols, UBinanceParse , UQuoteTimers
 
   ,UApiTypes
 
@@ -15,7 +15,9 @@ type
 
   TBinanceManager = class( TExchangeManager )
   private
+  	FSeq  : int64;
     FParse: TBinanceParse;
+    FDepTimer: TQuoteTimer;
     procedure OnTimer( Sender : TObject );
   public
 
@@ -30,7 +32,11 @@ type
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
 
+    procedure OnDepthTimer(Sender: TObject);
+
     property Parse : TBinanceParse read FParse;
+    property DepTimer : TQuoteTimer read FDepTimer;
+    
   end;
 
 implementation
@@ -38,7 +44,7 @@ implementation
 uses
   GApp , Math
   , UApiConsts
-  , UBinanceWebSockets
+  , UBinanceWebSockets, UBinanceFutures
   ;
 
 { TBinanceManager }
@@ -47,8 +53,8 @@ constructor TBinanceManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
 
-  FParse:= TBinanceParse.Create(self);
-
+  FParse:= TBinanceParse.Create(self);    
+  FSeq	:= 0;
 end;
 
 destructor TBinanceManager.Destroy;
@@ -59,6 +65,8 @@ begin
 //  for I := 0 to High(QuoteSock) do
 //    QuoteSock[i].Free;
 
+  if FDepTimer <> nil then
+    FDepTimer.Enabled := false;
   FParse.Free;
   inherited;
 end;
@@ -82,6 +90,11 @@ begin
   Timer.OnTimer := OnTimer;
 
   Result := true;
+
+  FDepTimer  := App.Engine.QuoteBroker.Timers.New;
+  FDepTimer.Enabled  := false;
+  FDepTimer.Interval := 500;
+  FDepTimer.OnTimer  := OnDepthTimer;    
 end;
 
 
@@ -99,6 +112,21 @@ begin
     and Exchanges[mtFutures].RequestCandleData('30m', sTmp )    ;
 end;
 
+procedure TBinanceManager.OnDepthTimer(Sender: TObject);
+begin
+  if Done then
+  begin
+    FDepTimer.Enabled := false;
+    Exit;
+  end;
+
+ (Exchanges[mtFutures] as TBinanceFutures).RequestData( FSeq mod 2 );
+  inc(FSeq);
+
+  if FSeq > 99999999 then
+  	FSeq := 0;
+end;
+
 procedure TBinanceManager.OnTimer(Sender: TObject);
 var
   iState, i : integer;
@@ -112,12 +140,14 @@ function TBinanceManager.SubscribeAll: boolean;
 var
   i, j : integer;
 begin
-//  Exit (true);
-//  QuoteSock[0].DoConnect;
+
   for I := 0 to High(QuoteSock) do begin
     QuoteSock[i].SubscribeAll;
     sleep(500);
   end;
+
+  FDepTimer.Enabled := true;
+    
   result := true;
 end;
 

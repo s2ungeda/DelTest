@@ -126,8 +126,8 @@ begin
   begin
     EventsCallMode := ecAsynchronous;
     WatchDogOptions.Enabled := true;
-    WatchDogOptions.Interval:= 3;
-    WatchDogOptions.Attempts:= 5;
+    WatchDogOptions.Interval:= 2;
+    WatchDogOptions.Attempts:= 3;
   end;
 
 //  FEvent  := TEvent.Create( nil, False, False, '');

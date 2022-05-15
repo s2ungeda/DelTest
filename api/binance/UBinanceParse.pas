@@ -34,6 +34,9 @@ type
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseCandleData( aKind: TMajorSymbolKind; sUnit, aData : string );
 
+    procedure ParseFutAllTicker( aData : string );
+    procedure ParseFutAllOrderBook( aData : string );
+
     property Parent : TExchangeManager read FParent;
 
   end;
@@ -98,6 +101,7 @@ begin
     Symbol.Last   := aSale.Price;
     Symbol.Volume := aSale.Volume;
     Symbol.Side   := aSale.Side;
+    Symbol.LastID := aJson.GetValue<int64>('l');
 
     LastEvent := qtTimeNSale;
 
@@ -106,14 +110,139 @@ begin
 
 end;
 
+procedure TBinanceParse.ParseFutAllOrderBook(aData: string);
+var
+	aVal : TJsonValue;
+	aArr : TJsonArray;
+  aObj : TJsonObject;
+  sCode : string;
+  aSymbol : TSymbol;
+  I: Integer;
+  iTrns : int64;
+begin
+	aVal := nil;
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseFutAllOrderBook data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;        
+  
+  aVal := TJsonObject.ParseJSONValue( aData);// as TJsonArray;  
+  if aVal = nil then Exit;  
+  if not (aVal is TJsonArray) then
+  begin
+  	App.Log(llError, 'ParseFutAllOrderBook InValid data : %s', [ aData ] );
+    Exit;
+  end;
+
+  try                       
+
+  	aArr := aVal as TJsonArray;
+  
+  	for I := 0 to aArr.Size-1 do
+		begin
+    	aObj	:= aArr.Get(i) as TJsonObject;
+
+		  sCode := aObj.GetValue('symbol').Value;
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sCode+Fut_Suf);
+      if aSymbol <> nil then
+      begin
+      	iTrns	:= aObj.GetValue<int64>('time');
+      	if iTrns > aSymbol.TrnsTime then
+        begin
+      
+          aSymbol.Asks[0].Price  := aObj.GetValue<double>('askPrice');
+          aSymbol.Asks[0].Volume := aObj.GetValue<double>('askQty');
+          aSymbol.Bids[0].Price  := aObj.GetValue<double>('bidPrice');
+          aSymbol.Bids[0].Volume := aObj.GetValue<double>('bidQty');
+
+          aSymbol.TrnsTime	:= iTrns;
+        end;
+
+      end;      
+    end;
+    
+  finally
+    if aVal <> nil then aVal.Free;
+  end;
+
+end;
+
+procedure TBinanceParse.ParseFutAllTicker(aData: string);
+var
+	aVal : TJsonValue;
+	aArr : TJsonArray;
+  aObj : TJsonObject;
+  sCode : string;
+  aSymbol : TSymbol;
+  I: Integer;
+  iLast : int64;
+begin
+	aVal := nil;
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseFutAllTicker data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;        
+  
+  aVal := TJsonObject.ParseJSONValue( aData);// as TJsonArray;  
+  if aVal = nil then Exit;  
+  if not (aVal is TJsonArray) then
+  begin
+  	App.Log(llError, 'ParseFutAllTicker InValid data : %s', [ aData ] );
+    Exit;
+  end;
+
+  try                       
+
+  	aArr := aVal as TJsonArray;
+  
+  	for I := 0 to aArr.Size-1 do
+		begin
+    	aObj	:= aArr.Get(i) as TJsonObject;
+
+		  sCode := aObj.GetValue('symbol').Value;
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sCode+Fut_Suf);
+      if aSymbol <> nil then
+      begin
+        aSymbol.DayOpen  := aObj.GetValue<double>('openPrice');
+        aSymbol.DayHigh  := aObj.GetValue<double>('highPrice');
+        aSymbol.DayLow   := aObj.GetValue<double>('lowPrice');
+        aSymbol.DayVolume:= aObj.GetValue<double>('volume') ;
+        aSymbol.DayAmount:= aObj.GetValue<double>('quoteVolume') * App.Engine.ApiManager.ExRate.Value / 100000000;
+
+       	iLast	:= aObj.GetValue<int64>('lastId');
+        if iLast > aSymbol.LastID then
+        begin
+          aSymbol.Last := aObj.GetValue<double>('lastPrice');
+          App.Engine.SymbolCore.CalcKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+//
+//          App.DebugLog('%s : %d > %d %s, %.0f', [ aSymbol.Code, iLast, aSymbol.LastID, 
+//          	aSymbol.PriceToStr( aSymbol.Last ), aSymbol.DayAmount
+//          	]  );
+          aSymbol.LastID	:= iLast;
+        end;
+
+      end;      
+    end;
+    
+  finally
+    if aVal <> nil then aVal.Free;
+  end;
+end;
+
 procedure TBinanceParse.ParseFutBookTicker(aJson: TJsonObject);
 begin
 
 end;
 
+// 조회로 변경했기에..사용안함..
 procedure TBinanceParse.ParseAllMiniTicker(aArr: TJsonArray);
 var
-  I: Integer;
+  I : Integer;
+  iLast : int64;
   aVal : TJsonValue;
   aObj : TJsonObject;
   sCode, sTmp : string;
@@ -125,7 +254,7 @@ begin
     aObj := aArr.Get(i) as TJsonObject ;
     sTmp := aObj.GetValue('e').Value;
 
-    if sTmp <> '24hrMiniTicker' then exit;
+    if sTmp <> '24hrTicker' then exit;
 
     sCode := aObj.GetValue('s').Value;
     aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sCode+Fut_Suf);
@@ -137,20 +266,54 @@ begin
       aSymbol.DayVolume:= StrToFloat( aObj.GetValue('v').Value );
       aSymbol.DayAmount:= StrToFloat( aObj.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
 
-      if App.AppStatus > asLoad then
+      iLast	:= aObj.GetValue<int64>('L');
+      if iLast > aSymbol.LastID then
       begin
-        aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
-        if aQuote = nil then
-        begin
-          aSymbol.Last := StrToFloat( aObj.GetValue('c').Value );
+        aSymbol.Last := aObj.GetValue<double>('c');
+        App.Engine.SymbolCore.CalcKimp( aSymbol );
+        App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+        App.Engine.SymbolCore.CalcMainWDC(aSymbol);
 
-          App.Engine.SymbolCore.CalcKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
-        end;
-      end;
+//        App.DebugLog('%s : %d > %d %s, %.0f', [ aSymbol.Code, iLast, aSymbol.LastID, 
+//          aSymbol.PriceToStr( aSymbol.Last ), aSymbol.DayAmount
+//          ]  );
+        aSymbol.LastID	:= iLast;
+      end;      
+
     end;
   end;
+
+//  for I := 0 to aArr.Size-1 do
+//  begin
+//    aObj := aArr.Get(i) as TJsonObject ;
+//    sTmp := aObj.GetValue('e').Value;
+//
+//    if sTmp <> '24hrMiniTicker' then exit;
+//
+//    sCode := aObj.GetValue('s').Value;
+//    aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sCode+Fut_Suf);
+//    if aSymbol <> nil then
+//    begin
+//      aSymbol.DayOpen  := StrToFloat( aObj.GetValue('o').Value );
+//      aSymbol.DayHigh  := StrToFloat( aObj.GetValue('h').Value );
+//      aSymbol.DayLow   := StrToFloat( aObj.GetValue('l').Value );
+//      aSymbol.DayVolume:= StrToFloat( aObj.GetValue('v').Value );
+//      aSymbol.DayAmount:= StrToFloat( aObj.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
+//
+//      if App.AppStatus > asLoad then
+//      begin
+//        aQuote:= App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+//        if aQuote = nil then
+//        begin
+//          aSymbol.Last := StrToFloat( aObj.GetValue('c').Value );
+//
+//          App.Engine.SymbolCore.CalcKimp( aSymbol );
+//          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
+//          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+//        end;
+//      end;
+//    end;
+//  end;
 
 end;
 
@@ -238,8 +401,58 @@ begin
 end;
 
 procedure TBinanceParse.ParseFutMarketDepth(aJson: TJsonObject);
-begin
+var
+  sCode : string;
+  aQuote : TQuote;
+  i : integer;
+  aVal : TJsonValue;
+  aArr, aArr2 : TJsonArray;
+  dtTime: TDateTime;
 
+begin
+  sCode := aJson.GetValue('s').Value;
+  aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode+Fut_Suf)    ;
+  if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;  
+
+  dtTime  := UnixTimeToDateTime( aJson.GetValue<int64>('E') );
+
+  with aQuote do
+  begin
+    aArr := aJson.GetValue('b') as TJsonArray;
+    for I := aArr.Size-1 downto 0 do
+    begin
+    	if i > Symbol.Asks.Size then continue;      
+      aArr2  := aArr.Get(i) as TJsonArray;  
+
+			Symbol.Bids[i].Price := StrToFloat( aArr2.Get(0).Value );
+      Symbol.Bids[i].Volume := StrToFloat( aArr2.Get(1).Value );
+    end;
+
+    aArr := aJson.GetValue('a') as TJsonArray;
+    for I := 0 to aArr.Size-1 do
+    begin
+    	if i > Symbol.Asks.Size then continue;      
+      aArr2  := aArr.Get(i) as TJsonArray;  
+
+			Symbol.Asks[i].Price := StrToFloat( aArr2.Get(0).Value );
+      Symbol.Asks[i].Volume := StrToFloat( aArr2.Get(1).Value );
+    end;    
+
+    Symbol.TrnsTime  := aJson.GetValue<int64>('T') ;
+    LastEvent := qtMarketDepth;
+    Update( dtTime );
+
+//    if Symbol.Spec.BaseCode = 'XRP' then
+//    begin
+//			App.DebugLog( '%s(%f) %s(%f) | %s(%f) %s(%f)', [  
+//      	Symbol.PriceToStr( Symbol.Asks[1].Price ), Symbol.Asks[1].Volume ,
+//        Symbol.PriceToStr( Symbol.Asks[0].Price ), Symbol.Asks[0].Volume ,
+//        Symbol.PriceToStr( Symbol.Bids[0].Price ), Symbol.Bids[1].Volume ,
+//        Symbol.PriceToStr( Symbol.Bids[1].Price ), Symbol.Bids[1].Volume 
+//        ]  )    ;
+//    end;
+    
+  end;
 end;
 
 
