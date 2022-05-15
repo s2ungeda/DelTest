@@ -348,9 +348,9 @@ procedure TFrmDalinMain.OnExRateMessage(var msg: TMessage);
 var Filename: String;
 	copyDataStruct : PCopyDataStruct;
 begin 
-	copyDataStruct := Pointer(Msg.LParam);  	
-	Filename := PChar(copyDataStruct.lpData);
-  caption  := FileName + ' ' + intTostr(msg.WParam);
+//	copyDataStruct := Pointer(Msg.LParam);  	
+//	Filename := PChar(copyDataStruct.lpData);
+//  caption  := FileName + ' ' + intTostr(msg.WParam);
 end;
 
 end.
