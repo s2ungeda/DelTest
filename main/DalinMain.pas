@@ -28,6 +28,8 @@ type
 
     procedure QryTimerTimer(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure stsBarDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
+      const Rect: TRect);
   private
     { Private declarations }
     FExRate : integer;
@@ -40,6 +42,7 @@ type
     procedure ReadExRate( bInit : boolean = false );
     procedure AppException(Sender: TObject; E: Exception);
     function GetInterval: integer;
+    function GetRect(oRect: TRect): TRect;
 
   public
     { Public declarations }
@@ -47,7 +50,9 @@ type
     procedure SetValue;
     procedure LoadEnv(aStorage: TStorage);
     procedure SaveEnv(aStorage: TStorage);
-		procedure OnExRateMessage(var msg: TMessage); message wm_CopyData;
+//		procedure OnExRateMessage(var msg: TMessage); message wm_CopyData;
+    procedure OnExRateMessage(var msg: TMessage); message WM_EXRATE_MESSAGE;
+
   end;
 
 var
@@ -344,10 +349,46 @@ begin
   ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
 end;
 
+function TFrmDalinMain.GetRect( oRect : TRect ) : TRect ;
+begin
+  Result := Rect( oRect.Left, oRect.Top, oRect.Right, oRect.Bottom );
+end;
+
+procedure TFrmDalinMain.stsBarDrawPanel(StatusBar: TStatusBar;
+  Panel: TStatusPanel; const Rect: TRect);
+  var
+    oRect : TRect;
+begin
+  if stsBar.Tag >= 0 then begin
+    StatusBar.Canvas.Brush.Color := clBtnFace;
+    StatusBar.Canvas.Font.Color := clBlack;
+  end
+  else if stsBar.Tag < 0 then begin
+    StatusBar.Canvas.Brush.Color := clRed;
+    StatusBar.Canvas.Font.Color := clWhite;
+  end;
+
+  StatusBar.Canvas.FillRect( Rect );
+  oRect := GetRect( Rect );
+  DrawText( stsBar.Canvas.Handle, PChar( stsBar.Panels[2].Text ),
+    Length( stsBar.Panels[2].Text ),
+    oRect, DT_VCENTER or DT_LEFT )    ;
+end;
+
 procedure TFrmDalinMain.OnExRateMessage(var msg: TMessage);
-var Filename: String;
-	copyDataStruct : PCopyDataStruct;
-begin 
+begin
+  // 상태 메세지
+  if msg.WParam = 100 then
+  begin
+    if msg.LParam = 99 then begin
+      stsBar.Panels[2].Text := 'ExRate : Closed';
+      stsBar.Tag := -1;
+    end
+    else begin
+      stsBar.Panels[2].Text := 'ExRate : Open';
+      stsBar.Tag := 0;
+    end;
+  end;
 //	copyDataStruct := Pointer(Msg.LParam);  	
 //	Filename := PChar(copyDataStruct.lpData);
 //  caption  := FileName + ' ' + intTostr(msg.WParam);

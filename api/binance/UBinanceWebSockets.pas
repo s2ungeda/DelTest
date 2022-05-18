@@ -57,7 +57,7 @@ procedure TBinanceWebSocket.AllMarketTicker( bSub : boolean );
 var
   sTmp, sData : string;
 begin
-	Exit;
+
   sTmp := ifThenStr( bSub,'SUBSCRIBE', 'UNSUBSCRIBE');
   inc(FSubIndex);
   sData := Format('{"method": "%s","params":["%s"],"id": %d}', [ sTmp, '!ticker@arr', FSubIndex ] );
@@ -345,7 +345,7 @@ begin
     SendData(sData);
   end;
   //  바이낸스는..추가로 구독취소 --> 조회로 전환
-  if FMarketType = mtFutures then    
+  if FMarketType = mtFutures then
 	  AllMarketTicker(false);
 end;
 

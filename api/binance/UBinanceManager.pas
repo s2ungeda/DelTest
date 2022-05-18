@@ -146,7 +146,7 @@ begin
     sleep(500);
   end;
 
-  FDepTimer.Enabled := true;
+//  FDepTimer.Enabled := true;
     
   result := true;
 end;

@@ -3,8 +3,8 @@ object FrmExRate: TFrmExRate
   Top = 0
   BorderStyle = bsDialog
   Caption = 'ExRate'
-  ClientHeight = 116
-  ClientWidth = 334
+  ClientHeight = 122
+  ClientWidth = 295
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,7 +17,7 @@ object FrmExRate: TFrmExRate
   TextHeight = 13
   object sbTimer: TSpeedButton
     Left = 89
-    Top = 39
+    Top = 58
     Width = 48
     Height = 22
     AllowAllUp = True
@@ -29,25 +29,25 @@ object FrmExRate: TFrmExRate
   end
   object lbPrice: TLabel
     Left = 8
-    Top = 72
+    Top = 86
     Width = 3
     Height = 13
   end
   object lbLog: TLabel
     Left = 8
-    Top = 92
+    Top = 106
     Width = 3
     Height = 13
   end
   object lbTimer: TLabel
-    Left = 152
-    Top = 42
+    Left = 149
+    Top = 62
     Width = 3
     Height = 13
   end
   object xas: TXASession
     Left = 416
-    Top = 168
+    Top = 193
     Width = 0
     Height = 0
     OnLogin = xasLogin
@@ -56,44 +56,44 @@ object FrmExRate: TFrmExRate
     ControlData = {000A0000D8130000D8130000}
   end
   object Button1: TButton
-    Left = 89
-    Top = 8
-    Width = 75
+    Left = 55
+    Top = 28
+    Width = 34
     Height = 25
     Caption = #51217#49549
-    TabOrder = 1
+    TabOrder = 2
     OnClick = Button1Click
   end
   object Button2: TButton
-    Left = 251
-    Top = 8
-    Width = 75
+    Left = 136
+    Top = 28
+    Width = 49
     Height = 25
     Caption = #51217#49549#51333#47308
-    TabOrder = 2
+    TabOrder = 3
     OnClick = Button2Click
   end
   object Button3: TButton
     Left = 8
-    Top = 8
-    Width = 75
+    Top = 28
+    Width = 41
     Height = 25
     Caption = #47196#44536#51064
-    TabOrder = 3
+    TabOrder = 4
     OnClick = Button3Click
   end
   object Button4: TButton
-    Left = 170
-    Top = 8
-    Width = 75
+    Left = 95
+    Top = 28
+    Width = 35
     Height = 25
     Caption = #51312#54924
-    TabOrder = 4
+    TabOrder = 5
     OnClick = Button4Click
   end
   object xaq: TXAQuery
     Left = 504
-    Top = 232
+    Top = 257
     Width = 0
     Height = 0
     OnReceiveData = xaqReceiveData
@@ -105,7 +105,7 @@ object FrmExRate: TFrmExRate
   end
   object xar: TXAReal
     Left = 512
-    Top = 248
+    Top = 273
     Width = 0
     Height = 0
     ControlData = {
@@ -114,25 +114,25 @@ object FrmExRate: TFrmExRate
   end
   object Edit1: TEdit
     Left = 8
-    Top = 39
+    Top = 58
     Width = 41
     Height = 21
     NumbersOnly = True
-    TabOrder = 7
+    TabOrder = 8
     Text = '10'
   end
   object Button5: TButton
-    Left = 251
-    Top = 39
+    Left = 214
+    Top = 27
     Width = 75
     Height = 25
     Caption = #49704#44592#44592
-    TabOrder = 8
+    TabOrder = 0
     OnClick = Button5Click
   end
   object cbWeek: TCheckBox
-    Left = 251
-    Top = 70
+    Left = 228
+    Top = 6
     Width = 65
     Height = 17
     Caption = #51452#47568#51228#50808
@@ -140,15 +140,37 @@ object FrmExRate: TFrmExRate
     State = cbChecked
     TabOrder = 9
   end
+  object dtStart: TDateTimePicker
+    Left = 8
+    Top = 4
+    Width = 97
+    Height = 21
+    Date = 44697.000000000000000000
+    Time = 0.354166666664241300
+    DateMode = dmUpDown
+    Kind = dtkTime
+    TabOrder = 10
+  end
+  object dtEnd: TDateTimePicker
+    Left = 127
+    Top = 4
+    Width = 97
+    Height = 21
+    Date = 44697.000000000000000000
+    Time = 0.708333333335758700
+    DateMode = dmUpDown
+    Kind = dtkTime
+    TabOrder = 11
+  end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
     Visible = True
-    Left = 256
-    Top = 88
+    Left = 224
+    Top = 65
   end
   object PopupMenu1: TPopupMenu
-    Left = 288
-    Top = 88
+    Left = 256
+    Top = 65
     object N2: TMenuItem
       Caption = 'Show'
       OnClick = N2Click
@@ -165,12 +187,14 @@ object FrmExRate: TFrmExRate
     Enabled = False
     Interval = 3000
     OnTimer = Timer1Timer
-    Left = 200
-    Top = 80
+    Left = 168
+    Top = 57
   end
   object Timer2: TTimer
     Enabled = False
-    Left = 224
-    Top = 80
+    Interval = 3000
+    OnTimer = Timer2Timer
+    Left = 192
+    Top = 57
   end
 end
