@@ -75,7 +75,43 @@ end;
 function TRequest.Request(AMethod: TRESTRequestMethod; AResource, ABody: string;
   var OutJson, OutRes: string): boolean;
 begin
+  with FReq do
+  begin
+    Method   := AMethod;
+    Resource := AResource;
+    if ABody <> '' then
+      Body.Add( ABody);
+//  Body.Add( ABody, ctAPPLICATION_JSON);
+  end;
 
+
+  try
+    try
+
+      FReq.Execute;
+
+      if Rsp.StatusCode <> 200 then
+      begin
+        OutRes := Format( 'status : %d, %s', [ Rsp.StatusCode, Rsp.StatusText ] );
+        OutJson:= Rsp.Content;
+        Exit( false );
+      end;
+
+
+
+      OutJson := Rsp.Content;
+      Result := true;
+
+    except
+      on E: Exception do
+      begin
+        OutRes := E.Message;
+        Exit(false);
+      end
+    end;
+  finally
+    FReq.Params.Clear;
+  end;
 end;
 
 function TRequest.CanRequest : boolean;
