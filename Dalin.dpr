@@ -88,7 +88,11 @@ uses
   FRepresentWDC in 'wins\FRepresentWDC.pas' {FrmRprsntWDC},
   UOtherData in 'engine\symbol\UOtherData.pas',
   FDataTest in 'wins\FDataTest.pas' {FrmTest},
-  UDataLogs in 'engine\common\UDataLogs.pas';
+  UDataLogs in 'engine\common\UDataLogs.pas',
+  UAccounts in 'engine\trade\UAccounts.pas',
+  UPositions in 'engine\trade\UPositions.pas',
+  UFills in 'engine\trade\UFills.pas',
+  UOrders in 'engine\trade\UOrders.pas';
 
 {$R *.res}
 begin

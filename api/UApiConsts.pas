@@ -31,7 +31,7 @@ const
   TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
   TExchangeKindShortDesc : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
   TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
-  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('Spot', 'Margin', 'Future');
+  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('All', 'Spot', 'Margin', 'Future');
 
 implementation
 

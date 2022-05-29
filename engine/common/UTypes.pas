@@ -15,6 +15,10 @@ type
   TSideType = ( stNone, stLong, stShort );
 
 
+  
+
+  
+
   TWinParam = record
     FontName : string;
     FontSize : integer;

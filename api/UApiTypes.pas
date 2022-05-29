@@ -7,7 +7,7 @@ type
 
   TExchangeKind   = ( ekBinance , ekUpbit, ekBithumb );
   TMarketType     = ( mtSpot, mtFutures );
-  TAccountMarketType  = ( amSpot, amMargin, amFuture );
+  TAccountMarketType  = (amAll, amSpot, amMargin, amFuture );
 
   TMajorSymbolKind = (msBTC, msETH, msXRP );
 

@@ -256,6 +256,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="engine\common\UDataLogs.pas"/>
+        <DCCReference Include="engine\trade\UAccounts.pas"/>
+        <DCCReference Include="engine\trade\UPositions.pas"/>
+        <DCCReference Include="engine\trade\UFills.pas"/>
+        <DCCReference Include="engine\trade\UOrders.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -288,15 +292,15 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\Dalin.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
+                <DeployFile LocalName="C:\Dalin\Dalin.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
                         <RemoteName>Dalin.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Dalin\Dalin.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>Dalin.rsm</RemoteName>
+                <DeployFile LocalName="Win32\Debug\Dalin.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Dalin.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

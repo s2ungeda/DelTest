@@ -42,9 +42,12 @@ procedure SetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
 function GetColor(iType, iColorFlag : integer) : TColor; overload;
 function GetColor( d : double ) : TColor; overload;
 //procedure GetColor(dVal: double; aGrid: TStringGrid; iCol,  iRow: integer);
-procedure ComboBox_AutoWidth(const theComboBox: TCombobox);
-
+procedure ComboBox_AutoWidth(const theComboBox: TCombobox);           
 function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; Lines: LPARAM): Integer; stdcall;
+
+
+//------------------------------------------math
+function CheckZero( dVal : double ) : boolean;
 
 
 
@@ -345,6 +348,12 @@ begin
     Result := clRed
   else if d < 0 then
     Result := clBlue;
+end;
+
+
+function CheckZero( dVal : double ) : boolean;
+begin
+	Result := IsZero( dVal );
 end;
 
 end.
