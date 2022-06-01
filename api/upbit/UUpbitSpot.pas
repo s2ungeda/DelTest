@@ -17,7 +17,7 @@ type
   TUpbitSpot = class( TExchange )
   private
 
-    FIndex  : integer;
+    FIndex  : int64;
     FLastIndex : integer;
 
     FLimitSec: integer;
@@ -30,10 +30,11 @@ type
     function RequestSpotTicker : boolean;
 
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest);
+    procedure MakeRest;
 
-    procedure parseAssetsstatus;
-    procedure parseOrderBook;
-    procedure parseTicker;
+//    procedure parseAssetsstatus;
+//    procedure parseOrderBook;
+//    procedure parseTicker;    
 
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
@@ -44,9 +45,12 @@ type
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; override;
+		// 타이머를 통한 조회    
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
+    
 
     function RequestDNWState : boolean; override;
-    function RequestAsyncDnwState( idx : Integer ) : TRESTExecutionThread;
+    function GetSig( idx : Integer ): string;
 
     property  LimitSec : integer read FLimitSec;
     property  LimitMin : integer read FLimitMin;
@@ -62,11 +66,12 @@ implementation
 uses
   GApp  , UApiConsts
   , UEncrypts
-  , UUpbitParse
+  , UUpbitParse, URestItems
+  
   , JOSE.Core.JWT
-
   , JOSE.Core.JWA
   , JOSE.Core.Builder
+  , Math
   ;
 
 { TBinanceSpotNMargin }
@@ -125,20 +130,36 @@ end;
 
 
 function TUpbitSpot.RequestMaster: boolean;
-var
-  i : integer;
 begin
 
-  for I := 0 to High(Req) do
-  begin
-    Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ));
-    Req[i].Req.OnHTTPProtocolError := OnHTTPProtocolError;
-  end;
-
   Result :=  RequestSpotTicker
-      and  RequestDNWState
-      ;
+      and  RequestDNWState       ;      
+
+	if Result then
+		MakeRest;
 end;
+
+procedure TUpbitSpot.MakeRest;
+var
+	i : integer;
+begin
+	SetLength( Rest, 3 );	
+
+  for I := 0 to 2 do
+  begin
+		var info : TDivInfo;
+    info.Kind		:= GetExKind;
+    info.Market	:= MarketType;
+    info.Index	:= i;
+    case i of
+    	0 : begin info.Division := QOUTE_REST ; info.WaitTime  := 150;  end; // pub query       분당 600회, 초당 10회 (종목, 캔들, 체결, 티커, 호가별)
+      1 : begin info.Division := TRADE_REST ; info.WaitTime  := 150;  end; // pri query       초당 30회, 분당 900회   -- 분당 30인거 같음..
+      2 : begin info.Division := TRADE_REST ; info.WaitTime  := 250;  end; // order           초당 8회, 분당 200회
+    end;
+    MakeRestThread( info );
+  end;
+end;
+
 
 
 function TUpbitSpot.RequestSpotTicker: boolean;
@@ -218,81 +239,148 @@ begin
 end;
 
 
-procedure TUpbitSpot.RequestData;
+procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);
 begin
-  // 호가 , 티커, 입출금.
-  if ( FIndex <> FLastIndex )
-    or ( RestResult = nil )
-    or (( RestResult <> nil ) and ( RestResult.Finished )) then
+  inherited;
+
+  if sData = '' then
   begin
-    FLastIndex := FIndex;
-
-    case FIndex of
-      0 , 2: begin
-        Req[0].Req.AddParameter('markets', FMarketParam, pkGETorPOST);
-        RestResult := Req[0].RequestAsync( parseOrderBook, rmGET, '/v1/orderbook', true);
-      end;
-      1 : begin
-        RestResult := RequestAsyncDnwState(1);
-      end;
-      3 :begin
-        Req[2].Req.AddParameter('markets', FMarketParam, pkGETorPOST);
-        RestResult := Req[2].RequestAsync( parseTicker, rmGET, 'v1/ticker', true);
-      end;
-      else exit;
-    end;
-
-    if RestResult = nil then
-      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
-    else begin
-      inc( FIndex );
-      if FIndex >= 4 then
-        FIndex := 0;
-    end;
-
-  end else
-  begin
-    var s : string;
-    if RestResult.Finished then s := 'fin' else s := 'not fin';
-    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
+  	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );
+    Exit;
   end;
+
+  if iCode <> 200 then begin
+  	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
+    Exit;  	
+  end else
+		if sName = 'orderbook' then
+			gUpReceiver.ParseSpotOrderBook( sData )
+    else if sName = 'ticker' then
+    	gUpReceiver.ParseSpotTicker2(sData)
+    else if sName = 'status' then
+    	gUpReceiver.ParseDNWSate( sData );    
+
 end;
 
-
-
-procedure TUpbitSpot.parseTicker;
+procedure TUpbitSpot.RequestData;
 var
-  sJson : string;
+	aReq : TReqeustItem;
+  i, idx : integer;
 begin
-  sJson :=  Req[2].GetResponse;
-  if sJson = '' then Exit;
-  gUpReceiver.ParseSpotTicker2( sJson );
+
+	for I := 0 to 2 do
+  begin
+
+    if ( i = 2 ) and ( FIndex mod 3 = 0 ) then
+    	continue;
+        
+    aReq := TReqeustItem.Create;
+    aReq.AMethod	:= rmGET;
+    aReq.Req.init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );      
+    	
+
+    case i of
+      0 : begin aReq.AResource:= '/v1/orderbook';   	idx	:= RestType(PUB_REQ);  
+      					aReq.Name := 'orderbook'; end;
+      1 : begin aReq.AResource:= '/v1/ticker';				idx := RestType(PUB_REQ); 
+     						aReq.Name := 'ticker'; 		end;
+      2 : begin aReq.AResource:= '/v1/status/wallet'; idx := RestType(PRI_REQ);
+      					aReq.Name := 'status'; 		end;
+    end;
+
+    if i = 2 then
+    begin
+      var sToken : string;
+      sToken := GetSig(i);
+      aReq.Req.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      App.DebugLog('------');
+    end else
+    	aReq.Req.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
+    
+    if Rest[idx] <> nil then
+    	Rest[idx].PushQueue( aReq );  
+  end;
+
+
+  inc( FIndex );
+  if FIndex > (High(int64) - 1000) then
+  	FIndex := 0;
+  
+	
+	
+//  // 호가 , 티커, 입출금.
+//  if ( FIndex <> FLastIndex )
+//    or ( RestResult = nil )
+//    or (( RestResult <> nil ) and ( RestResult.Finished )) then
+//  begin
+//    FLastIndex := FIndex;
+//
+//    case FIndex of
+//      0 , 2: begin
+//        Req[0].Req.AddParameter('markets', FMarketParam, pkGETorPOST);
+//        RestResult := Req[0].RequestAsync( parseOrderBook, rmGET, '/v1/orderbook', true);
+//      end;
+//      1 : begin
+//        RestResult := RequestAsyncDnwState(1);
+//      end;
+//      3 :begin
+//        Req[2].Req.AddParameter('markets', FMarketParam, pkGETorPOST);
+//        RestResult := Req[2].RequestAsync( parseTicker, rmGET, 'v1/ticker', true);
+//      end;
+//      else exit;
+//    end;
+//
+//    if RestResult = nil then
+//      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
+//    else begin
+//      inc( FIndex );
+//      if FIndex >= 4 then
+//        FIndex := 0;
+//    end;
+//
+//  end else
+//  begin
+//    var s : string;
+//    if RestResult.Finished then s := 'fin' else s := 'not fin';
+//    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
+//  end;
 end;
 
-procedure TUpbitSpot.parseAssetsstatus;
-var
-  sJson : string;
-begin
-  sJson :=  Req[1].GetResponse;
-  if sJson = '' then Exit;
-  gUpReceiver.ParseDNWSate( sJson );
-end;
 
-procedure TUpbitSpot.parseOrderBook;
-var
-  sJson : string;
-begin
-  sJson :=  Req[0].GetResponse;
-  if sJson = '' then Exit;
-  gUpReceiver.ParseSpotOrderBook( sJson );
 
-end;
+//procedure TUpbitSpot.parseTicker;
+//var
+//  sJson : string;
+//begin
+//  sJson :=  Req[2].GetResponse;
+//  if sJson = '' then Exit;
+//  gUpReceiver.ParseSpotTicker2( sJson );
+//end;
+//
+//procedure TUpbitSpot.parseAssetsstatus;
+//var
+//  sJson : string;
+//begin
+//  sJson :=  Req[1].GetResponse;
+//  if sJson = '' then Exit;
+//  gUpReceiver.ParseDNWSate( sJson );
+//end;
+//
+//procedure TUpbitSpot.parseOrderBook;
+//var
+//  sJson : string;
+//begin
+//  sJson :=  Req[0].GetResponse;
+//  if sJson = '' then Exit;
+//  gUpReceiver.ParseSpotOrderBook( sJson );
+//
+//end;
 
-function TUpbitSpot.RequestAsyncDnwState( idx : Integer ): TRESTExecutionThread;
+function TUpbitSpot.GetSig( idx : Integer ): string;
 var
   LToken: TJWT;
   guid : TGUID;
-  sSig, sID, sToken, sOut, sJson : string;
+  sSig, sID : string;
 begin
 
   LToken:= TJWT.Create(TJWTClaims);
@@ -306,11 +394,7 @@ begin
 
     sSig := TJOSE.SerializeCompact(  App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot )
       ,  TJOSEAlgorithmId.HS256, LToken);
-    sToken := Format('Bearer %s', [sSig ]);
-    Req[idx].Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
-
-    Result := Req[idx].RequestAsync( parseAssetsstatus, rmGET, '/v1/status/wallet');
-
+    Result := Format('Bearer %s', [sSig ]);   
   finally
     LToken.Free;
   end;
@@ -352,30 +436,6 @@ var
   LToken: TJWT;
   sSig, sID, sToken, sOut, sJson : string;
 begin
-//  if not FEnable then
-//  begin
-//    inc( FInterval ,2 );
-//    if FInterval > 30 then begin
-//      FEnable   := true;
-//      FInterval := 0;
-//      FLimitMin := 1;
-//    end else Exit;
-//  end;
-//
-//
-//  if (FLimitSec <= 0) then
-//  begin
-//    App.Log(llInfo, 'TUpbitSpot RequestDNWState Rate Limit %d, %d',[ FLimitMin, FLimitSec] );
-//
-//    if FLimitMin <= 0 then begin
-//      FEnable   := false;
-//      FInterval := 0;
-//      Exit;
-//    end;
-//
-//    FLimitSec := 1;
-//    Exit;
-//  end;
 
   LToken:= TJWT.Create(TJWTClaims);
 

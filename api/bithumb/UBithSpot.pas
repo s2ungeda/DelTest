@@ -27,6 +27,7 @@ type
     procedure parseAssetsstatus;
     procedure parseOrderBook;
     procedure parseTicker;
+    procedure MakeRest;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -35,6 +36,7 @@ type
 
     procedure RequestOrderBook( c : char ) ; overload;
     function RequestDNWState : boolean; override;
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
 
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
@@ -51,6 +53,7 @@ uses
   GApp   , UApiConsts
   , UBithParse
   , USymbolUtils
+  , Math
   ;
 
 { TBinanceSpotNMargin }
@@ -99,26 +102,42 @@ begin
   finally
     if aObj <> nil then aObj.Free
   end;
+end;                                      
+
+procedure TBithSpot.ParseRequestData(iCode: integer; sName, sData: string);
+begin
+  inherited;
+
 end;
 
-
-
-
 function TBithSpot.RequestMaster: boolean;
-var
-  i : integer;
 begin
-
-  for I := 0 to High(Req) do
-  begin
-    Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ));
-    Req[i].Req.OnHTTPProtocolError := OnHTTPProtocolError;
-  end;
 
   Result := RequestTicker
     and RequestOrderBook
     and RequestDNWState
     ;
+
+	if Result then
+		MakeRest;
+end;
+
+procedure TBithSpot.MakeRest;
+var
+	i : integer;
+begin
+	SetLength( Rest, 2 );	
+
+  for I := 0 to 1 do
+  begin
+		var info : TDivInfo;
+    info.Kind		:= GetExKind;
+    info.Market	:= MarketType;
+    info.Division	:= i;
+    info.Index		:= i;
+    info.WaitTime	:= ifThen( i = 0 , 20, 100 );
+    MakeRestThread( info );
+  end;
 end;
 
 
@@ -297,39 +316,39 @@ end;
 
 procedure TBithSpot.RequestData;
 begin
-  if ( FIndex <> FLastIndex )
-    or ( RestResult = nil )
-    or (( RestResult <> nil ) and ( RestResult.Finished )) then
-  begin
-    FLastIndex := FIndex;
-
-    case FIndex of
-      0 , 2: begin
-        RestResult := Req[0].RequestAsync( parseOrderBook, rmGET, '/public/orderbook/ALL_KRW', true);
-      end;
-      1 : begin
-        RestResult := Req[1].RequestAsync( parseAssetsstatus, rmGET, '/public/assetsstatus/ALL', true);
-      end;
-      3 :begin
-        RestResult := Req[2].RequestAsync( parseTicker, rmGET, '/public/ticker/ALL_KRW', true);
-      end;
-      else exit;
-    end;
-
-    if RestResult = nil then
-      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
-    else begin
-      inc( FIndex );
-      if FIndex >= 4 then
-        FIndex := 0;
-    end;
-
-  end else
-  begin
-    var s : string;
-    if RestResult.Finished then s := 'fin' else s := 'not fin';
-    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
-  end;
+//  if ( FIndex <> FLastIndex )
+//    or ( RestResult = nil )
+//    or (( RestResult <> nil ) and ( RestResult.Finished )) then
+//  begin
+//    FLastIndex := FIndex;
+//
+//    case FIndex of
+//      0 , 2: begin
+//        RestResult := Req[0].RequestAsync( parseOrderBook, rmGET, '/public/orderbook/ALL_KRW', true);
+//      end;
+//      1 : begin
+//        RestResult := Req[1].RequestAsync( parseAssetsstatus, rmGET, '/public/assetsstatus/ALL', true);
+//      end;
+//      3 :begin
+//        RestResult := Req[2].RequestAsync( parseTicker, rmGET, '/public/ticker/ALL_KRW', true);
+//      end;
+//      else exit;
+//    end;
+//
+//    if RestResult = nil then
+//      App.Log( llError,  ' !! %s, %d Request %d Error ', [ TExchangeKindDesc[GetExKind], FIndex ] )
+//    else begin
+//      inc( FIndex );
+//      if FIndex >= 4 then
+//        FIndex := 0;
+//    end;
+//
+//  end else
+//  begin
+//    var s : string;
+//    if RestResult.Finished then s := 'fin' else s := 'not fin';
+//    App.DebugLog( '!! %s, %d waiting req -> %d %s ', [ TExchangeKindDesc[GetExKind], FIndex, RestResult.ThreadID, s ]  );
+//  end;
 end;
 
 
@@ -337,7 +356,7 @@ procedure TBithSpot.parseOrderBook;
 var
   sJson : string;
 begin
-  sJson :=  Req[0].GetResponse;
+ //sJson :=  Req[0].GetResponse;
   if sJson = '' then Exit;
   gBithReceiver.ParseSpotOrderBook( sJson );
 
@@ -346,7 +365,7 @@ procedure TBithSpot.parseAssetsstatus;
 var
   sJson : string;
 begin
-  sJson :=  Req[1].GetResponse;
+  //sJson :=  Req[1].GetResponse;
   if sJson = '' then Exit;
   gBithReceiver.ParseDnwState( sJson );
 
@@ -355,7 +374,7 @@ procedure TBithSpot.parseTicker;
 var
   sJson : string;
 begin
-  sJson :=  Req[2].GetResponse;
+  //sJson :=  Req[2].GetResponse;
   if sJson = '' then Exit;
   gBithReceiver.ParseTicker( sJson );
 end;

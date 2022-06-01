@@ -23,6 +23,7 @@ type
     function RequestMarginTier : boolean;
     procedure ReceiveDNWState;
     function RequestDNWStateSync : boolean;
+    procedure MakeRest;
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -94,6 +95,29 @@ begin
          and RequestSpotTicker
          and RequestDNWStateSync
          ;
+//	if Result then
+//		MakeRest;
+end;
+
+procedure TBinanceSpotNMargin.MakeRest;
+var
+	i : integer;
+begin
+	SetLength( Rest, 2 );	
+
+  for I := 0 to 1 do
+  begin
+		var info : TDivInfo;
+    info.Kind		:= GetExKind;
+    info.Market	:= MarketType;
+    info.Division	:= i;
+    info.Index		:= i;
+    case i of
+    	0 : info.WaitTime	:= 100;   	//  초당 20;
+      1 : info.WaitTime	:= 50;			//  초당 50
+    end;
+    MakeRestThread( info );
+  end;
 end;
 
 // 저장해놓은 마스터 string 를 다시 파싱하면 됨.

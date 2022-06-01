@@ -80,6 +80,7 @@ begin
 
     aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
     try
+    	if aObj = nil then Exit;      
       aPair := aObj.Get('ty');
       if aPair <> nil then
       begin
@@ -97,7 +98,7 @@ begin
           [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[aMarket], aData ]);
       end;
     finally
-      aObj.Free;
+      if aObj <> nil then aObj.Free;
     end;
 
   except

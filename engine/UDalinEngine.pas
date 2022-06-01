@@ -6,8 +6,8 @@ uses
 
   System.Classes,
 
-  UFormBroker , USymbolCore, UApiConfigManager      ,
-  UApiManager, UQuoteBroker, USymbolBroker
+  UFormBroker , UTradeCore, USymbolCore, UApiConfigManager ,
+  UApiManager,  UQuoteBroker, USymbolBroker
   ;
 
 type
@@ -19,11 +19,13 @@ type
     FApiManager: TApimanager;
     FQuoteBroker: TQuoteBrokerManager;
     FSymbolBroker: TSymbolBroker;
+    FTradeCore: TTradeCore;
   public
     constructor Create;
     destructor  Destroy; override;
 
     property FormBroker: TFormBroker read FFormBroker;
+    property TradeCore : TTradeCore  read FTradeCore;
     property SymbolCore: TSymbolCore read FSymbolCore;
     property ApiManager: TApimanager read FApiManager;
 
@@ -43,6 +45,7 @@ begin
   FQuoteBroker:= TQuoteBrokerManager.Create;
   FApiManager := TApimanager.Create;
   FFormBroker := TFormBroker.Create;
+  FTradeCore	:= TTradeCore.Create;
   FSymbolCore := TSymbolCore.Create;
   FSymbolBroker := TSymbolBroker.Create;
 end;
@@ -51,6 +54,7 @@ destructor TDalinEngine.Destroy;
 begin
   FApiManager.Free;
   FFormBroker.Free;
+  FTradeCore.Free;
   FSymbolCore.Free;
   FApiConfig.Free;
   FQuoteBroker.Free;

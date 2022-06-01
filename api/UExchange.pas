@@ -3,15 +3,15 @@ unit UExchange;
 interface
 
 uses
-  System.Classes,   System.SysUtils,
+  System.Classes,   System.SysUtils,    
+  
   REST.Types, REST.Client ,
 
-  UApiTypes,
+  URestRequests, URestThread,
 
-  URestRequests
+  UApiTypes
   ;
-type
-
+type	
 
   TExchange = class
   private
@@ -29,13 +29,14 @@ type
     FMasterData: string;
     FCodes: TStrings;
 
-  public
+    procedure FinRest( i : integer );
 
-    RestResult :  TRESTExecutionThread;
-    Req : array [0..2] of TRequest;
+  public   
+
+	  Rest : array of TRestThread;
 
     Constructor Create( aObj : TObject; aMarketType : TMarketType ); overload;
-    Destructor  Destroy; override;
+    Destructor  Destroy; override;          
 
     function Request( AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
       var OutJson, OutRes  : string  ) : boolean;
@@ -54,17 +55,22 @@ type
     function RequestMaster : boolean ; virtual; abstract;
     function RequestDNWState : boolean; virtual; abstract;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
+
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
+
 //--------------------------------------------------------------
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;
 //--------------------------------------------------------------
+		procedure MakeRestThread( aInfo : TDivInfo );
+		function  RestType( iType : integer ) : integer;    
+
+
     property Parent : TObject read FParent;
 
     property RESTClient: TRESTClient read FRESTClient;
     property RestReq: TRESTRequest read FRestReq;
-    property RestRes: TRESTResponse read FRestRes;
-
-
+    property RestRes: TRESTResponse read FRestRes;      
 
     property Info : TExchangeInfo read FInfo;
     property LastTime : TDateTime read FLastTime write FLastTime;
@@ -91,7 +97,7 @@ uses
 constructor TExchange.Create(  aObj : TObject; aMarketType : TMarketType );
 var
   i : Integer;
-begin
+begin         
 
   FRESTClient   := TRESTClient.Create('');
   FRestReq := TRESTRequest.Create( FRESTClient );
@@ -105,12 +111,9 @@ begin
 
   FCodes := TStringList.Create;
 
-  FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;
+  Rest	:= nil;
 
-  for I := 0 to High(Req) do
-    Req[i] := TRequest.Create;
-
-  RestResult := nil;
+  FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;     
 end;
 
 destructor TExchange.Destroy;
@@ -118,21 +121,30 @@ var
   i : integer;
 begin
 
-  FCodes.Free;
+  if Rest <> nil then
+    for i := 0 to High(Rest) do   
+      if Rest[i] <> nil then
+      	FinRest(i);
 
+  FCodes.Free;      
 //  if FRestRes <> nil then
     FRestRes.Free;
   FRestReq.Free;
 //  if FRestClient <> nil then
     FRESTClient.Free;
-
-  for I := 0 to High(Req) do
-    Req[i].Free;
-
+//  for I := 0 to High(Req) do
+//    Req[i].Free;     
   inherited;
+end;  
+
+
+procedure TExchange.FinRest(i: integer);
+begin
+  Rest[i].Terminate;
+  Rest[i].WaitFor;
+  Rest[i].Free;
+  Rest[i] := nil;
 end;
-
-
 
 function TExchange.GetCodeIndex( S : string ) : integer;
 begin
@@ -150,6 +162,11 @@ end;
 function TExchange.GetExKind: TExchangeKind;
 begin
   Result := ( FParent as TExchangeManager ).ExchangeKind;
+end;
+
+procedure TExchange.MakeRestThread(aInfo: TDivInfo);
+begin
+	Rest[aInfo.Index]	:= TRestThread.Create( aInfo, ParseRequestData );
 end;
 
 procedure TExchange.OnHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -241,6 +258,43 @@ begin
 
 end;
 
+// 인덱스를 리턴해준다..
+function TExchange.RestType(iType: integer): integer;
+begin
+
+  case GetExKind of
+  	ekBinance : 
+    	case FMarketType of
+      	mtSpot : 
+          case iType of
+            PUB_REQ : Result := 0;
+            PRI_REQ : Result := 0;
+            ORD_REQ : Result := 1;
+		      end;
+        mtFutures : 
+          case iType of
+            PUB_REQ : Result := 0;
+            PRI_REQ : Result := 0;
+            ORD_REQ : Result := 1;
+		      end;        
+      end;  
+
+  	ekBithumb : 
+    	case iType of
+        PUB_REQ 				:	Result := 0;
+        PRI_REQ, ORD_REQ: Result := 1;
+      end;
+
+  	ekUpbit : 
+    	case iType of
+        PUB_REQ : Result := 0;
+        PRI_REQ : Result := 1;
+        ORD_REQ : Result := 2;
+      end;            
+  end;
+
+end;
+
 procedure TExchange.Set406;
 begin
   FRestReq.Accept := '*/*';
@@ -249,8 +303,7 @@ end;
 
 procedure TExchange.SetBaseUrl(url: string);
 begin
-  FRESTClient.BaseURL := url;
-
+  FRESTClient.BaseURL := url;        
 end;
 
 
@@ -259,5 +312,6 @@ procedure TExchange.SetParam(const aName, aValue: string;
 begin
   FRestReq.AddParameter(aName, aValue, aKind);
 end;
+
 
 end.

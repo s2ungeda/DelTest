@@ -11,6 +11,16 @@ type
 
   TMajorSymbolKind = (msBTC, msETH, msXRP );
 
+	// 소켓, Rest 구분을 위해..
+  TDivInfo = record
+ 		Kind 		: TExchangeKind;
+    Market 	: TMarketType;
+    Division: integer;    	// 0 : public   1 : 주문   2 : 주문외 privatge
+    Index		: integer;     
+    WaitTime: integer;
+  end;
+  
+
   TApiInfo = record
     BaseUrl    : string;
     Prepare    : string;
@@ -18,8 +28,7 @@ type
     MarketType : TMarketType;
 
     Key : string;
-    Secret  : string;
-
+    Secret  : string;    
   end;
 
 
@@ -34,10 +43,7 @@ type
     MarketInfo : array [ TMarketType ] of TApiInfo;
 
     procedure SetInfo( i:integer; stName : string ; isMar,isFut, isDome : boolean );
-  end;
-
-
-
+  end;       
 
 
 implementation
@@ -52,6 +58,7 @@ begin
   IsMargin := isMar;
   IsFuture := isFut;
   IsDomestic := isDome;
-end;
+end;            
+
 
 end.

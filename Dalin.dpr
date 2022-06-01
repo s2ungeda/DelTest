@@ -92,7 +92,10 @@ uses
   UAccounts in 'engine\trade\UAccounts.pas',
   UPositions in 'engine\trade\UPositions.pas',
   UFills in 'engine\trade\UFills.pas',
-  UOrders in 'engine\trade\UOrders.pas';
+  UOrders in 'engine\trade\UOrders.pas',
+  UTradeCore in 'engine\trade\UTradeCore.pas',
+  URestThread in 'api\URestThread.pas',
+  URestItems in 'api\URestItems.pas';
 
 {$R *.res}
 begin

@@ -14,8 +14,11 @@ type
 	  Req : TRequest;
     AMethod : TRESTRequestMethod;  
     AResource : string;
+    Name : string;
     sJson, sOut	: string;
 		owner :    TRestThread;
+    st	: DWORD;
+    et	: DWORD;
   	constructor Create;
     Destructor  Destroy; override;	    
     procedure ASyncProc;
@@ -83,22 +86,16 @@ begin
   while not Terminated do
   begin
 
-    if not( FEvent.WaitFor( 300 ) in [wrSignaled] ) then
+    if not( FEvent.WaitFor( 20 ) in [wrSignaled] ) then
     begin
     	FData	:= PopQueue;
       if FData <> nil then
-      begin
+      begin      	
+      	FData.st := GetTickCount;
         FData.Req.Request( FData.AMethod, FData.AResource, '', sJson, sOut );       
         Synchronize( SyncProc ); 
-        //FData.Req.RequestAsync( FData.ASyncProc, FData.AMethod, FData.AResource)     ;
-//        FData.Req.RequestAsync(
-//        	procedure begin
-//          	Synchronize( SyncProc );
-//          end,
-//        FData.AMethod, FData.AResource);
-
-        FData.Free;
-
+        FData.Free;              
+        FData := nil;
       end;
     end;
 			
@@ -137,9 +134,15 @@ begin
 end;
 
 procedure TRestThread.SyncProc;
+var
+	sTmp : string;
 begin
-	if Assigned( FOnNotify ) then
-  	FOnNotify( sJson );//FormatDateTime('hh:nn:ss.zzz', now ) );
+	FData.et := GetTickCount - FData.st;
+	if Assigned( FOnNotify ) then  begin
+  	
+  	FOnNotify( Format('%s[%03d]:%s',  [ FData.Name, FData.et, sJson ]) );
+  end;
+    
 end;
 
 { TReqeustItem }
@@ -152,6 +155,8 @@ end;
 constructor TReqeustItem.Create;
 begin
 	Req := TRequest.Create;
+  st := 0;
+  et := 0;
 end;
 
 destructor TReqeustItem.Destroy;

@@ -16,13 +16,15 @@ type
     FRsp: TRESTResponse;
     FClient: TRESTClient;
     FReqResult: TRESTExecutionThread;
+    FStatusText: string;
+    FStatusCode: integer;
     function CanRequest: boolean;
 
   public
     Constructor Create;
     Destructor  Destroy; override;
 
-    procedure init( url : string );
+    procedure init( url : string;  bOpt : boolean = false );
     function Request( AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
       var OutJson, OutRes  : string  ) : boolean;
     function RequestAsync( aHandler: TCompletionHandler; AMethod : TRESTRequestMethod;  AResource : string;
@@ -32,6 +34,9 @@ type
     property Req : TRESTRequest read FReq;
     property Rsp : TRESTResponse read FRsp;
     property Client  : TRESTClient  read FClient;
+
+    property StatusCode : integer read FStatusCode;
+    property StatusText : string  read FStatusText;
 
     property ReqResult : TRESTExecutionThread read FReqResult;
   end;
@@ -65,15 +70,20 @@ begin
   Result := FReq.Response.Content;
 end;
 
-procedure TRequest.init(url: string);
+procedure TRequest.init(url: string;  bOpt : boolean);
 begin
   FClient.BaseURL := url;
-
-
+	if bOpt then
+  begin
+    FReq.Accept := '*/*';
+    FReq.AcceptEncoding := 'gzip, deflate';  
+  end;  
 end;
 
 function TRequest.Request(AMethod: TRESTRequestMethod; AResource, ABody: string;
   var OutJson, OutRes: string): boolean;
+  var
+  	idx : integer;
 begin
   with FReq do
   begin
@@ -81,23 +91,26 @@ begin
     Resource := AResource;
     if ABody <> '' then
       Body.Add( ABody);
-//  Body.Add( ABody, ctAPPLICATION_JSON);
-  end;
-
+  end;      
 
   try
     try
 
       FReq.Execute;
 
-      if Rsp.StatusCode <> 200 then
+      FStatusCode := Rsp.StatusCode;
+      FStatusText := Rsp.StatusText;     
+
+      if FStatusCode <> 200 then
       begin
-        OutRes := Format( 'status : %d, %s', [ Rsp.StatusCode, Rsp.StatusText ] );
+        OutRes := Format( 'status : %d, %s', [ FStatusCode, FStatusText ] );
         OutJson:= Rsp.Content;
         Exit( false );
-      end;
+      end;                   
 
-
+//      idx := Rsp.Headers.IndexOfName('Remaining-Req');
+//      if idx >=0 then
+//      	OutRes := Rsp.Headers[idx]; 	
 
       OutJson := Rsp.Content;
       Result := true;

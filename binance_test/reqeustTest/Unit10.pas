@@ -22,6 +22,7 @@ type
     Timer1: TTimer;
     CheckBox1: TCheckBox;
     Memo1: TMemo;
+    Edit4: TEdit;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -31,10 +32,12 @@ type
     procedure Timer1Timer(Sender: TObject);
 
     procedure CheckBox1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
     FThread : TRestThread;
     FCount : integer;
+    procedure PushData;
   public
     { Public declarations }
     procedure OnNotify(const S: string) ;
@@ -90,8 +93,9 @@ var
   sJson, sOut : string;
 begin
 	aReq := TReqeustItem.Create;
-  aReq.AMethod	:= rmGET;
-  aReq.Req.init( edit1.Text );
+  aReq.AMethod	:= rmGET;        
+    
+  aReq.Req.init( edit1.Text, true );
 
 	case ( Sender as TButton).Tag of
   	0 : aReq.AResource:= edit2.Text;
@@ -99,8 +103,7 @@ begin
   end;
 
   aReq.Req.Request( rmGET, aReq.AResource, '',sJson, sOut );
-  OnNotify( aReq.Req.GetResponse );
-
+  OnNotify( aReq.Req.GetResponse );   
 end;
 
 
@@ -115,11 +118,21 @@ begin
   FThread := nil;
   FCount  := 0;
   Button1Click( nil );
+
+  Edit1.Text := 'https://api.bithumb.com';
+  Edit2.Text := '/public/orderbook/ALL_KRW';
+  Edit3.Text := '/public/ticker/ALL_KRW';
+  Edit4.Text := '/public/assetsstatus/ALL';
 end;
 
 procedure TForm10.FormDeactivate(Sender: TObject);
 begin
-	Button2Click( nil );
+//	Button2Click( nil );
+end;
+
+procedure TForm10.FormDestroy(Sender: TObject);
+begin
+	Button2Click(nil);
 end;
 
 procedure TForm10.OnNotify(const S: string);
@@ -127,14 +140,44 @@ var
 	iLen : integer;
 begin
 	iLen := Length( S );
-  if iLen > 100 then  	
-	  memo1.Lines.Add( Copy(S, 1, 100 ) )
+  if iLen > 200 then  	
+	  memo1.Lines.Add( Copy(S, 1, 200 ) )
   else
 	  memo1.Lines.Add( S)  ;
 end;
 
+procedure TForm10.PushData;
+var
+	aReq : TReqeustItem;
+  iTag : integer;
+  I: Integer;
+begin
+
+	for I := 0 to 2 do
+	begin
+
+    aReq := TReqeustItem.Create;
+    aReq.AMethod	:= rmGET;
+    aReq.Req.init( edit1.Text, true );
+
+    case i of
+      0 : begin aReq.AResource:= edit2.Text;  aReq.Name := 'orderb'; end;
+      1 : begin aReq.AResource:= edit3.Text;	aReq.Name := 'ticker'; end;
+      2 : begin aReq.AResource:= edit4.Text;	aReq.Name := 'assets';end;
+    end;
+
+    if FThread <> nil then
+      FThread.PushQueue( aReq);
+  end;
+
+end;
+
 procedure TForm10.Timer1Timer(Sender: TObject);
 begin
+	PushData;
+
+  Exit;
+  
 	if FCount mod 2 = 0 then
   	Button3Click( Button3)
   else
@@ -150,3 +193,4 @@ begin
 end;
 
 end.
+

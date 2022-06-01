@@ -23,6 +23,7 @@ type
     // async proc
     procedure AsyncFutAllTicker;
     procedure AsyncFutAllOrderBook;
+    procedure MakeRest;
     
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
@@ -103,14 +104,14 @@ end;
 procedure TBinanceFutures.RequestData( iMod : integer );
 begin
 
-	case iMod of
-      0 : begin
-        RestResult := Req[iMod].RequestAsync( AsyncFutAllOrderBook, rmGET, '/fapi/v1/ticker/bookTicker');
-      end;
-      1 : begin
-        RestResult := Req[iMod].RequestAsync( AsyncFutAllTicker, rmGET, '/fapi/v1/ticker/24hr');
-      end;    
-  end;
+//	case iMod of
+//      0 : begin
+//        RestResult := Req[iMod].RequestAsync( AsyncFutAllOrderBook, rmGET, '/fapi/v1/ticker/bookTicker');
+//      end;
+//      1 : begin
+//        RestResult := Req[iMod].RequestAsync( AsyncFutAllTicker, rmGET, '/fapi/v1/ticker/24hr');
+//      end;    
+//  end;
 
 //  if ( FIndex <> FLastIndex )
 //    or ( RestResult = nil )
@@ -151,8 +152,8 @@ procedure TBinanceFutures.AsyncFutAllOrderBook;
 var
   sJson : string;
 begin
-  sJson :=  Req[0].GetResponse;
-  if sJson = '' then Exit;
+//  sJson :=  Req[0].GetResponse;
+//  if sJson = '' then Exit;
   gBinReceiver.ParseFutAllOrderBook( sJson );
 
 end;
@@ -161,8 +162,8 @@ procedure TBinanceFutures.AsyncFutAllTicker;
 var
   sJson : string;
 begin
-  sJson :=  Req[1].GetResponse;
-  if sJson = '' then Exit;
+//  sJson :=  Req[1].GetResponse;
+//  if sJson = '' then Exit;
   gBinReceiver.ParseFutAllTicker( sJson );
 
 end;
@@ -215,18 +216,33 @@ end;
 //end;
 
 function TBinanceFutures.RequestMaster: boolean;
-var
-	i : integer;
-begin
-
-  for I := 0 to High(Req) do
-  begin
-    Req[i].init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures ));
-    Req[i].Req.OnHTTPProtocolError := OnHTTPProtocolError;
-  end;
+begin  
   
   Result := RequestFuttMaster
          and RequestFutTicker;
+//	if Result then
+//		MakeRest;
+end;
+
+procedure TBinanceFutures.MakeRest;
+var
+	i : integer;
+begin
+	SetLength( Rest, 2 );	
+
+  for I := 0 to 1 do
+  begin
+		var info : TDivInfo;
+    info.Kind		:= GetExKind;
+    info.Market	:= MarketType;
+    info.Division	:= i;
+    info.Index		:= i;
+    case i of
+    	0 : info.WaitTime	:= 50;
+      1 : info.WaitTime	:= 100;
+    end;
+    MakeRestThread( info );
+  end;
 end;
 
 end.

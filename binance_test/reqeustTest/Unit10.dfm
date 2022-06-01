@@ -2,8 +2,8 @@ object Form10: TForm10
   Left = 0
   Top = 0
   Caption = 'Form10'
-  ClientHeight = 786
-  ClientWidth = 518
+  ClientHeight = 506
+  ClientWidth = 956
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,6 +12,7 @@ object Form10: TForm10
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
   PixelsPerInch = 96
   TextHeight = 13
@@ -97,12 +98,20 @@ object Form10: TForm10
   object Memo1: TMemo
     Left = 8
     Top = 184
-    Width = 502
-    Height = 594
+    Width = 940
+    Height = 313
     Lines.Strings = (
       'Memo1')
     ScrollBars = ssBoth
     TabOrder = 9
+  end
+  object Edit4: TEdit
+    Left = 32
+    Top = 157
+    Width = 121
+    Height = 21
+    TabOrder = 10
+    Text = 'Edit4'
   end
   object RESTClient1: TRESTClient
     Params = <>
@@ -122,7 +131,7 @@ object Form10: TForm10
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 500
+    Interval = 100
     OnTimer = Timer1Timer
     Left = 320
     Top = 24

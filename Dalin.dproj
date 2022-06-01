@@ -4,7 +4,7 @@
         <ProjectVersion>19.2</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -260,6 +260,9 @@
         <DCCReference Include="engine\trade\UPositions.pas"/>
         <DCCReference Include="engine\trade\UFills.pas"/>
         <DCCReference Include="engine\trade\UOrders.pas"/>
+        <DCCReference Include="engine\trade\UTradeCore.pas"/>
+        <DCCReference Include="api\URestThread.pas"/>
+        <DCCReference Include="api\URestItems.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -301,6 +304,12 @@
                 <DeployFile LocalName="Win32\Debug\Dalin.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Dalin.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Dalin\Dalin.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>Dalin.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
