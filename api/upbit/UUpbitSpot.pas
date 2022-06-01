@@ -271,7 +271,7 @@ begin
 	for I := 0 to 2 do
   begin
 
-    if ( i = 2 ) and ( FIndex mod 3 = 0 ) then
+    if ( i = 2 ) and ( FIndex mod 4 = 0 ) then
     	continue;
         
     aReq := TReqeustItem.Create;
@@ -293,7 +293,7 @@ begin
       var sToken : string;
       sToken := GetSig(i);
       aReq.Req.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
-      App.DebugLog('------');
+     // App.DebugLog('------');
     end else
     	aReq.Req.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
     

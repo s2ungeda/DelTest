@@ -54,7 +54,7 @@ begin
   FOnResNotify	:=  aProc;
 	
   inherited Create(false);
-  FreeOnTerminate := false;
+  FreeOnTerminate := true;
   Priority  := tpNormal;
   
   FEvent  := TEvent.Create( nil, False, False, MakeuniqueName('Event') );
@@ -131,7 +131,7 @@ begin
 	if Assigned( FOnResNotify ) then begin    
   	if FData.Name = 'status' then
     begin
-    	App.DebugLog( '----%s----', [FData.OutData] );
+    //	App.DebugLog( '----%s----', [FData.OutData] );
     end;
   	FOnResNotify( FData.Req.StatusCode, FData.Name, FData.JsonData );
   end;

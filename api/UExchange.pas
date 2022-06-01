@@ -141,7 +141,7 @@ end;
 procedure TExchange.FinRest(i: integer);
 begin
   Rest[i].Terminate;
-  Rest[i].WaitFor;
+//  Rest[i].WaitFor;
   Rest[i].Free;
   Rest[i] := nil;
 end;

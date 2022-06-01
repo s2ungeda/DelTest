@@ -51,7 +51,7 @@ implementation
 
 uses
   GApp   , UApiConsts
-  , UBithParse
+  , UBithParse, URestItems
   , USymbolUtils
   , Math
   ;
@@ -71,10 +71,7 @@ destructor TBithSpot.Destroy;
 begin
 
   inherited;
-end;
-
-
-
+end;          
 
 function TBithSpot.ParsePrepareMaster : integer;
 var
@@ -104,11 +101,7 @@ begin
   end;
 end;                                      
 
-procedure TBithSpot.ParseRequestData(iCode: integer; sName, sData: string);
-begin
-  inherited;
 
-end;
 
 function TBithSpot.RequestMaster: boolean;
 begin
@@ -314,8 +307,64 @@ begin
 
 end;
 
-procedure TBithSpot.RequestData;
+procedure TBithSpot.ParseRequestData(iCode: integer; sName, sData: string);
 begin
+  inherited;
+
+  if sData = '' then
+  begin
+  	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );
+    Exit;
+  end;
+
+  if iCode <> 200 then begin
+  	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
+    Exit;  	
+  end else
+		if sName = 'orderbook' then
+			gBithReceiver.ParseSpotOrderBook( sData )
+    else if sName = 'ticker' then
+    	gBithReceiver.ParseTicker( sData )
+    else if sName = 'assetsstatus' then
+    	gBithReceiver.ParseDnwState( sData );    
+  
+end;
+
+procedure TBithSpot.RequestData;
+var
+	aReq : TReqeustItem;
+  i, idx : integer;
+begin
+
+	for I := 0 to 2 do
+  begin
+
+//    if ( i = 2 ) and ( FIndex mod 3 = 0 ) then
+//    	continue;
+        
+    aReq := TReqeustItem.Create;
+    aReq.AMethod	:= rmGET;
+    aReq.Req.init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ), true );      
+    	
+
+    case i of
+      0 : begin aReq.AResource:= '/public/orderbook/ALL_KRW';   	idx	:= RestType(PUB_REQ);  
+      					aReq.Name := 'orderbook'; end;
+      1 : begin aReq.AResource:= '/public/assetsstatus/ALL';		 	idx := RestType(PUB_REQ); 
+     						aReq.Name := 'assetsstatus'; 		end;
+      2 : begin aReq.AResource:= 'public/ticker/ALL_KRW'; 				idx := RestType(PUB_REQ);
+      					aReq.Name := 'ticker'; 		end;
+    end;
+    
+    if Rest[idx] <> nil then
+    	Rest[idx].PushQueue( aReq );  
+  end;
+
+
+  inc( FIndex );
+  if FIndex > (High(int64) - 1000) then
+  	FIndex := 0;
+    
 //  if ( FIndex <> FLastIndex )
 //    or ( RestResult = nil )
 //    or (( RestResult <> nil ) and ( RestResult.Finished )) then
