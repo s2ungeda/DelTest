@@ -23,6 +23,7 @@ type
     CheckBox1: TCheckBox;
     Memo1: TMemo;
     Edit4: TEdit;
+    Button6: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -37,23 +38,25 @@ type
     { Private declarations }
     FThread : TRestThread;
     FCount : integer;
+    FList  : TList;
     procedure PushData;
+    procedure findres(Sender: TObject);
   public
     { Public declarations }
-    procedure OnNotify(const S: string) ;
+    procedure OnNotify(Sender: TObject) ;
   end;
 var
   Form10: TForm10;
 implementation       
 
-//uses
-//	 REST.Types
-//   ;
+uses
+   URestRequests
+   ;
 {$R *.dfm}
 procedure TForm10.Button1Click(Sender: TObject);
 begin
   //
-  FThread := TRestThread.Create( OnNotify );
+  FThread := TRestThread.Create( OnNotify, FList );
 end;
 
 procedure TForm10.Button2Click(Sender: TObject);
@@ -69,20 +72,22 @@ end;
 
 procedure TForm10.Button3Click(Sender: TObject);
 var
-	aReq : TReqeustItem;
+	aReq : TRequest;
   iTag : integer;
+  sNm, sRsrc  : string;
 begin
-	aReq := TReqeustItem.Create;
-  aReq.AMethod	:= rmGET;
-  aReq.Req.init( edit1.Text );
+	aReq := TRequest.Create;
 
 	case ( Sender as TButton).Tag of
-  	0 : aReq.AResource:= edit2.Text;
-    1 : aReq.AResource:= edit3.Text;	  
+  	0 : begin sNm := 'orderbook';  sRsrc:= edit2.Text; end;
+    1 : begin sNm := 'ticker';  sRsrc:= edit3.Text; end;
+    2 : begin sNm := 'status';  sRsrc:= edit4.Text; end;
   end;
 
-  if FThread <> nil then
-  	FThread.PushQueue( aReq);
+  aReq.init( rmGET, edit1.Text, sRsrc, sNm, true );
+  aReq.OnNotify := OnNotify;
+  if aReq.RequestAsync then
+    FList.Add( aReq );
 
 end;
 
@@ -103,7 +108,7 @@ begin
   end;
 
   aReq.Req.Request( rmGET, aReq.AResource, '',sJson, sOut );
-  OnNotify( aReq.Req.GetResponse );   
+ // OnNotify( aReq.Req.GetResponse );
 end;
 
 
@@ -116,8 +121,10 @@ end;
 procedure TForm10.FormCreate(Sender: TObject);
 begin
   FThread := nil;
+  FList   := TList.Create;
   FCount  := 0;
   Button1Click( nil );
+
 
   Edit1.Text := 'https://api.bithumb.com';
   Edit2.Text := '/public/orderbook/ALL_KRW';
@@ -133,17 +140,39 @@ end;
 procedure TForm10.FormDestroy(Sender: TObject);
 begin
 	Button2Click(nil);
+  FList.Free;
 end;
 
-procedure TForm10.OnNotify(const S: string);
+procedure TForm10.findres( Sender : TObject);
+var
+  I: Integer;
+	aReq : TReqeustItem;
+begin
+  for I := FList.Count-1 downto 0 do
+  begin
+    aReq :=  TReqeustItem( FList.Items[i] );
+    if aReq <> nil then begin
+    end;
+  end;
+end;
+
+procedure TForm10.OnNotify(Sender: TObject);
 var
 	iLen : integer;
+  sTmp, ss : string;
+  aReq : TRequest;
 begin
-	iLen := Length( S );
-  if iLen > 200 then  	
-	  memo1.Lines.Add( Copy(S, 1, 200 ) )
-  else
-	  memo1.Lines.Add( S)  ;
+
+  if Sender = nil then Exit;
+  aReq := Sender as TRequest;
+
+  memo1.Lines.Add( Format('%d(%03d) : %d, %s, %100.100s' , [ aReq.GetID, FList.Count,
+    aReq.StatusCode, aReq.Name, aReq.Content
+   ] )   );
+
+  FList.Remove( Sender );
+  aReq.Free;
+
 end;
 
 procedure TForm10.PushData;
@@ -173,20 +202,22 @@ begin
 end;
 
 procedure TForm10.Timer1Timer(Sender: TObject);
+var
+  iMod : integer;
 begin
-	PushData;
 
-  Exit;
-  
-	if FCount mod 2 = 0 then
-  	Button3Click( Button3)
-  else
-	 	Button3Click( Button4)   ;
+  iMod := FCount mod 3 ;
+
+  case iMod of
+    0 :  Button3Click( Button3);
+    1 :  Button3Click( Button4);
+    2 :  Button3Click( Button5);
+  end;
 
 //	if FCount mod 2 = 0 then
 //  	Button5Click( Button3)
 //  else
-//	 	Button5Click( Button4)   ;    
+//	 	Button5Click( Button4)   ;
 
   inc( FCount );
   		

@@ -113,6 +113,16 @@ object Form10: TForm10
     TabOrder = 10
     Text = 'Edit4'
   end
+  object Button6: TButton
+    Tag = 2
+    Left = 240
+    Top = 162
+    Width = 75
+    Height = 25
+    Caption = 'Button6'
+    TabOrder = 11
+    OnClick = Button3Click
+  end
   object RESTClient1: TRESTClient
     Params = <>
     Left = 376
