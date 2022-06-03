@@ -123,6 +123,42 @@ object Form10: TForm10
     TabOrder = 11
     OnClick = Button3Click
   end
+  object Button7: TButton
+    Left = 576
+    Top = 70
+    Width = 75
+    Height = 25
+    Caption = 'MK Ccl'
+    TabOrder = 12
+    OnClick = Button7Click
+  end
+  object Button8: TButton
+    Left = 576
+    Top = 112
+    Width = 75
+    Height = 25
+    Caption = 'Free Ccl'
+    TabOrder = 13
+    OnClick = Button8Click
+  end
+  object Button9: TButton
+    Left = 672
+    Top = 70
+    Width = 75
+    Height = 25
+    Caption = 'Ready'
+    TabOrder = 14
+    OnClick = Button9Click
+  end
+  object Button10: TButton
+    Left = 672
+    Top = 112
+    Width = 75
+    Height = 25
+    Caption = 'do it'
+    TabOrder = 15
+    OnClick = Button10Click
+  end
   object RESTClient1: TRESTClient
     Params = <>
     Left = 376
@@ -141,7 +177,7 @@ object Form10: TForm10
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 100
+    Interval = 20
     OnTimer = Timer1Timer
     Left = 320
     Top = 24

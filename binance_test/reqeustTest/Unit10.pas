@@ -4,7 +4,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs
   , URestThread, Vcl.StdCtrls, REST.Types, REST.Client, Data.Bind.Components,
-  Data.Bind.ObjectScope, Vcl.ExtCtrls
+  Data.Bind.ObjectScope, Vcl.ExtCtrls ,
+
+  UCyclicThreads, UCyclicItems
   ;
 type
   TForm10 = class(TForm)
@@ -24,6 +26,10 @@ type
     Memo1: TMemo;
     Edit4: TEdit;
     Button6: TButton;
+    Button7: TButton;
+    Button8: TButton;
+    Button9: TButton;
+    Button10: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -34,16 +40,23 @@ type
 
     procedure CheckBox1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
+    procedure Button8Click(Sender: TObject);
+    procedure Button9Click(Sender: TObject);
+    procedure Button10Click(Sender: TObject);
   private
     { Private declarations }
     FThread : TRestThread;
-    FCount : integer;
+    FCclThr: TCyclicThread;
+    FIndex, FCount : integer;
     FList  : TList;
     procedure PushData;
     procedure findres(Sender: TObject);
   public
     { Public declarations }
+    Cyclics : TCyclicItems;
     procedure OnNotify(Sender: TObject) ;
+    procedure OnNotify2(Sender: TObject) ;
   end;
 var
   Form10: TForm10;
@@ -53,6 +66,11 @@ uses
    URestRequests
    ;
 {$R *.dfm}
+procedure TForm10.Button10Click(Sender: TObject);
+begin
+  FCclThr.doJob;
+end;
+
 procedure TForm10.Button1Click(Sender: TObject);
 begin
   //
@@ -75,20 +93,57 @@ var
 	aReq : TRequest;
   iTag : integer;
   sNm, sRsrc  : string;
+
+
+  i : integer;
+  aItem : TCyclicItem;
+  bSend : boolean;
+  gap, nTick : DWORD;
 begin
-	aReq := TRequest.Create;
+//	aReq := TRequest.Create;
+//
+//	case ( Sender as TButton).Tag of
+//  	0 : begin sNm := 'orderbook';  sRsrc:= edit2.Text; end;
+//    1 : begin sNm := 'ticker';  sRsrc:= edit3.Text; end;
+//    2 : begin sNm := 'status';  sRsrc:= edit4.Text; end;
+//  end;
+//
+//  aReq.init( rmGET, edit1.Text, sRsrc, sNm, true );
+//  aReq.OnNotify := OnNotify2;
+//  if aReq.RequestAsync then
+//    FList.Add( aReq );
 
-	case ( Sender as TButton).Tag of
-  	0 : begin sNm := 'orderbook';  sRsrc:= edit2.Text; end;
-    1 : begin sNm := 'ticker';  sRsrc:= edit3.Text; end;
-    2 : begin sNm := 'status';  sRsrc:= edit4.Text; end;
-  end;
 
-  aReq.init( rmGET, edit1.Text, sRsrc, sNm, true );
-  aReq.OnNotify := OnNotify;
-  if aReq.RequestAsync then
-    FList.Add( aReq );
+ for I := 0 to Cyclics.Count-1 do
+    begin
+      aItem := Cyclics.Cyclic[i];
+      if aItem = nil then continue;
 
+      bSend := false;
+      nTick := GetTickCount;
+
+      if aITem.LastTime <= 0 then
+      begin
+        gap := aItem.Count * INTERVAL;
+        if gap >= aItem.Interval then
+          bSend := true;
+        inc( aItem.Count );
+      end else
+      begin
+        gap   := nTick - aItem.LastTime ;
+        if gap >= aItem.Interval then
+          bSend := true;
+      end;
+
+      if bSend then begin
+        aItem.PrevTime  := aItem.LastTime;
+        aItem.LastTime  := nTick;
+
+        OnNotify( aItem );
+//        FData := aItem;
+//        Synchronize( SyncProc );
+      end;
+    end;
 end;
 
 procedure TForm10.Button5Click(Sender: TObject);
@@ -113,6 +168,58 @@ end;
 
 
 
+procedure TForm10.Button7Click(Sender: TObject);
+var
+  aItem : TCyclicItem;
+begin
+
+  FIndex := 0;
+
+  Cyclics.Clear;
+
+  aItem := Cyclics.New('orderbook');
+  aItem.Interval  := 100;
+  aItem.Index     := 1;
+
+  aItem := Cyclics.New('ticker');
+  aItem.Interval  := 500;
+  aItem.Index     := 2;
+
+  aItem := Cyclics.New('assetsstatus');
+  aItem.Interval  := 2000;
+  aItem.Index     := 3;
+
+//  exit;
+
+  FCclThr:= TCyclicThread.Create(Cyclics, OnNotify);
+  FCclThr.Resume;
+end;
+
+procedure TForm10.Button8Click(Sender: TObject);
+begin
+  FCclThr.Terminate;
+  FCclThr := nil;
+
+  FList.Clear;
+end;
+
+procedure TForm10.Button9Click(Sender: TObject);
+var
+  aReq : TRequest;
+  I: Integer;
+begin
+  // 미리 100 개 만들어둔다.
+  FList.Clear;
+  for I := 0 to 49 do
+  begin
+    aReq := TRequest.Create;
+    aReq.init( edit1.Text, true);
+    aReq.OnNotify := OnNotify2;
+    FList.Add( aReq );
+  end;
+
+end;
+
 procedure TForm10.CheckBox1Click(Sender: TObject);
 begin
 	Timer1.Enabled	:= CheckBox1.Checked;
@@ -121,15 +228,22 @@ end;
 procedure TForm10.FormCreate(Sender: TObject);
 begin
   FThread := nil;
+  FCclThr := nil;
   FList   := TList.Create;
   FCount  := 0;
   Button1Click( nil );
 
+  Cyclics := TCyclicItems.Create;
 
   Edit1.Text := 'https://api.bithumb.com';
   Edit2.Text := '/public/orderbook/ALL_KRW';
   Edit3.Text := '/public/ticker/ALL_KRW';
   Edit4.Text := '/public/assetsstatus/ALL';
+
+//  Edit1.Text := 'https://api.upbit.com';
+//  Edit2.Text := '/v1/orderbook';
+//  Edit3.Text := '/v1/ticker';
+//  Edit4.Text := '/v1/status/wallet';
 end;
 
 procedure TForm10.FormDeactivate(Sender: TObject);
@@ -139,8 +253,11 @@ end;
 
 procedure TForm10.FormDestroy(Sender: TObject);
 begin
+  if FCclThr <> nil then
+    FCclThr.Terminate;
 	Button2Click(nil);
   FList.Free;
+  Cyclics.Free;
 end;
 
 procedure TForm10.findres( Sender : TObject);
@@ -158,21 +275,70 @@ end;
 
 procedure TForm10.OnNotify(Sender: TObject);
 var
-	iLen : integer;
   sTmp, ss : string;
-  aReq : TRequest;
+  aItem : TCyclicItem;
+	aReq : TRequest;
+  iTag : integer;
+  sNm, sRsrc  : string;
 begin
 
   if Sender = nil then Exit;
+
+  aItem := Sender as TCyclicItem;
+
+//  memo1.Lines.Add(  Format('%d (%d)(%d) : %s', [ aItem.LastTime, aItem.LastTime - aItem.PrevTime,
+//      aItem.Interval, aItem.Name ] ) );
+
+//  exit;
+
+  try
+
+    if FIndex >= FList.Count then
+      FIndex := 0;
+
+    aReq :=  TRequest( FList.Items[Findex] );
+    if ( aReq <> nil ) and ( aReq.State <> 1 ) then
+    begin
+
+      aReq.Req.Params.Clear;
+
+      case aItem.Index of
+        1 : begin  sRsrc:= edit2.Text; end;
+        2 : begin  sRsrc:= edit3.Text; end;
+        3 : begin  sRsrc:= edit4.Text; end;
+      end;
+
+      aReq.SetParam(rmGET, sRsrc, aITem.Name);
+
+      if FThread <> nil then
+        FThread.PushQueue( aReq );
+
+//      if aReq.RequestAsync then
+//        aReq.State := 1;
+    end;
+  finally
+      inc( FIndex );
+  end;
+
+end;
+
+procedure TForm10.OnNotify2(Sender: TObject);
+var
+   aReq : TRequest;
+begin
+  if Sender = nil then Exit;
   aReq := Sender as TRequest;
 
-  memo1.Lines.Add( Format('%d(%03d) : %d, %s, %100.100s' , [ aReq.GetID, FList.Count,
+//  if aReq.Name = 'ticker' then
+//
+  memo1.Lines.Add( Format('%d(%03d) : %d, %s, %100.100s' , [ aReq.GetID, FIndex,
     aReq.StatusCode, aReq.Name, aReq.Content
    ] )   );
 
-  FList.Remove( Sender );
-  aReq.Free;
+  aReq.State := 2;
 
+//  FList.Remove( Sender );
+//  aReq.Free;
 end;
 
 procedure TForm10.PushData;
@@ -195,8 +361,8 @@ begin
       2 : begin aReq.AResource:= edit4.Text;	aReq.Name := 'assets';end;
     end;
 
-    if FThread <> nil then
-      FThread.PushQueue( aReq);
+//    if FThread <> nil then
+//      FThread.PushQueue( aReq);
   end;
 
 end;

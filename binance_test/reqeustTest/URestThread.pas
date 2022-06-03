@@ -46,8 +46,8 @@ type
     constructor Create( aProc : TNotifyEvent; aList : TList );
     destructor Destroy; override;
 
-    procedure PushQueue( aReqItem : TReqeustItem );
-    function  PopQueue : TReqeustItem;
+    procedure PushQueue( aReqItem : TRequest );
+    function  PopQueue : TRequest;
 
     property OnNotify : TNotifyEvent read FOnNotify;
     
@@ -55,6 +55,10 @@ type
 
 
 implementation
+
+uses
+ Forms
+ ;
 { TRestThread }
 
 constructor TRestThread.Create( aProc : TNotifyEvent; aList : TList );
@@ -67,7 +71,7 @@ begin
   Priority  := tpNormal;
   
   FEvent  := TEvent.Create( nil, False, False, '');
-  FMutex  := CreateMuTex( nil, false, 'Binance_Mutex_1' );
+  FMutex  := CreateMuTex( nil, false, 'Binance_Mutex_2' );
   FQueue  := TList.Create;
   FQueue2	:= TList.Create;
 
@@ -94,12 +98,14 @@ begin
   while not Terminated do
   begin
 
-    if not( FEvent.WaitFor( 20 ) in [wrSignaled] ) then
+    if not( FEvent.WaitFor( 10 ) in [wrSignaled] ) then
     begin
-      var aData : TReqeustItem;
+      var aData : TRequest;
       aData := PopQueue;
       if aData <> nil then
       begin
+        if aData.RequestAsync then
+          aData.State := 1;
 //        aData.ResThread := aData.Req.RequestAsync(
 //          procedure begin
 //
@@ -113,6 +119,8 @@ begin
 //        , aData.AMethod, aData.AResource, true);
      //   FList.Add( aData );
       end;
+
+      Application.ProcessMessages;
     end;
 
 
@@ -135,14 +143,14 @@ begin
 //        Synchronize( SyncProc );
 //        Dispose( FData );
 //      end;
-//      Application.ProcessMessages;
+
 //    end;
   end;
 
 
 end;
 
-function TRestThread.PopQueue: TReqeustItem;
+function TRestThread.PopQueue: TRequest;
 begin
 
 	if FQueue.Count < 1 then exit (nil);
@@ -154,7 +162,7 @@ begin
     
 end;
 
-procedure TRestThread.PushQueue(aReqItem: TReqeustItem);
+procedure TRestThread.PushQueue(aReqItem: TRequest);
 begin
 	WaitForSingleObject(FMutex, INFINITE);
 	FQueue.Add( aReqItem );

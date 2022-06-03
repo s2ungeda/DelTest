@@ -13,6 +13,7 @@ type
     FOnNotify: TNotifyEvent;
     FName: string;
     FReqThread: TRESTExecutionThread;
+    FState: integer;
     function GetContent: string;
     function GetStatusCode: integer;
     function GetStatusText: string;
@@ -30,6 +31,7 @@ type
 
     function GetID : integer;
 
+    procedure SetParam(  AMethod : TRESTRequestMethod;  AResource, AName : string );
     procedure ASyncProc;
     property Req : TRESTRequest read FReq;
     property Rsp : TRESTResponse read FRsp;
@@ -41,6 +43,9 @@ type
     property Content  : string read GetContent;
 
     property OnNotify : TNotifyEvent read FOnNotify write FOnNotify;
+
+    // 0 : no used  1 : request   2 : response
+    property State  : integer read FState write FState;
 
   end;
 implementation
@@ -60,6 +65,8 @@ begin
   Req.Response := FRsp;
   FReqThread  := nil;
   FOnNotify   := nil;
+
+  FState      := 0;
 end;
 destructor TRequest.Destroy;
 begin
@@ -160,6 +167,16 @@ function TRequest.RequestAsync: boolean;
 begin
   FReqThread := FReq.ExecuteAsync(ASyncProc);
   Result := FReqThread <> nil;
+end;
+
+procedure TRequest.SetParam(AMethod : TRESTRequestMethod;  AResource, AName : string);
+begin
+  FName  := AName;
+  with FReq do
+  begin
+    Method    := AMethod;
+    Resource  := AResource;
+  end;
 end;
 
 function TRequest.RequestAsync(aHandler: TCompletionHandler;
