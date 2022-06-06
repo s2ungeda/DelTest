@@ -18,7 +18,7 @@ type
     FMutex  : HWND;
     FQueue  : TList;
 
-    FData		: TReqeustItem;
+   // FData		: TReqeustItem;
     FDivInfo: TDivInfo;
     FOnResNotify: TResponseNotify;
 
@@ -28,11 +28,11 @@ type
     procedure Execute; override;
     procedure SyncProc;
   public
-    constructor Create( aInfo : TDivInfo; aProc : TResponseNotify );
+    constructor Create( aInfo : TDivInfo );
     destructor Destroy; override;   
 
-    procedure PushQueue( aReqItem : TReqeustItem );
-    function  PopQueue : TReqeustItem;   
+    procedure PushQueue( aReqItem : TRequest );
+    function  PopQueue : TRequest;   
 
     property  DivInfo : TDivInfo read FDivInfo;
     property  OnResNotify : TResponseNotify read FOnResNotify;
@@ -47,11 +47,11 @@ uses
   ;
 { TRestThread }
 
-constructor TRestThread.Create( aInfo : TDivInfo ; aProc : TResponseNotify );
+constructor TRestThread.Create( aInfo : TDivInfo  );
 begin
 
   FDivInfo 			:= aInfo;
-  FOnResNotify	:=  aProc;
+//  FOnResNotify	:=  aProc;
 	
   inherited Create(false);
   FreeOnTerminate := true;
@@ -82,15 +82,23 @@ begin
 
     if not( FEvent.WaitFor( FDivInfo.WaitTime ) in [wrSignaled] ) then
     begin
-    	FData	:= PopQueue;
-      if FData <> nil then
-      begin      	
-       //	FData.st := GetTickCount;       
-        FData.Req.Request( FData.AMethod, FData.AResource, '', FData.JsonData, FData.OutData );       
-        Synchronize( SyncProc );
-        FData.Free;              
-        FData := nil;
+      var aData : TRequest;
+      aData := PopQueue;
+      if aData <> nil then
+      begin
+        if aData.RequestAsync then
+          aData.State := 1;    
       end;
+      
+//    	FData	:= PopQueue;
+//      if FData <> nil then
+//      begin      	
+//       //	FData.st := GetTickCount;       
+//        FData.Req.Request( FData.AMethod, FData.AResource, '', FData.JsonData, FData.OutData );       
+//        Synchronize( SyncProc );
+//        FData.Free;              
+//        FData := nil;
+//      end;
     end; 
   end;
 
@@ -100,11 +108,11 @@ end;
 
 function TRestThread.MakeuniqueName(sAddSt: string): string;
 begin
-	Result := Format('%s_%s_%s_%d_%d', [ TExShortDesc[ FDivInfo.Kind] 
-  	,   TMarketTypeDesc[ FDivInfo.Market ], sAddSt, FDivInfo.Division, FDivInfo.Index ] );
+	Result := Format('%s_%s_%s_%d', [ TExShortDesc[ FDivInfo.Kind] 
+  	,   TMarketTypeDesc[ FDivInfo.Market ], sAddSt,  FDivInfo.Index ] );
 end;
 
-function TRestThread.PopQueue: TReqeustItem;
+function TRestThread.PopQueue: TRequest;
 begin
 
 	if FQueue.Count < 1 then exit (nil);
@@ -118,7 +126,7 @@ end;
 
 
 
-procedure TRestThread.PushQueue(aReqItem: TReqeustItem);
+procedure TRestThread.PushQueue(aReqItem: TRequest);
 begin
 	WaitForSingleObject(FMutex, INFINITE);
 	FQueue.Add( aReqItem );
@@ -127,15 +135,15 @@ end;
 
 procedure TRestThread.SyncProc;
 begin
-//	FData.et := GetTickCount - FData.st;
-	if Assigned( FOnResNotify ) then begin    
-  	if FData.Name = 'status' then
-    begin
-    //	App.DebugLog( '----%s----', [FData.OutData] );
-    end;
-  	FOnResNotify( FData.Req.StatusCode, FData.Name, FData.JsonData );
-  end;
+
+//	if Assigned( FOnResNotify ) then begin
+//  	if FData.Name = 'status' then
+//    begin
+//    //	App.DebugLog( '----%s----', [FData.OutData] );
+//    end;
+//  	FOnResNotify( FData.Req.StatusCode, FData.Name, FData.JsonData );
 //  end;
+
     
 end;
 

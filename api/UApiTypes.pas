@@ -15,7 +15,7 @@ type
   TDivInfo = record
  		Kind 		: TExchangeKind;
     Market 	: TMarketType;
-    Division: integer;    	// 0 : public   1 : 주문   2 : 주문외 privatge
+    //Division: integer;    	// 0 : public   1 : 주문   2 : 주문외 privatge
     Index		: integer;     
     WaitTime: integer;
   end;

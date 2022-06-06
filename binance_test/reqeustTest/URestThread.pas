@@ -67,7 +67,7 @@ begin
 	FOnNotify := aProc;
 	
   inherited Create(false);
-  FreeOnTerminate := false;
+  FreeOnTerminate := true;
   Priority  := tpNormal;
   
   FEvent  := TEvent.Create( nil, False, False, '');

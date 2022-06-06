@@ -95,7 +95,9 @@ uses
   UOrders in 'engine\trade\UOrders.pas',
   UTradeCore in 'engine\trade\UTradeCore.pas',
   URestThread in 'api\URestThread.pas',
-  URestItems in 'api\URestItems.pas';
+  URestItems in 'api\URestItems.pas',
+  UCyclicThreads in 'api\UCyclicThreads.pas',
+  UCyclicItems in 'api\UCyclicItems.pas';
 
 {$R *.res}
 begin

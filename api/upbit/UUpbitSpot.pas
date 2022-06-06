@@ -48,6 +48,8 @@ type
 		// 타이머를 통한 조회    
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
     
+    procedure CyclicNotify( Sender : TObject ); override; 
+    procedure RestNotify( Sender : TObject ); override;
 
     function RequestDNWState : boolean; override;
     function GetSig( idx : Integer ): string;
@@ -66,8 +68,8 @@ implementation
 uses
   GApp  , UApiConsts
   , UEncrypts
-  , UUpbitParse, URestItems
-  
+  , UUpbitParse, URestItems 
+  , UCyclicItems, URestRequests
   , JOSE.Core.JWT
   , JOSE.Core.JWA
   , JOSE.Core.Builder
@@ -86,6 +88,71 @@ begin
   FIndex  := 0;
   FLastIndex := -1;
 end;
+
+procedure TUpbitSpot.CyclicNotify(Sender: TObject);
+var
+	aItem : TCyclicItem;
+  aReq  : TRequest;
+  sNm, sRsrc  : string;
+begin
+  if Sender = nil then Exit;       
+  aItem := Sender as TCyclicItem;
+
+  try
+  	aReq	:= GetReqItems;
+    if (aReq <> nil) and ( aReq.State <> 1 ) then
+    begin
+			aReq.Req.Params.Clear;
+
+      case aItem.index of
+      	1 : sRsrc	:=  '/v1/orderbook';
+        2 : sRsrc	:=  '/v1/ticker';
+        3 : sRsrc	:=  '/v1/status/wallet';
+      end;
+
+      if aItem.index = 3 then
+      begin
+        var sToken : string;
+        sToken := GetSig(0);
+        aReq.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );            
+      end else
+      	aReq.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
+
+      aReq.SetParam(rmGET, sRsrc, aITem.Name);
+
+      if RestThread <> nil then
+        RestThread.PushQueue( aReq );           
+    end else
+    if (aReq <> nil) and ( aReq.State = 1 ) then
+    begin
+      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
+    end;
+    
+  
+  except
+  	on e : exception do
+	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
+      , aItem.Name, e.Message ]  );
+  end;       
+end;
+
+procedure TUpbitSpot.RestNotify(Sender: TObject);
+var
+   aReq : TRequest;
+   sTmp : string;
+begin
+  if Sender = nil then Exit;
+  try
+  	aReq := Sender as TRequest;
+	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
+  finally
+		aReq.State := 2;
+  end;
+
+
+//procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);  
+end;
+
 
 destructor TUpbitSpot.Destroy;
 begin
@@ -139,25 +206,39 @@ begin
 		MakeRest;
 end;
 
+	// pub query       분당 600회, 초당 10회 (종목, 캔들, 체결, 티커, 호가별)
+	// pri query       초당 30회, 분당 900회   -- 분당 30인거 같음..
+  // order           초당 8회, 분당 200회
+
 procedure TUpbitSpot.MakeRest;
 var
-	i : integer;
+  aItem : TCyclicItem;  
+  info : TDivInfo;
 begin
-	SetLength( Rest, 3 );	
+	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
+	MakeRestItems( 50 );      
 
-  for I := 0 to 2 do
-  begin
-		var info : TDivInfo;
-    info.Kind		:= GetExKind;
-    info.Market	:= MarketType;
-    info.Index	:= i;
-    case i of
-    	0 : begin info.Division := QOUTE_REST ; info.WaitTime  := 150;  end; // pub query       분당 600회, 초당 10회 (종목, 캔들, 체결, 티커, 호가별)
-      1 : begin info.Division := TRADE_REST ; info.WaitTime  := 150;  end; // pri query       초당 30회, 분당 900회   -- 분당 30인거 같음..
-      2 : begin info.Division := TRADE_REST ; info.WaitTime  := 250;  end; // order           초당 8회, 분당 200회
-    end;
-    MakeRestThread( info );
-  end;
+  info.Kind		:= GetExKind;
+  info.Market	:= MarketType;
+  info.Index	:= 0;
+  info.WaitTime := 20;
+  // rest thread
+  MakeRestThread( info );
+
+  aItem := CyclicItems.New('orderbook');
+  aItem.Interval  := 200;
+  aItem.Index     := 1;
+
+  aItem := CyclicItems.New('ticker');
+  aItem.Interval  := 200;
+  aItem.Index     := 2;
+
+  aItem := CyclicItems.New('status');
+  aItem.Interval  := 3000;
+  aItem.Index     := 3;  
+	// cyclic thread .. 리커버리 끝나면  resume..
+  // MakeCyclicThread;
+  
 end;
 
 
@@ -212,6 +293,8 @@ begin
 
 end;
 
+
+
 procedure TUpbitSpot.ReceiveDNWState;
 var
   sTmp : string;
@@ -258,8 +341,7 @@ begin
     else if sName = 'ticker' then
     	gUpReceiver.ParseSpotTicker2(sData)
     else if sName = 'status' then
-    	gUpReceiver.ParseDNWSate( sData );    
-
+    	gUpReceiver.ParseDNWSate( sData );     
 end;
 
 procedure TUpbitSpot.RequestData;
@@ -297,8 +379,8 @@ begin
     end else
     	aReq.Req.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
     
-    if Rest[idx] <> nil then
-    	Rest[idx].PushQueue( aReq );  
+//    if Rest[idx] <> nil then
+//    	Rest[idx].PushQueue( aReq );  
   end;
 
 

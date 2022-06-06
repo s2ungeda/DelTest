@@ -159,6 +159,14 @@ object Form10: TForm10
     TabOrder = 15
     OnClick = Button10Click
   end
+  object cbDiv: TCheckBox
+    Left = 792
+    Top = 116
+    Width = 41
+    Height = 17
+    Caption = #50668#47084#44060
+    TabOrder = 16
+  end
   object RESTClient1: TRESTClient
     Params = <>
     Left = 376

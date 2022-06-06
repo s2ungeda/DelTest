@@ -67,7 +67,6 @@ begin
 //          ShowMessage('Failed SubscribeAll');
 //          Exit;
 //        end;
-
         App.AppStatus := asLoad;
       end;
     asLoad :
@@ -79,6 +78,7 @@ begin
     asShow :
       begin
         //
+        //App.Engine.ApiManager.StartRequest;
         App.Engine.ApiManager.SubscribeAll;
         FrmDalinMain.Show;
       end;

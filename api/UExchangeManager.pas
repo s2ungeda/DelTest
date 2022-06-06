@@ -3,7 +3,7 @@ interface
 uses
   system.Classes, system.SysUtils,
   UExchange     , UWebSockets,   USymbols,   UQuoteTimers,
-  UApiTypes
+  UApiTypes 		
   ;
 type
   TMarketArray = array [ TMarketType ] of TExchange;
@@ -16,6 +16,7 @@ type
     FCodes: TStrings;
     FTimer: TQuoteTimer;
     FDone: boolean;
+
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
   public
@@ -37,6 +38,7 @@ type
     function ConnectAll : boolean;
     function DissConnectAll : boolean;
     procedure init ;
+    procedure StartRequest;
 
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
@@ -57,7 +59,8 @@ type
     // 교집합 코드를 담을 리스트..
     property Codes       : TStrings read FCodes;
     property Timer       : TQuoteTimer read FTimer write FTimer;
-    property Done       : boolean read FDone write FDone;
+    property Done        : boolean read FDone write FDone;
+
   end;
 
 implementation
@@ -225,6 +228,15 @@ begin
 
   Result := true;
 
+end;
+
+procedure TExchangeManager.StartRequest;
+var
+  I: TMarketType;
+begin
+  for I := mtSpot to High(TMarketType) do
+    if ( Exchanges[i] <> nil ) and ( Exchanges[i].CyclicThreads <> nil )  then 
+    	Exchanges[i].CyclicThreads.Resume;
 end;
 
 end.

@@ -29,8 +29,10 @@ type
     function PrepareMaster : boolean;
     function InitMarketWebSocket : boolean;
     function SubscribeAll : boolean;
-    function ConnectAll: boolean;
+    function ConnectAll: boolean;    
     function DisConnectAll : boolean;
+
+    procedure StartRequest;
 
     procedure MakeCloseData;
     procedure RequestExRate;
@@ -266,6 +268,14 @@ begin
   end;
 
   Result := true;
+end;
+
+procedure TApiManager.StartRequest;
+var
+  i :  TExchangeKind;
+begin
+  for I := ekBinance to High(TExchangeKind) do
+  	FExManagers[i].StartRequest;
 end;
 
 function TApiManager.Sub(aQuote: TQuote): boolean;

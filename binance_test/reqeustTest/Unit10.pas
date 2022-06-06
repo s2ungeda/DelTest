@@ -30,6 +30,7 @@ type
     Button8: TButton;
     Button9: TButton;
     Button10: TButton;
+    cbDiv: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -52,6 +53,7 @@ type
     FList  : TList;
     procedure PushData;
     procedure findres(Sender: TObject);
+    function GetSig(idx: Integer): string;
   public
     { Public declarations }
     Cyclics : TCyclicItems;
@@ -63,7 +65,12 @@ var
 implementation       
 
 uses
-   URestRequests
+   URestRequests   
+   , UEncrypts
+   ,   JOSE.Core.JWT
+  , JOSE.Core.JWA
+  , JOSE.Core.Builder
+   
    ;
 {$R *.dfm}
 procedure TForm10.Button10Click(Sender: TObject);
@@ -82,9 +89,9 @@ begin
   if FThread <> nil then
   begin
     FThread.Terminate;
-    FThread.WaitFor;
-    FThread.Free;
-    FThread := nil;
+//    FThread.WaitFor;
+//    FThread.Free;
+//    FThread := nil;
   end;
 end;
 
@@ -177,19 +184,30 @@ begin
 
   Cyclics.Clear;
 
-  aItem := Cyclics.New('orderbook');
-  aItem.Interval  := 100;
-  aItem.Index     := 1;
+//	bithumb
+//  aItem := Cyclics.New('orderbook');
+//  aItem.Interval  := 100;
+//  aItem.Index     := 1;
+//
+//  aItem := Cyclics.New('ticker');
+//  aItem.Interval  := 500;
+//  aItem.Index     := 2;
+//
+//  aItem := Cyclics.New('assetsstatus');
+//  aItem.Interval  := 2000;
+//  aItem.Index     := 3;
 
-  aItem := Cyclics.New('ticker');
-  aItem.Interval  := 500;
-  aItem.Index     := 2;
+//  aItem := Cyclics.New('orderbook');
+//  aItem.Interval  := 200;
+//  aItem.Index     := 1;
+//
+//  aItem := Cyclics.New('ticker');
+//  aItem.Interval  := 200;
+//  aItem.Index     := 2;
 
   aItem := Cyclics.New('assetsstatus');
-  aItem.Interval  := 2000;
+  aItem.Interval  := 3000;
   aItem.Index     := 3;
-
-//  exit;
 
   FCclThr:= TCyclicThread.Create(Cyclics, OnNotify);
   FCclThr.Resume;
@@ -235,15 +253,17 @@ begin
 
   Cyclics := TCyclicItems.Create;
 
-  Edit1.Text := 'https://api.bithumb.com';
-  Edit2.Text := '/public/orderbook/ALL_KRW';
-  Edit3.Text := '/public/ticker/ALL_KRW';
-  Edit4.Text := '/public/assetsstatus/ALL';
+//	bithumb
+//  Edit1.Text := 'https://api.bithumb.com';
+//  Edit2.Text := '/public/orderbook/ALL_KRW';
+//  Edit3.Text := '/public/ticker/ALL_KRW';
+//  Edit4.Text := '/public/assetsstatus/ALL';
 
-//  Edit1.Text := 'https://api.upbit.com';
-//  Edit2.Text := '/v1/orderbook';
-//  Edit3.Text := '/v1/ticker';
-//  Edit4.Text := '/v1/status/wallet';
+	// upbit
+  Edit1.Text := 'https://api.upbit.com';
+  Edit2.Text := '/v1/orderbook';
+  Edit3.Text := '/v1/ticker';
+  Edit4.Text := '/v1/status/wallet';
 end;
 
 procedure TForm10.FormDeactivate(Sender: TObject);
@@ -270,6 +290,29 @@ begin
     aReq :=  TReqeustItem( FList.Items[i] );
     if aReq <> nil then begin
     end;
+  end;
+end;
+
+function TForm10.GetSig( idx : Integer ): string;
+var
+  LToken: TJWT;
+  guid : TGUID;
+  sSig, sID : string;
+begin
+
+  LToken:= TJWT.Create(TJWTClaims);
+
+  try
+
+    sID := GetUUID;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN');
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+
+    sSig := TJOSE.SerializeCompact(  'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux'  ,  TJOSEAlgorithmId.HS256, LToken);
+    Result := Format('Bearer %s', [sSig ]);   
+  finally
+    LToken.Free;
   end;
 end;
 
@@ -307,6 +350,28 @@ begin
         2 : begin  sRsrc:= edit3.Text; end;
         3 : begin  sRsrc:= edit4.Text; end;
       end;
+      
+      
+      if aItem.index in [1..2] then
+      begin
+			//	if cbDiv.Checked then
+
+					sTmp :='KRW-BTC,KRW-ETH,KRW-NEO,KRW-MTL,KRW-LTC,KRW-XRP,KRW-ETC,KRW-OMG,KRW-WAVES,KRW-XEM,KRW-QTUM,KRW-XLM,'+
+        	'KRW-STORJ,KRW-ADA,KRW-ICX,KRW-EOS,KRW-TRX,KRW-SC,KRW-ONT,KRW-ZIL,KRW-ZRX,KRW-BCH,KRW-BAT,KRW-IOST,KRW-CVC,'+
+          'KRW-IOTA,KRW-KNC,KRW-THETA,KRW-ENJ,KRW-MANA,KRW-ANKR,KRW-ATOM,KRW-HBAR,KRW-VET,KRW-CHZ,KRW-STMX,KRW-KAVA,'+
+          'KRW-LINK,KRW-XTZ,KRW-SXP,KRW-DOT,KRW-SRM,KRW-SAND,KRW-DOGE,KRW-FLOW,KRW-AXS,KRW-SOL,KRW-MATIC,KRW-AAVE,KRW-1INCH,KRW-ALGO,KRW-NEAR,KRW-AVAX,KRW-CELO,KRW-GMT';
+//        else
+//        
+//      		sTmp := 'KRW-BTC';
+	    	aReq.Req.AddParameter('markets', sTmp, pkGETorPOST);          
+      end  else
+      begin
+        var sToken : string;
+        sToken := GetSig(0);
+        aReq.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );      
+
+        memo1.Lines.Add( format('status  thread id : %d' , [  GetCurrentThreadID ]  )   );        
+      end;
 
       aReq.SetParam(rmGET, sRsrc, aITem.Name);
 
@@ -325,15 +390,27 @@ end;
 procedure TForm10.OnNotify2(Sender: TObject);
 var
    aReq : TRequest;
+   sTmp : string;
 begin
   if Sender = nil then Exit;
   aReq := Sender as TRequest;
 
 //  if aReq.Name = 'ticker' then
 //
-  memo1.Lines.Add( Format('%d(%03d) : %d, %s, %100.100s' , [ aReq.GetID, FIndex,
-    aReq.StatusCode, aReq.Name, aReq.Content
+
+
+	if  aReq.StatusCode <> 200 then
+  begin
+	// ubpit
+  sTmp := aReq.Req.Response.Headers.Values['Remaining-Req'];
+//  App.DebugLog('remain-req', [ sTmp] );
+  
+  memo1.Lines.Add( Format('%d(%03d) : %d, %s, %s, %100.100s' , [ aReq.GetID, FIndex,
+    aReq.StatusCode, aReq.Name, stmp,  aReq.Content
    ] )   );
+  end else
+  if aReq.Name = 'assetsstatus' then  
+	  memo1.Lines.Add( format('status respose thread id : %d' , [  GetCurrentThreadID ]  )   );
 
   aReq.State := 2;
 

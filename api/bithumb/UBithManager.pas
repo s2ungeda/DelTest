@@ -88,7 +88,7 @@ begin
   // orderbook 을 위한 조회 타이머.
   FDepTimer  := App.Engine.QuoteBroker.Timers.New;
   FDepTimer.Enabled  := false;
-  FDepTimer.Interval := 300;
+  FDepTimer.Interval := 50;
   FDepTimer.OnTimer  := OnDepthTimer;
 
   Timer.OnTimer   := OnTimer;
@@ -111,13 +111,15 @@ end;
 procedure TBithManager.OnDepthTimer(Sender: TObject);
 begin
 
+//  thread 로 대체
   if Done then
   begin
     FDepTimer.Enabled := false;
     Exit;
   end;
 
-  (Exchanges[mtSpot] as TBithSpot).RequestData;
+//  (Exchanges[mtSpot] as TBithSpot).RequestData;
+  Exchanges[mtSpot].ProcCyclicWork;
 end;
 
 

@@ -7,7 +7,7 @@ uses
   
   REST.Types, REST.Client ,
 
-  URestRequests, URestThread,
+  URestRequests, URestThread, UCyclicThreads , UCyclicItems, 
 
   UApiTypes
   ;
@@ -28,12 +28,15 @@ type
     FMarketIdx: integer;
     FMasterData: string;
     FCodes: TStrings;
-
-    procedure FinRest( i : integer );
+    FCyclicThreads: TCyclicThread;
+    FCyclicItems: TCyclicItems;
+    FReqItems: TList;
+    FRestThread: TRestThread;
+    FReqIndex	: integer;        
 
   public   
 
-	  Rest : array of TRestThread;
+	  //Rest : array of TRestThread;
 
     Constructor Create( aObj : TObject; aMarketType : TMarketType ); overload;
     Destructor  Destroy; override;          
@@ -57,13 +60,22 @@ type
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
+    // cyclicthread notify
+ 		procedure CyclicNotify( Sender : TObject ); virtual; abstract;   
+    // rest response notify
+    procedure RestNotify( Sender : TObject ); virtual; abstract;   
 
 //--------------------------------------------------------------
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;
+    function GetReqItems	 : TRequest;
 //--------------------------------------------------------------
 		procedure MakeRestThread( aInfo : TDivInfo );
+    procedure MakeCyclicThread;
+    procedure ProcCyclicWork;
+    procedure MakeRestItems( iCount : integer);
 		function  RestType( iType : integer ) : integer;    
+
 
 
     property Parent : TObject read FParent;
@@ -71,6 +83,11 @@ type
     property RESTClient: TRESTClient read FRESTClient;
     property RestReq: TRESTRequest read FRestReq;
     property RestRes: TRESTResponse read FRestRes;      
+    //
+    property RestThread    : TRestThread read FRestThread;
+    property CyclicThreads : TCyclicThread read  FCyclicThreads; 
+    property CyclicItems	 : TCyclicItems read FCyclicItems;
+    property ReqItems			 : TList read FReqItems;    
 
     property Info : TExchangeInfo read FInfo;
     property LastTime : TDateTime read FLastTime write FLastTime;
@@ -90,6 +107,7 @@ uses
   GApp,
   System.JSON,
   UExchangeManager, UApiConsts
+  , windows
   ;
 
 { TExchagne }
@@ -111,9 +129,17 @@ begin
 
   FCodes := TStringList.Create;
 
-  Rest	:= nil;
+//  Rest	:= nil;
 
   FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;     
+
+  // Req 를 100 개 미리 만들어둠..
+  FReqItems:= TList.Create;
+
+  FCyclicItems:= TCyclicItems.Create;
+  FCyclicThreads:= nil;
+  FRestThread		:= nil;
+  FReqIndex			:= 0;
 end;
 
 destructor TExchange.Destroy;
@@ -121,30 +147,29 @@ var
   i : integer;
 begin
 
-  if Rest <> nil then
-    for i := 0 to High(Rest) do   
-      if Rest[i] <> nil then
-      	FinRest(i);
+	if FCyclicThreads <> nil then
+  	FCyclicThreads.Terminate;
+  if FRestThread <> nil then  
+    FRestThread.Terminate;
+//                           
+  FCyclicItems.Free;
+
+  FReqItems.Free;
+  
+//  if Rest <> nil then
+//    for i := 0 to High(Rest) do   
+//      if Rest[i] <> nil then
+//	      Rest[i].Terminate;
 
   FCodes.Free;      
-//  if FRestRes <> nil then
-    FRestRes.Free;
-  FRestReq.Free;
-//  if FRestClient <> nil then
-    FRESTClient.Free;
-//  for I := 0 to High(Req) do
-//    Req[i].Free;     
+
+  FRestRes.Free;
+	FRestReq.Free;
+	FRESTClient.Free;
+
   inherited;
 end;  
 
-
-procedure TExchange.FinRest(i: integer);
-begin
-  Rest[i].Terminate;
-//  Rest[i].WaitFor;
-  Rest[i].Free;
-  Rest[i] := nil;
-end;
 
 function TExchange.GetCodeIndex( S : string ) : integer;
 begin
@@ -164,9 +189,47 @@ begin
   Result := ( FParent as TExchangeManager ).ExchangeKind;
 end;
 
+
+
+function TExchange.GetReqItems: TRequest;
+begin
+	if FreqItems.Count <= 0 then Result := nil;
+  
+	if FReqIndex >= FReqItems.Count then
+  	FReqIndex := 0;
+
+  Result := TRequest( FReqItems.Items[ FReqIndex ]);
+  inc( FReqIndex );
+end;
+
+procedure TExchange.MakeRestItems( iCount : integer );
+var
+  aReq : TRequest;
+  I: Integer;
+  sUrl : string;
+  bOpt : boolean;
+begin
+ 
+  FReqItems.Clear;
+  sUrl :=  App.Engine.ApiConfig.GetBaseUrl( GetExKind, FMarketType );
+  for I := 0 to iCount-1 do
+  begin
+    aReq := TRequest.Create;        
+    aReq.init( sUrl, GetExKind = ekBithumb);
+    aReq.OnNotify := RestNotify;
+    FReqItems.Add( aReq );
+  end;
+end;
+
+procedure TExchange.MakeCyclicThread;
+begin
+	FCyclicThreads := TCyclicThread.Create(CyclicItems, CyclicNotify);   
+end;
+
 procedure TExchange.MakeRestThread(aInfo: TDivInfo);
 begin
-	Rest[aInfo.Index]	:= TRestThread.Create( aInfo, ParseRequestData );
+//	Rest[aInfo.Index]	:= TRestThread.Create( aInfo, ParseRequestData );
+  FRestThread	:= TRestThread.Create( aInfo );
 end;
 
 procedure TExchange.OnHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -199,6 +262,42 @@ begin
   Result := FCodes.Count > 0 ;
 end;
 
+
+procedure TExchange.ProcCyclicWork;
+var
+	i : integer;
+  aItem : TCyclicItem;
+  bSend : boolean;
+  gap, nTick : DWORD;
+begin
+  for I := 0 to FCyclicItems.Count-1 do
+  begin          
+    aItem := FCyclicItems.Cyclic[i];
+    if aItem = nil then continue;
+
+    bSend := false;
+    nTick := GetTickCount;
+
+    if aITem.LastTime <= 0 then
+    begin
+      gap := aItem.Count * INTERVAL;
+      if gap >= aItem.Interval then
+        bSend := true;
+      inc( aItem.Count );
+    end else
+    begin
+      gap   := nTick - aItem.LastTime ;
+      if gap >= aItem.Interval then
+        bSend := true;
+    end;
+
+    if bSend then begin
+      aItem.PrevTime  := aItem.LastTime;
+      aItem.LastTime  := nTick;
+     	cyclicNotify( aItem );
+    end;
+  end;
+end;
 
 function TExchange.Request(AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
       var OutJson, OutRes : string ): boolean;

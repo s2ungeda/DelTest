@@ -34,6 +34,9 @@ type
 
     procedure RequestData;
 
+    procedure CyclicNotify( Sender : TObject ); override; 
+    procedure RestNotify( Sender : TObject ); override;    
+
     procedure RequestOrderBook( c : char ) ; overload;
     function RequestDNWState : boolean; override;
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
@@ -51,7 +54,7 @@ implementation
 
 uses
   GApp   , UApiConsts
-  , UBithParse, URestItems
+  , UBithParse, URestItems ,UCyclicItems, URestRequests
   , USymbolUtils
   , Math
   ;
@@ -66,6 +69,8 @@ begin
   FLastIndex := -1;
 
 end;
+
+
 
 destructor TBithSpot.Destroy;
 begin
@@ -117,20 +122,32 @@ end;
 
 procedure TBithSpot.MakeRest;
 var
-	i : integer;
+  aItem : TCyclicItem;  
+  info : TDivInfo;
 begin
-	SetLength( Rest, 2 );	
+	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
+	MakeRestItems( 50 );      
 
-  for I := 0 to 1 do
-  begin
-		var info : TDivInfo;
-    info.Kind		:= GetExKind;
-    info.Market	:= MarketType;
-    info.Division	:= i;
-    info.Index		:= i;
-    info.WaitTime	:= ifThen( i = 0 , 20, 100 );
-    MakeRestThread( info );
-  end;
+  info.Kind		:= GetExKind;
+  info.Market	:= MarketType;
+  info.Index	:= 0;
+  info.WaitTime := 20;
+  // rest thread
+  MakeRestThread( info );
+
+  aItem := CyclicItems.New('orderbook');
+  aItem.Interval  := 100;
+  aItem.Index     := 1;
+
+  aItem := CyclicItems.New('ticker');
+  aItem.Interval  := 200;
+  aItem.Index     := 2;
+
+  aItem := CyclicItems.New('status');
+  aItem.Interval  := 3000;
+  aItem.Index     := 3;
+	// cyclic thread .. 리커버리 끝나면  resume..
+  // MakeCyclicThread;
 end;
 
 
@@ -212,6 +229,58 @@ begin
   end;
 end;
 
+procedure TBithSpot.CyclicNotify(Sender: TObject);
+var
+	aItem : TCyclicItem;
+  aReq  : TRequest;
+  sNm, sRsrc  : string;
+begin
+  if Sender = nil then Exit;       
+  aItem := Sender as TCyclicItem;
+
+  try
+  	aReq	:= GetReqItems;
+    if (aReq <> nil) and ( aReq.State <> 1 ) then
+    begin
+			aReq.Req.Params.Clear;
+
+      case aItem.index of
+        1 : sRsrc:= '/public/orderbook/ALL_KRW';       
+        2 : sRsrc:= '/public/ticker/ALL_KRW'; 		
+        3 : sRsrc:= '/public/assetsstatus/ALL';	
+      end; 
+
+      aReq.SetParam(rmGET, sRsrc, aITem.Name);
+
+      if RestThread <> nil then
+        RestThread.PushQueue( aReq );           
+    end else
+    if (aReq <> nil) and ( aReq.State = 1 ) then
+    begin
+      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
+    end; 
+  
+  except
+  	on e : exception do
+	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
+      	,aItem.Name , e.Message ]  );
+  end;
+end;
+
+procedure TBithSpot.RestNotify(Sender: TObject);
+var
+   aReq : TRequest;
+   sTmp : string;
+begin
+  if Sender = nil then Exit;
+  try
+  	aReq := Sender as TRequest;
+	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
+  finally
+		aReq.State := 2;
+  end;
+
+end;
 
 function TBithSpot.RequestOrderBook: boolean;
 var
@@ -325,7 +394,7 @@ begin
 			gBithReceiver.ParseSpotOrderBook( sData )
     else if sName = 'ticker' then
     	gBithReceiver.ParseTicker( sData )
-    else if sName = 'assetsstatus' then
+    else if sName = 'status' then
     	gBithReceiver.ParseDnwState( sData );    
   
 end;
@@ -336,6 +405,10 @@ var
   i, idx : integer;
 begin
 
+	ProcCyclicWork;
+
+	exit;
+
 	for I := 0 to 2 do
   begin
 
@@ -345,7 +418,7 @@ begin
     aReq := TReqeustItem.Create;
     aReq.AMethod	:= rmGET;
     aReq.Req.init( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ), true );      
-    	
+
 
     case i of
       0 : begin aReq.AResource:= '/public/orderbook/ALL_KRW';   	idx	:= RestType(PUB_REQ);  
@@ -356,8 +429,8 @@ begin
       					aReq.Name := 'ticker'; 		end;
     end;
     
-    if Rest[idx] <> nil then
-    	Rest[idx].PushQueue( aReq );  
+//    if Rest[idx] <> nil then
+//    	Rest[idx].PushQueue( aReq );  
   end;
 
 

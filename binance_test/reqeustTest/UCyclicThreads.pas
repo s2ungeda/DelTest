@@ -111,8 +111,9 @@ begin
   while not Terminated do
   begin
 //    WaitForSingleObject( FMutex,  INTERVAL );
-
-    if not(FEvent.WaitFor(INTERVAL) in [wrTimeout]) then Continue;
+                                                
+//    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
+    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
 
 
     for I := 0 to FItems.Count-1 do

@@ -90,7 +90,7 @@ begin
 //  end;
 
   Timer.OnTimer := OnTimer;
-  Timer.Interval:= 1000;
+  Timer.Interval:= 50;
   Result := true;
 end;
 
@@ -109,7 +109,9 @@ end;
 
 procedure TUpbitManager.OnTimer(Sender: TObject);
 begin
-  (Exchanges[mtSpot] as TUpbitSpot).RequestData;
+//  thread ∑Œ ¥Î√º
+//  (Exchanges[mtSpot] as TUpbitSpot).RequestData;
+	Exchanges[mtSpot].ProcCyclicWork;
 end;
 
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;
@@ -141,7 +143,7 @@ var
   i : Integer;
 begin
   for I := 0 to High(QuoteSock) do
-    QuoteSock[i].SubscribeAll;
+    QuoteSock[i].SubscribeAll;     
 
   Timer.Enabled := true;
   Result := true;

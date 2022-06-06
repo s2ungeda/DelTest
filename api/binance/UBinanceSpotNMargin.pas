@@ -103,14 +103,14 @@ procedure TBinanceSpotNMargin.MakeRest;
 var
 	i : integer;
 begin
-	SetLength( Rest, 2 );	
+//	SetLength( Rest, 2 );	
 
   for I := 0 to 1 do
   begin
 		var info : TDivInfo;
     info.Kind		:= GetExKind;
     info.Market	:= MarketType;
-    info.Division	:= i;
+//    info.Division	:= i;
     info.Index		:= i;
     case i of
     	0 : info.WaitTime	:= 100;   	//  √ ¥Á 20;
