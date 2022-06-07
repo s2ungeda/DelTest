@@ -167,6 +167,23 @@ object Form10: TForm10
     Caption = #50668#47084#44060
     TabOrder = 16
   end
+  object Edit5: TEdit
+    Left = 488
+    Top = 16
+    Width = 121
+    Height = 21
+    TabOrder = 17
+    Text = '/info/account'
+  end
+  object Button11: TButton
+    Left = 615
+    Top = 14
+    Width = 75
+    Height = 25
+    Caption = 'Button11'
+    TabOrder = 18
+    OnClick = Button11Click
+  end
   object RESTClient1: TRESTClient
     Params = <>
     Left = 376

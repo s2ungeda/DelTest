@@ -31,6 +31,8 @@ type
     Button9: TButton;
     Button10: TButton;
     cbDiv: TCheckBox;
+    Edit5: TEdit;
+    Button11: TButton;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -45,6 +47,7 @@ type
     procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
     procedure Button10Click(Sender: TObject);
+    procedure Button11Click(Sender: TObject);
   private
     { Private declarations }
     FThread : TRestThread;
@@ -76,6 +79,18 @@ uses
 procedure TForm10.Button10Click(Sender: TObject);
 begin
   FCclThr.doJob;
+end;
+
+procedure TForm10.Button11Click(Sender: TObject);
+var
+  aReq : TRequest;
+begin
+  aReq := TRequest.Create;
+  aReq.init( edit1.Text, true);
+
+  aReq.SetParam( rmGET, edit5.Text, 'balance' );
+
+
 end;
 
 procedure TForm10.Button1Click(Sender: TObject);
@@ -160,13 +175,13 @@ var
   sJson, sOut : string;
 begin
 	aReq := TReqeustItem.Create;
-  aReq.AMethod	:= rmGET;        
-    
+  aReq.AMethod	:= rmGET;
+
   aReq.Req.init( edit1.Text, true );
 
 	case ( Sender as TButton).Tag of
   	0 : aReq.AResource:= edit2.Text;
-    1 : aReq.AResource:= edit3.Text;	  
+    1 : aReq.AResource:= edit3.Text;
   end;
 
   aReq.Req.Request( rmGET, aReq.AResource, '',sJson, sOut );
@@ -254,16 +269,16 @@ begin
   Cyclics := TCyclicItems.Create;
 
 //	bithumb
-//  Edit1.Text := 'https://api.bithumb.com';
-//  Edit2.Text := '/public/orderbook/ALL_KRW';
-//  Edit3.Text := '/public/ticker/ALL_KRW';
-//  Edit4.Text := '/public/assetsstatus/ALL';
+  Edit1.Text := 'https://api.bithumb.com';
+  Edit2.Text := '/public/orderbook/ALL_KRW';
+  Edit3.Text := '/public/ticker/ALL_KRW';
+  Edit4.Text := '/public/assetsstatus/ALL';
 
 	// upbit
-  Edit1.Text := 'https://api.upbit.com';
-  Edit2.Text := '/v1/orderbook';
-  Edit3.Text := '/v1/ticker';
-  Edit4.Text := '/v1/status/wallet';
+//  Edit1.Text := 'https://api.upbit.com';
+//  Edit2.Text := '/v1/orderbook';
+//  Edit3.Text := '/v1/ticker';
+//  Edit4.Text := '/v1/status/wallet';
 end;
 
 procedure TForm10.FormDeactivate(Sender: TObject);
