@@ -35,6 +35,7 @@ type
 
     // private
     procedure ParseAccounts( aData : string );
+    procedure ParseWaitORder( aData : string );
 
     property Parent : TExchangeManager read FParent;
   end;
@@ -461,6 +462,11 @@ begin
   end;
 end;
 
+procedure TUpbitParse.ParseWaitORder(aData: string);
+begin
+
+end;
+
 procedure TUpbitParse.ParseCandleData(sUnit, aData: string);
 var
   aArr : TJsonArray;
@@ -692,5 +698,7 @@ begin
   end;
 
 end;
+
+
 
 end.

@@ -7,7 +7,7 @@ uses
 
   System.JSON,  Rest.Json , Rest.Types , Rest.Client,
 
-  UExchange,
+  UExchange, USymbols,
 
   UApiTypes
 
@@ -47,12 +47,19 @@ type
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; override;
 		// 타이머를 통한 조회    
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
+
+    // private api
+    function RequestAccounts : boolean;
+    function RequestWaitOrders : boolean;
+    procedure RequestAvailableAmt( aSymbol : TSymbol );
+    
     
     procedure CyclicNotify( Sender : TObject ); override; 
     procedure RestNotify( Sender : TObject ); override;
 
     function RequestDNWState : boolean; override;
-    function GetSig( idx : Integer ): string;
+    function GetSig( idx : Integer ): string; overload;
+    function GetSig( sQuery : string ): string; overload;
 
     property  LimitSec : integer read FLimitSec;
     property  LimitMin : integer read FLimitMin;
@@ -74,6 +81,7 @@ uses
   , JOSE.Core.JWA
   , JOSE.Core.Builder
   , Math
+  , System.Hash
   ;
 
 { TBinanceSpotNMargin }
@@ -186,6 +194,8 @@ begin
 
   inherited;
 end;
+
+
 
 
 
@@ -319,6 +329,8 @@ begin
   end;
 
 end;
+
+
 
 
 
@@ -507,6 +519,118 @@ begin
   finally
     LToken.Free;
   end;
+end;
+
+function TUpbitSpot.GetSig(sQuery: string): string;
+var
+  LToken: TJWT;
+  guid : TGUID;
+  sSig, sID, sToken : string;
+  vHash : THashSHA2;
+begin
+
+  LToken:= TJWT.Create(TJWTClaims);
+
+  try
+
+    sID := GetUUID;
+
+    Result := vHash.gethashstring( sQuery, SHA512 );      
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ));
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', Result );    
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );        
+
+    sSig := TJOSE.SerializeCompact(  App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot )
+      ,  TJOSEAlgorithmId.HS256, LToken);
+    sToken := Format('Bearer %s', [sSig ]);  
+
+    RestReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );      
+    
+  finally
+    LToken.Free;
+  end;
+
+end;
+
+function TUpbitSpot.RequestAccounts : boolean;
+var
+//	aReq : TRequest;
+  sSig ,sJson, sOut: string;
+  bRes : boolean;
+begin 
+
+//  aReq	:= GetReqItems;
+//  if (aReq <> nil) and ( aReq.State <> 1 ) then
+//  begin
+//    aReq.Req.Params.Clear;
+//    sSig	:= GetSig(0);
+//    aReq.Req.AddParameter('Authorization', sSig, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+//
+//    aReq.SetParam( rmGET, '/v1/accounts', 'account' );
+//
+//    if RestThread <> nil then
+//      RestThread.PushQueue( aReq );        
+//  end;
+	bRes := false;
+
+  try
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );  
+    sSig	:= GetSig(0);
+    RestReq.AddParameter('Authorization', sSig, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+
+    if Request( rmGET, '/v1/accounts', '', sJson, sOut ) then
+    begin
+      gUpReceiver.ParseAccounts( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestAccounts (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit (bRes);
+    end;
+
+    bRes := true;    
+    
+  except
+  end;
+
+  Result := bRes;
+end;
+
+function TUpbitSpot.RequestWaitOrders: boolean;
+var
+  sQryStr ,sJson, sQuery, sOut: string;
+  bRes : boolean;
+begin
+	bRes := false;
+
+  try
+    SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );  
+    sQuery  := 'state=wait';
+    sQryStr	:= GetSig(sQuery);
+
+    if Request( rmGET, '/v1/orders?'+sQuery, '', sJson, sOut ) then
+    begin
+      gUpReceiver.ParseAccounts( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestWaitOrders (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit (bRes);
+    end;
+
+    bRes := true;    
+    
+  except
+  end;
+
+  Result := bRes;
+end;
+
+procedure TUpbitSpot.RequestAvailableAmt(aSymbol: TSymbol);
+begin
+
 end;
 
 function TUpbitSpot.RequestCandleData(sUnit, sCode: string): boolean;
