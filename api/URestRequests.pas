@@ -18,6 +18,8 @@ type
     function GetStatusCode: integer;
     function GetStatusText: string;
   public
+    StTime, EnTime : int64;
+
     Constructor Create;
     Destructor  Destroy; override;
     procedure init( url : string;  bOpt : boolean = false ); overload;
@@ -47,14 +49,22 @@ type
     // 0 : no used  1 : request   2 : response
     property State  : integer read FState write FState;
 
+
   end;
 implementation
+
+uses
+  Windows
+  ;
 { TRequest }
 
 procedure TRequest.ASyncProc;
 begin
   if Assigned(FOnNotify) then
+  begin
+    EnTime  := GetTickCount;
     FOnNotify( Self );
+  end;
 end;
 
 constructor TRequest.Create;
@@ -67,6 +77,9 @@ begin
   FOnNotify   := nil;
 
   FState      := 0;
+
+  StTime      := 0;
+  EnTime      := 0;
 end;
 destructor TRequest.Destroy;
 begin
@@ -166,6 +179,7 @@ end;
 function TRequest.RequestAsync: boolean;
 begin
   FReqThread := FReq.ExecuteAsync(ASyncProc);
+  StTime := GetTickCount;
   Result := FReqThread <> nil;
 end;
 

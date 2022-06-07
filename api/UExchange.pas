@@ -32,7 +32,11 @@ type
     FCyclicItems: TCyclicItems;
     FReqItems: TList;
     FRestThread: TRestThread;
-    FReqIndex	: integer;        
+    FReqIndex	: integer;
+    FAccCnt: int64;
+    FAccVal: int64;
+    FMaxVal: int64;
+    FMinVal: int64;
 
   public   
 
@@ -99,6 +103,12 @@ type
     property MasterData : string read FMasterData;
     // 공통 Base Currency Code 가 담겨 있음.
     property Codes  : TStrings read FCodes;
+
+    // request 평균을 구하기 위해
+    property AccVal : int64 read FAccVal write FAccVal;
+    property AccCnt : int64 read FAccCnt write FAccCnt;
+    property MaxVal : int64 read FMaxVal write FMaxVal;
+    property MinVal : int64 read FMinVal write FMinVal;
   end;
 
 implementation
@@ -140,6 +150,12 @@ begin
   FCyclicThreads:= nil;
   FRestThread		:= nil;
   FReqIndex			:= 0;
+
+  FAccCnt:= 0;
+  FAccVal:= 0;
+
+  FMaxVal:= 0;
+  FMinVal:= 100;
 end;
 
 destructor TExchange.Destroy;

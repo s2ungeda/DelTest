@@ -10,23 +10,27 @@ uses
 
 type
 
+  TAcntAmtArray = array [TSettleCurType] of double;
+
 	TAccount = class( TCollectionItem )
   private
     FAccountType: TAccountMarketType;
-    FTradeAmt: double;
-    FAvailableAmt: double;
     FExchangeKind: TExchangeKind;
     FApiKey: string;
     FPriKey: string;
     function GetName: string;
+
   public
+
+    AvailableAmt :  array [TSettleCurType] of double;            // 주문가능금액
+    TradeAmt     :  array [TSettleCurType] of double;            // 약정금액 ( 보유자산 )
+
     constructor Create( aColl : TCollection ); override;
-    destructor Destroy; override;  
+    destructor Destroy; override;
 
     property AccountType  : TAccountMarketType read FAccountType write FAccountType;
     property ExchangeKind : TExchangeKind read FExchangeKind write FExchangeKind;
-    property AvailableAmt : double read FAvailableAmt write   FAvailableAmt; 		// 주문가능금액
-    property TradeAmt			: double read FTradeAmt	write FTradeAmt;            	// 약정금액 ( 보유자산 )     
+
 
     property ApiKey : string read FApiKey;
     property PriKey : string read FPriKey;
@@ -77,11 +81,17 @@ uses
 { TAccount }
 
 constructor TAccount.Create(aColl: TCollection);
+var
+  i : TSettleCurType;
 begin
   inherited create( aColl );
 
-  FTradeAmt			:= 0.0;
-  FAvailableAmt	:= 0.0;
+  for I := scKRW to High(TSettleCurType) do
+  begin
+    TradeAmt[i]			:= 0.0;
+    AvailableAmt[i]	:= 0.0;
+  end;
+
 end;
 
 destructor TAccount.Destroy;
@@ -95,7 +105,12 @@ begin
 	Result := TExchangeKindShortDesc[ FExchangeKind ]+'.'+ TAccountMarketTypeDesc[ FAccountType];
 end;
 
-{ TAccounts }
+{procedure TAccount.SetAvailableAmt(const Value: TAcntAmtArray);
+begin
+  FAvailableAmt := Value;
+end;
+
+ TAccounts }
 
 constructor TAccounts.Create;
 begin

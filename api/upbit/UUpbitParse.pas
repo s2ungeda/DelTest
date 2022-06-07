@@ -5,6 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON , USymbols , UExchangeManager , UQuoteBroker
+  , UAccounts, UPositions
   , UApiTypes
   ;
 
@@ -30,8 +31,10 @@ type
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseDNWSate( aData : string );
     procedure ParseSpotOrderBook( aData : string ); overload;
-
     procedure ParseCandleData( sUnit, aData : string );
+
+    // private
+    procedure ParseAccounts( aData : string );
 
     property Parent : TExchangeManager read FParent;
   end;
@@ -68,6 +71,7 @@ var
   aObj : TJsonObject;
   aPair : TJsonPair;
   sTmp : string;
+  aAccount : TAccount;
 begin
   if aData = '' then
   begin
@@ -237,9 +241,9 @@ begin
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
   try
 
-    for I := 0 to aArr.Size-1 do
+    for I := 0 to aArr.Count-1 do
     begin
-      aVal := aArr.Get(i);
+      aVal := aArr.Items[i];
       sCode:= aVal.GetValue<string>('market');
 
       sts := sCode.Split(['-']);
@@ -395,6 +399,68 @@ begin
 
 end;
 
+
+// .. 처음에 한번 전체 로드...
+procedure TUpbitParse.ParseAccounts(aData: string);
+var
+  aArr : TJsonArray;
+  aObj : TJsonObject;
+  aVal : TJsonValue;
+  I: Integer;
+  aAcnt : TAccount;
+  aSymbol : TSymbol;
+  sTmp,sCode, sCur : string;
+  aSCType : TSettleCurType;
+  dTmp : double;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseDNWSate data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.Accounts[ FParent.ExchangeKind].Accounts[0];
+  if aAcnt = nil then Exit;
+
+  aArr := nil;
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+
+  try
+
+    for I := 0 to aArr.Size-1 do
+    begin
+      aObj  := aArr.Get(i) as TJsonObject;
+      sCur  := aObj.GetValue('currency').Value;
+      sCode := aObj.GetValue('unit_currency').Value;
+      aSCType := GetSettleType( sCur );
+
+      dTmp    := aObj.GetValue<double>('balance', 0 );
+      if aSCType <> scNone then
+      begin
+        aAcnt.TradeAmt[ aSCType ] := dTmp; //aObj.GetValue<double>('balance', 0 );
+      end else
+      begin
+        aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sCur);
+        if aSymbol = nil then continue;
+
+        // 잔고가 잇으면..
+        if (IsZero(dTmp )) and ( dTmp > 0 )then
+        begin
+
+        end;
+
+      end;
+
+      aObj.GetValue('unit_currency').Value;
+    end;
+
+  finally
+    if aArr <> nil then aArr.Free;
+
+  end;
+end;
+
 procedure TUpbitParse.ParseCandleData(sUnit, aData: string);
 var
   aArr : TJsonArray;
@@ -426,10 +492,10 @@ begin
       accAmt := 0;
       j      := 0;
 
-      for I := 0 to aArr.Size-1 do
+      for I := 0 to aArr.Count-1 do
       begin
 
-        aVal := aArr.Get(i);
+        aVal := aArr.Items[i];
 
         sCode:= GetSymbolCode( aVal.GetValue<string>('market') );
 
@@ -533,9 +599,9 @@ begin
     try
       if aArr = nil then Exit;
 
-      for I := 0 to aArr.Size-1 do
+      for I := 0 to aArr.Count-1 do
       begin
-        aVal := aArr.Get(i);
+        aVal := aArr.Items[i];
         sTmp := aVal.GetValue<string>('currency');
         if FParent.Codes.IndexOf(sTmp) < 0 then continue;
 

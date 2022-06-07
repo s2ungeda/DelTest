@@ -271,11 +271,41 @@ procedure TBithSpot.RestNotify(Sender: TObject);
 var
    aReq : TRequest;
    sTmp : string;
+   avg  : integer;
+   gap  : integer;
 begin
   if Sender = nil then Exit;
   try
   	aReq := Sender as TRequest;
 	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
+
+    gap := (aReq.EnTime - aReq.StTime);
+    AccCnt:= AccCnt+1;
+    AccVal:= AccVal + gap;
+
+    avg := AccVal div AccCnt;
+
+    if avg > 200 then
+    begin
+      App.Log(llInfo, 'bt_latency', 'avg : %05d : %d, %s %d, %d  (%d, %d) ', [ avg,
+         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, MaxVal, MinVal ]  );
+    end;
+
+    if MaxVal < gap then begin
+      App.Log(llInfo, 'bt_latency', 'max : %05d : %d, %s %d, %d (%d)', [ gap,
+         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, avg ]  );
+      MaxVal := gap;
+    end;
+
+    if MinVal > gap then begin
+      App.Log(llInfo, 'bt_latency', 'min : %05d : %d, %s %d, %d (%d)', [ gap,
+         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, avg ]  );
+      MinVal := gap;
+    end;
+
+    if True then
+
+
   finally
 		aReq.State := 2;
   end;
@@ -405,7 +435,7 @@ var
   i, idx : integer;
 begin
 
-	ProcCyclicWork;
+
 
 	exit;
 

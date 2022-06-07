@@ -591,9 +591,9 @@ begin
 
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
 
-  for I := 0 to aArr.Size-1 do
+  for I := 0 to aArr.Count-1 do
   begin
-    aVal := aArr.Get(i);
+    aVal := aArr.Items[i];
     sTmp := aVal.GetValue<string>('symbol');
     aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sTmp+Fut_Suf);
     if aSymbol <> nil then
@@ -642,9 +642,9 @@ begin
   aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
   j:= 0;
 
-  for I := 0 to aArr.Size-1 do
+  for I := 0 to aArr.Count-1 do
   begin
-    aVal  := aArr.Get(i) ;
+    aVal  := aArr.Items[i] ;
     sTmp  := aVal.GetValue<string>('quote');
     if sTmp <> 'USDT' then continue;
     bAble := aVal.GetValue<boolean>('isMarginTrade');

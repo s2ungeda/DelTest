@@ -18,7 +18,7 @@ type
     FMutex  : HWND;
     FQueue  : TList;
 
-   // FData		: TReqeustItem;
+    FData		: TRequest;
     FDivInfo: TDivInfo;
     FOnResNotify: TResponseNotify;
 
@@ -32,7 +32,8 @@ type
     destructor Destroy; override;   
 
     procedure PushQueue( aReqItem : TRequest );
-    function  PopQueue : TRequest;   
+    function  PopQueue : TRequest;
+    function  QCount : integer;
 
     property  DivInfo : TDivInfo read FDivInfo;
     property  OnResNotify : TResponseNotify read FOnResNotify;
@@ -82,12 +83,14 @@ begin
 
     if not( FEvent.WaitFor( FDivInfo.WaitTime ) in [wrSignaled] ) then
     begin
-      var aData : TRequest;
-      aData := PopQueue;
-      if aData <> nil then
+     // var aData : TRequest;
+      FData := PopQueue;
+      if FData <> nil then
       begin
-        if aData.RequestAsync then
-          aData.State := 1;    
+        if FData.RequestAsync then
+          FData.State := 1
+        else
+          App.Log(llError, 'RequestAsync error : %s, %s',[ FDAta.Req.Resource, Fdata.Name]  );
       end;
       
 //    	FData	:= PopQueue;
@@ -96,7 +99,7 @@ begin
 //       //	FData.st := GetTickCount;       
 //        FData.Req.Request( FData.AMethod, FData.AResource, '', FData.JsonData, FData.OutData );       
 //        Synchronize( SyncProc );
-//        FData.Free;              
+//        FData.Free;
 //        FData := nil;
 //      end;
     end; 
@@ -131,6 +134,11 @@ begin
 	WaitForSingleObject(FMutex, INFINITE);
 	FQueue.Add( aReqItem );
   ReleaseMutex(FMutex);              
+end;
+
+function TRestThread.QCount: integer;
+begin
+  Result := FQueue.Count;
 end;
 
 procedure TRestThread.SyncProc;

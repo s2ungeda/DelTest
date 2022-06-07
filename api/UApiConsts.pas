@@ -43,6 +43,8 @@ const
   TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
   TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('All', 'Spot', 'Margin', 'Future');
 
+  TSettleCurTypeDesc : array [ TSettleCurType ] of string = ('NONE', 'KRW', 'USDT', 'BTC' );
+
 implementation
 
 end.

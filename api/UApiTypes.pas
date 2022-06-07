@@ -8,8 +8,11 @@ type
   TExchangeKind   = ( ekBinance , ekUpbit, ekBithumb );
   TMarketType     = ( mtSpot, mtFutures );
   TAccountMarketType  = (amAll, amSpot, amMargin, amFuture );
-
   TMajorSymbolKind = (msBTC, msETH, msXRP );
+
+  // account settle currency
+  TSettleCurType = ( scNone, scKRW, scUSDT, scBTC );
+
 
 	// 소켓, Rest 구분을 위해..
   TDivInfo = record
@@ -43,8 +46,9 @@ type
     MarketInfo : array [ TMarketType ] of TApiInfo;
 
     procedure SetInfo( i:integer; stName : string ; isMar,isFut, isDome : boolean );
-  end;       
+  end;
 
+  function GetSettleType( sCur : string): TSettleCurType;
 
 implementation
 
@@ -59,6 +63,18 @@ begin
   IsFuture := isFut;
   IsDomestic := isDome;
 end;            
+
+
+function GetSettleType( sCur : string): TSettleCurType;
+begin
+  if sCur = 'KRW' then
+    Result := scKRW
+  else if sCur = 'USDT' then
+    Result := scUSDT
+  else if sCur = 'BTC' then
+    Result := scBTC
+  else Result := scNone;
+end;
 
 
 end.

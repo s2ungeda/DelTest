@@ -33,6 +33,9 @@ type
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseCandleData( aKind: TMajorSymbolKind;  sUnit , aData : string );
 
+    // private
+    procedure ParseAccounts( aData : string );
+
     property Parent : TExchangeManager read FParent;
     property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
   end;
@@ -135,6 +138,11 @@ end;
 
 // 24 는 0 시기준 -> 뒤에서 부터 24까지만..
 // 30 분 은 날자 파싱해서..오늘날자 까지만. 만.
+
+procedure TBithParse.ParseAccounts(aData: string);
+begin
+
+end;
 
 procedure TBithParse.ParseCandleData(aKind: TMajorSymbolKind; sUnit, aData: string);
 var
