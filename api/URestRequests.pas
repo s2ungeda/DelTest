@@ -2,7 +2,7 @@ unit URestRequests;
 interface
 uses
   System.Classes, System.SysUtils, System.DateUtils,
-  REST.Client, REST.Types
+  REST.Client, REST.Types  , windows
   ;
 type
   TRequest = class
@@ -14,11 +14,17 @@ type
     FName: string;
     FReqThread: TRESTExecutionThread;
     FState: integer;
+    FSeq: integer;
+    FInterval: integer;
     function GetContent: string;
     function GetStatusCode: integer;
     function GetStatusText: string;
   public
     StTime, EnTime : int64;
+
+	  LastTime : DWORD;
+    PrevTime : DWORD;
+    Count    : integer;    
 
     Constructor Create;
     Destructor  Destroy; override;
@@ -33,7 +39,9 @@ type
 
     function GetID : integer;
 
-    procedure SetParam(  AMethod : TRESTRequestMethod;  AResource, AName : string );
+    procedure SetParam(  AMethod : TRESTRequestMethod;  AResource, AName : string ); overload;
+    procedure SetParam(  aSeq, aInterval : integer ); overload;
+    
     procedure ASyncProc;
     property Req : TRESTRequest read FReq;
     property Rsp : TRESTResponse read FRsp;
@@ -48,14 +56,13 @@ type
 
     // 0 : no used  1 : request   2 : response
     property State  : integer read FState write FState;
-
+    property Seq	 	: integer read FSeq		;
+    property Interval	: integer read FInterval ;
 
   end;
 implementation
 
-uses
-  Windows
-  ;
+
 { TRequest }
 
 procedure TRequest.ASyncProc;
@@ -80,6 +87,9 @@ begin
 
   StTime      := 0;
   EnTime      := 0;
+
+  LastTime := 0;
+  Count    := 0;  
 end;
 destructor TRequest.Destroy;
 begin
@@ -181,6 +191,13 @@ begin
   FReqThread := FReq.ExecuteAsync(ASyncProc);
   StTime := GetTickCount;
   Result := FReqThread <> nil;
+end;
+
+procedure TRequest.SetParam(aSeq, aInterval: integer);
+begin
+
+	FSeq			:= aSeq;
+  FInterval := aInterval;
 end;
 
 procedure TRequest.SetParam(AMethod : TRESTRequestMethod;  AResource, AName : string);

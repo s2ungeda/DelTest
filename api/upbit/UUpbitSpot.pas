@@ -97,28 +97,35 @@ begin
   FLastIndex := -1;
 end;
 
+destructor TUpbitSpot.Destroy;
+begin
+
+  inherited;
+end;
+
+
 procedure TUpbitSpot.CyclicNotify(Sender: TObject);
 var
-	aItem : TCyclicItem;
+//	aItem : TCyclicItem;
   aReq  : TRequest;
   sNm, sRsrc  : string;
 begin
   if Sender = nil then Exit;       
-  aItem := Sender as TCyclicItem;
+  aReq := Sender as TRequest;
 
   try
-  	aReq	:= GetReqItems;
-    if (aReq <> nil) and ( aReq.State <> 1 ) then
-    begin
-			aReq.Req.Params.Clear;
+//  	aReq	:= GetReqItems;
+//    if (aReq <> nil) and ( aReq.State <> 1 ) then
+//    begin
+//			aReq.Req.Params.Clear;
+//
+//      case aItem.index of
+//      	1 : sRsrc	:=  '/v1/orderbook';
+//        2 : sRsrc	:=  '/v1/ticker';
+//        3 : sRsrc	:=  '/v1/status/wallet';
+//      end;
 
-      case aItem.index of
-      	1 : sRsrc	:=  '/v1/orderbook';
-        2 : sRsrc	:=  '/v1/ticker';
-        3 : sRsrc	:=  '/v1/status/wallet';
-      end;
-
-      if aItem.index = 3 then
+      if aReq.Seq = 2 then
       begin
         var sToken : string;
         sToken := GetSig(0);
@@ -126,21 +133,23 @@ begin
       end else
       	aReq.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
 
-      aReq.SetParam(rmGET, sRsrc, aITem.Name);
+//      aReq.SetParam(rmGET, sRsrc, aITem.Name);
 
-      if RestThread <> nil then
-        RestThread.PushQueue( aReq );           
-    end else
-    if (aReq <> nil) and ( aReq.State = 1 ) then
-    begin
-      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
-    end;
+			if aReq.RequestAsync then
+      	aReq.State := 1;
+//      if RestThread <> nil then
+//        RestThread.PushQueue( aReq );
+//    end else
+//    if (aReq <> nil) and ( aReq.State = 1 ) then
+//    begin
+//      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
+//    end;
     
   
   except
-  	on e : exception do
-	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
-      , aItem.Name, e.Message ]  );
+//  	on e : exception do
+//	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
+//      , aItem.Name, e.Message ]  );
   end;       
 end;
 
@@ -187,17 +196,6 @@ begin
 
 //procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);  
 end;
-
-
-destructor TUpbitSpot.Destroy;
-begin
-
-  inherited;
-end;
-
-
-
-
 
 
 
@@ -252,29 +250,35 @@ var
   aItem : TCyclicItem;  
   info : TDivInfo;
 begin
-	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
-	MakeRestItems( 50 );      
-
-  info.Kind		:= GetExKind;
-  info.Market	:= MarketType;
-  info.Index	:= 0;
-  info.WaitTime := 20;
-  // rest thread
-  MakeRestThread( info );
 
   aItem := CyclicItems.New('orderbook');
   aItem.Interval  := 200;
-  aItem.Index     := 1;
+  aItem.Index     := 0;
+  aItem.Resource	:= '/v1/orderbook';  
+  aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
   aItem.Interval  := 200;
-  aItem.Index     := 2;
+  aItem.Index     := 1;
+  aItem.Resource	:= '/v1/ticker';
+  aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('status');
   aItem.Interval  := 3000;
-  aItem.Index     := 3;  
+  aItem.Index     := 2;  
+  aItem.Resource	:= '/v1/status/wallet';
+  aITem.Method		:= rmGET;                                             
+	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
+	MakeRestItems( 3 );      
+
+//  info.Kind		:= GetExKind;
+//  info.Market	:= MarketType;
+//  info.Index	:= 0;
+//  info.WaitTime := 20;
+//  // rest thread
+//  MakeRestThread( info );       
 	// cyclic thread .. 리커버리 끝나면  resume..
-  // MakeCyclicThread;
+  MakeCyclicThread;
   
 end;
 

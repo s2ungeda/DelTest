@@ -221,6 +221,7 @@ end;
 procedure TExchange.MakeRestItems( iCount : integer );
 var
   aReq : TRequest;
+  aItem: TCyclicItem;
   I: Integer;
   sUrl : string;
   bOpt : boolean;
@@ -228,18 +229,28 @@ begin
  
   FReqItems.Clear;
   sUrl :=  App.Engine.ApiConfig.GetBaseUrl( GetExKind, FMarketType );
-  for I := 0 to iCount-1 do
+  
+//  for I := 0 to iCount-1 do
+	for I := 0 to CyclicItems.Count-1 do    
   begin
+  	aItem	:= CyclicItems.Cyclic[i];
     aReq := TRequest.Create;        
     aReq.init( sUrl, GetExKind = ekBithumb);
+    aReq.SetParam( aItem.index, aItem.Interval );
+    aReq.SetParam( aItem.Method, aItem.Resource, aItem.Name );
+    aReq.Req.ReadTimeout := 3000;
     aReq.OnNotify := RestNotify;
     FReqItems.Add( aReq );
   end;
 end;
 
 procedure TExchange.MakeCyclicThread;
+var
+	aName : string;
 begin
-	FCyclicThreads := TCyclicThread.Create(CyclicItems, CyclicNotify);   
+//	FCyclicThreads := TCyclicThread.Create(CyclicItems, CyclicNotify);   
+	aName := Format('%s_%s', [ TExShortDesc[ GetExKind],  TMarketTypeDesc[FMarketType] ]);
+	FCyclicThreads := TCyclicThread.Create(FReqItems, CyclicNotify, aName);   
 end;
 
 procedure TExchange.MakeRestThread(aInfo: TDivInfo);

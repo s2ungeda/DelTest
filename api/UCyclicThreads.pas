@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SyncObjs
   , Windows
-  , UCyclicItems
+  , URestRequests//UCyclicItems
   ;
 
 const
@@ -19,15 +19,15 @@ type
     { Private declarations }
    FMutex  : HWND;
    FEvent  : TEvent;
-   FITems  : TCyclicItems;
+   FITems  : TList;
    FOnNotify  : TNotifyEvent;
 
-   FData : TCyclicItem;
+   FData : TRequest;
    procedure SyncProc;
   protected
     procedure Execute; override;
   public
-    constructor Create( AItems : TCyclicItems; ANotify : TNotifyEvent );
+    constructor Create( aList : TList; ANotify : TNotifyEvent ; AName : string);
     destructor Destroy; override;
 
     procedure doJob;
@@ -41,16 +41,16 @@ uses
 
 { IntervalThread }
 
-constructor TCyclicThread.Create( AItems : TCyclicItems; ANotify : TNotifyEvent );
+constructor TCyclicThread.Create( aList : TList; ANotify : TNotifyEvent; AName : string );
 begin
 
-  FITems    := AItems;
+  FITems    := aList;
   FOnNotify := ANotify;
 
   inherited Create(true);
   FreeOnTerminate := true;
   Priority  := tpNormal;
-  FMutex  := CreateMuTex( nil, false, 'Binance_Mutex_1' );
+  FMutex  := CreateMuTex( nil, false, PChar(AName) );
   FEvent  := TEvent.Create( nil, False, False, '');
 end;
 
@@ -68,8 +68,8 @@ end;
 
 procedure TCyclicThread.Execute;
 var
-  I, gap : Integer;
-  aItem : TCyclicItem;
+  I, iSnd, gap : Integer;
+  aItem : TRequest;
   nTick : DWORD;
   bSend : boolean;
 begin
@@ -80,18 +80,19 @@ begin
 //    WaitForSingleObject( FMutex,  INTERVAL );
                                                 
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
-    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
+    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;           
 
-
+    iSnd := 0;
+    
     for I := 0 to FItems.Count-1 do
     begin
 
       if Terminated then break;
 
-      aItem := FItems.Cyclic[i];
+      aItem := TRequest( FItems.Items[i] );
       if aItem = nil then continue;
 
-      bSend := false;
+      bSend := false;     
       nTick := GetTickCount;
 
       if aITem.LastTime <= 0 then
@@ -100,6 +101,7 @@ begin
         if gap >= aItem.Interval then
           bSend := true;
         inc( aItem.Count );
+        
       end else
       begin
         gap   := nTick - aItem.LastTime ;
@@ -107,14 +109,16 @@ begin
           bSend := true;
       end;
 
-      if bSend then begin
+      if bSend and (aItem.State <> 1) then begin
         aItem.PrevTime  := aItem.LastTime;
         aItem.LastTime  := nTick;
         FData := aItem;
-        Synchronize( SyncProc );
+        Synchronize( SyncProc );  
+        inc( iSnd );
       end;
-
-      Application.ProcessMessages;
+			// 루프 한번에 한건만 조회 하기 위해..
+      if iSnd > 0 then break;               
+   //   Application.ProcessMessages;
     end;
 
 

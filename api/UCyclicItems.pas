@@ -3,7 +3,7 @@ unit UCyclicItems;
 interface
 
 uses
-  System.Classes  ,
+  System.Classes  ,  REST.Types, 
 
   Windows
   ;
@@ -18,6 +18,8 @@ type
     PrevTime : DWORD;
     Count    : integer;
     index    : integer;
+    Resource : string;    
+    Method	 : TRESTRequestMethod;
   end;
 
   TCyclicItems = class( TCollection )
