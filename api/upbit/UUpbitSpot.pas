@@ -110,6 +110,8 @@ var
   aReq  : TRequest;
   sNm, sRsrc  : string;
 begin
+
+
   if Sender = nil then Exit;       
   aReq := Sender as TRequest;
 
@@ -161,37 +163,40 @@ var
 
 begin
   if Sender = nil then Exit;
-  try
-  	aReq := Sender as TRequest;
-	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
-
-    gap := (aReq.EnTime - aReq.StTime);
-    AccCnt:= AccCnt+1;
-    AccVal:= AccVal + gap;
-
-    avg := AccVal div AccCnt;
-
-    if avg > 200 then
-    begin
-      App.Log(llInfo, 'up_latency', 'avg : %05d : %d, %s %d, %d  (%d, %d) ', [ avg,
-         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, MaxVal, MinVal ]  );
-    end;
-
-    if MaxVal < gap then begin
-      App.Log(llInfo, 'up_latency', 'max : %05d : %d, %s %d, %d (%d)', [ gap,
-         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, avg ]  );
-      MaxVal := gap;
-    end;
-
-    if MinVal > gap then begin
-      App.Log(llInfo, 'up_latency', 'min : %05d : %d, %s %d, %d (%d)', [ gap,
-         aReq.StatusCode, aReq.Name, RestThread.QCount, AccCnt, avg ]  );
-      MinVal := gap;
-    end;
-
-  finally
-		aReq.State := 2;
-  end;
+  inherited  RestNotify( Sender );
+  
+//  if Sender = nil then Exit;
+//  try
+//  	aReq := Sender as TRequest;
+//	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
+//
+//    gap := (aReq.EnTime - aReq.StTime);
+//    AccCnt:= AccCnt+1;
+//    AccVal:= AccVal + gap;
+//
+//    avg := AccVal div AccCnt;
+//
+//    if avg > 200 then
+//    begin
+//      App.Log(llInfo, 'up_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
+//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, MaxVal, MinVal ]  );
+//    end;
+//
+//    if MaxVal < gap then begin
+//      App.Log(llInfo, 'up_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
+//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
+//      MaxVal := gap;
+//    end;
+//
+//    if MinVal > gap then begin
+//      App.Log(llInfo, 'up_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
+//         aReq.StatusCode, aReq.Name, {RestThread.QCount,}  AccCnt, avg ]  );
+//      MinVal := gap;
+//    end;
+//
+//  finally
+//		aReq.State := 2;
+//  end;
 
 
 //procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);  
@@ -248,17 +253,17 @@ end;
 procedure TUpbitSpot.MakeRest;
 var
   aItem : TCyclicItem;  
-  info : TDivInfo;
+
 begin
 
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 200;
+  aItem.Interval  := 250;
   aItem.Index     := 0;
   aItem.Resource	:= '/v1/orderbook';  
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 200;
+  aItem.Interval  := 250;
   aItem.Index     := 1;
   aItem.Resource	:= '/v1/ticker';
   aITem.Method		:= rmGET;
@@ -278,7 +283,7 @@ begin
 //  // rest thread
 //  MakeRestThread( info );       
 	// cyclic thread .. 府目滚府 场唱搁  resume..
-  MakeCyclicThread;
+//  MakeCyclicThread;
   
 end;
 

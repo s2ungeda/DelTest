@@ -120,19 +120,19 @@ begin
     Exit;
   end;
 
- (Exchanges[mtFutures] as TBinanceFutures).RequestData( FSeq mod 2 );
-  inc(FSeq);
-
-  if FSeq > 99999999 then
-  	FSeq := 0;
+// (Exchanges[mtFutures] as TBinanceFutures).RequestData( FSeq mod 2 );
+//  inc(FSeq);
+//
+//  if FSeq > 99999999 then
+//  	FSeq := 0;
 end;
 
 procedure TBinanceManager.OnTimer(Sender: TObject);
-var
-  iState, i : integer;
+//var
+//  iState, i : integer;
 begin
   // 1초에 한번
-  Exchanges[mtSpot].RequestDNWState;
+  //Exchanges[mtSpot].RequestDNWState;
 
 end;
 

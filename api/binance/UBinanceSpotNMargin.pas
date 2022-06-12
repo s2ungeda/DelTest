@@ -24,9 +24,14 @@ type
     procedure ReceiveDNWState;
     function RequestDNWStateSync : boolean;
     procedure MakeRest;
+
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
+
+    procedure CyclicNotify(Sender: TObject);    override;    
+    procedure ParseRequestData(iCode: integer; sName, sData: string);    override;    
+    procedure RestNotify(Sender: TObject);  override;        
 
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
@@ -39,6 +44,7 @@ implementation
 uses
   GApp, GLibs  , UApiConsts
   , UBinanceParse
+  , UCyclicItems, URestRequests
   , UFQN
   , UEncrypts
   ;
@@ -95,30 +101,11 @@ begin
          and RequestSpotTicker
          and RequestDNWStateSync
          ;
-//	if Result then
-//		MakeRest;
+	if Result then
+		MakeRest;
 end;
 
-procedure TBinanceSpotNMargin.MakeRest;
-var
-	i : integer;
-begin
-//	SetLength( Rest, 2 );	
 
-  for I := 0 to 1 do
-  begin
-		var info : TDivInfo;
-    info.Kind		:= GetExKind;
-    info.Market	:= MarketType;
-//    info.Division	:= i;
-    info.Index		:= i;
-    case i of
-    	0 : info.WaitTime	:= 100;   	//  초당 20;
-      1 : info.WaitTime	:= 50;			//  초당 50
-    end;
-    MakeRestThread( info );
-  end;
-end;
 
 // 저장해놓은 마스터 string 를 다시 파싱하면 됨.
 function TBinanceSpotNMargin.RequestSpotMaster: boolean;
@@ -356,6 +343,71 @@ begin
   end;
 
   Result := true;
+
+end;
+
+
+procedure TBinanceSpotNMargin.MakeRest;
+var
+  aItem : TCyclicItem;  
+begin
+  aItem := CyclicItems.New('status');
+  aItem.Interval  := 1000;
+  aItem.Index     := 0;
+  aItem.Resource	:= '/sapi/v1/asset/assetDetail';  
+  aITem.Method		:= rmGET;                                          
+
+	MakeRestItems( 0 );     
+  MakeCyclicThread;  
+end;
+
+procedure TBinanceSpotNMargin.CyclicNotify(Sender: TObject);
+var
+  aReq  : TRequest;
+  sTime, data, sig : string;
+begin
+  if Sender = nil then Exit;       
+  aReq := Sender as TRequest;
+
+  if aReq.Seq = 0 then
+  begin
+    sTime:= GetTimestamp;
+    data := Format('timestamp=%s', [sTime]);
+    sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+    aReq.Req.AddParameter('timestamp', sTime, pkGETorPOST);
+    aReq.Req.AddParameter('signature', sig, pkGETorPOST);
+    aReq.Req.AddParameter('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER);
+  end;       
+
+  if aReq.RequestAsync then
+  	aReq.State := 1;
+end;
+
+procedure TBinanceSpotNMargin.RestNotify(Sender: TObject);
+begin
+  if Sender = nil then Exit;
+  inherited  RestNotify( Sender )         
+end;
+
+
+
+procedure TBinanceSpotNMargin.ParseRequestData(iCode: integer; sName,
+  sData: string);
+begin
+  if sData = '' then
+  begin
+  	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );
+    Exit;
+  end;
+
+  if iCode <> 200 then begin
+  	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
+    Exit;  	
+  end else
+		if sName = 'status' then
+	   	gBinReceiver.ParseDNWState( sData );
+
 
 end;
 

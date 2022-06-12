@@ -383,6 +383,9 @@ begin
           aSymbol.DayVolume   := StrToFloatDef( aVal.GetValue<string>( 'units_traded_24H' ), 0.0 );
           dTmp                := StrToFloatDef( aVal.GetValue<string>( 'closing_price' ), 0.0 );
 
+          if sCode = 'SAND' then
+          	sCode := 'SAND';
+
           if dtTime > aSymbol.LastEventTime then
           begin
             aSymbol.Last          := dTmp ;

@@ -34,6 +34,7 @@ type
     Button15: TButton;
     Button16: TButton;
     Button17: TButton;
+    edtUid: TEdit;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -673,10 +674,13 @@ begin
 
   try
 
-    sID := GetUUID;
+    sID := GetUUID;    
 
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+    
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';       
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );
@@ -712,8 +716,12 @@ begin
 
     sID := GetUUID;
 
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+        
     sJson  := 'market=KRW-TRX';
 
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -760,8 +768,12 @@ begin
 
     sID := GetUUID;
 
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+         
     sJson  := 'state=wait&page=1';
 
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -809,8 +821,12 @@ begin
 
     sID := GetUUID;
 
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+    
     sJson  := 'uuids[]=40ed4d6a-2986-44d9-a6c5-6a6f598944eb&uuids[]=c50ddf49-736e-4e1d-bffa-f28b83084363';    
 
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -858,9 +874,12 @@ begin
 
     sID := GetUUID;
 
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
-    sJson  := 'uuid=40ed4d6a-2986-44d9-a6c5-6a6f598944eb';
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+        
+  	//apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  //sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+    sJson  := 'uuid='+edtUid.Text;//-2986-44d9-a6c5-6a6f598944eb';
 
     sOut  := vHash.gethashstring( sJson, SHA512 );    
 
@@ -877,7 +896,7 @@ begin
     restReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 
 	  restClient.BaseURL := 'https://api.upbit.com';
-  	restReq.Resource := '/v1/order?'+sOut;
+  	restReq.Resource := '/v1/order?'+sJson;
       
     restReq.Method   := rmDELETE;    
     restReq.Execute;
@@ -897,14 +916,14 @@ var
   guid : TGUID;
   sSig, sID, sToken, sOut, apikey, sKey ,sJson : string;
   vHash : THashSHA2;
-
+  aParam : TRESTRequestParameter;
   aObj : TJsonObject;
 begin        
 
   LToken:= TJWT.Create(TJWTClaims);
   aObj 	:= TJsonObject.Create;
 
-  aObj.AddPair('market','KRW_TRX');
+  aObj.AddPair('market','KRW-TRX');
   aObj.AddPair('side','bid');
   aObj.AddPair('volume','60');
   aObj.AddPair('price','90');
@@ -916,7 +935,7 @@ begin
 
   	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
 	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';    
-    sJson  := 'market=KRW_TRX&side=bid&volume=60&price=90&order_type=limit';
+    sJson  := 'market=KRW-TRX&side=bid&volume=60&price=90&order_type=limit';
 
     sOut  := vHash.gethashstring( sJson, SHA512 );    
 
@@ -935,6 +954,15 @@ begin
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/orders';
 
+		//restClient.Accept	:= 'application/json';
+
+    memo1.Lines.Add( aObj.ToString );
+    
+//    aParam := restReq.Params.AddItem;
+//    aParam.Value := aObj.ToString;
+//    aParam.ContentType := ctAPPLICATION_JSON;  
+
+        
     restReq.Body.Add(aObj);
       
     restReq.Method   := rmPOST;    

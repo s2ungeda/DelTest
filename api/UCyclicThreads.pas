@@ -9,7 +9,7 @@ uses
   ;
 
 const
-  INTERVAL = 30;
+  INTERVAL = 100;
 
 type      
 
@@ -117,11 +117,10 @@ begin
         inc( iSnd );
       end;
 			// 루프 한번에 한건만 조회 하기 위해..
-      if iSnd > 0 then break;               
-   //   Application.ProcessMessages;
+      if iSnd > 0 then break;                        
     end;
 
-
+    Application.ProcessMessages;
   end;
 
 end;

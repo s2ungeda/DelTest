@@ -192,6 +192,13 @@ object Form3: TForm3
     TabOrder = 19
     OnClick = Button17Click
   end
+  object edtUid: TEdit
+    Left = 96
+    Top = 152
+    Width = 201
+    Height = 21
+    TabOrder = 20
+  end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'
     Params = <>

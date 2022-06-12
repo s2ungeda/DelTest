@@ -65,11 +65,11 @@ type
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
     // cyclicthread notify
- 		procedure CyclicNotify( Sender : TObject ); virtual; abstract;   
-    // rest response notify
-    procedure RestNotify( Sender : TObject ); virtual; abstract;   
+ 		procedure CyclicNotify( Sender : TObject ); virtual; abstract;     
 
 //--------------------------------------------------------------
+		// rest response notify
+    procedure RestNotify( Sender : TObject ); virtual; 
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;
     function GetReqItems	 : TRequest;
@@ -292,14 +292,45 @@ end;
 
 procedure TExchange.ProcCyclicWork;
 var
-	i : integer;
-  aItem : TCyclicItem;
+	i , iSnd : integer;
+//  aItem : TCyclicItem;
+  aItem : TRequest;
   bSend : boolean;
   gap, nTick : DWORD;
+  
 begin
-  for I := 0 to FCyclicItems.Count-1 do
+//  for I := 0 to FCyclicItems.Count-1 do
+//  begin          
+//    aItem := FCyclicItems.Cyclic[i];
+//    if aItem = nil then continue;
+//
+//    bSend := false;
+//    nTick := GetTickCount;
+//
+//    if aITem.LastTime <= 0 then
+//    begin
+//      gap := aItem.Count * INTERVAL;
+//      if gap >= aItem.Interval then
+//        bSend := true;
+//      inc( aItem.Count );
+//    end else
+//    begin
+//      gap   := nTick - aItem.LastTime ;
+//      if gap >= aItem.Interval then
+//        bSend := true;
+//    end;
+//
+//    if bSend then begin
+//      aItem.PrevTime  := aItem.LastTime;
+//      aItem.LastTime  := nTick;
+//     	cyclicNotify( aItem );
+//    end;
+//  end;
+
+	iSnd := 0;
+  for I := 0 to FReqItems.Count-1 do
   begin          
-    aItem := FCyclicItems.Cyclic[i];
+    aItem := TRequest(FReqItems.Items[i]);
     if aItem = nil then continue;
 
     bSend := false;
@@ -318,12 +349,15 @@ begin
         bSend := true;
     end;
 
-    if bSend then begin
+    if (bSend) and ( aItem.State <> 1 ) then begin
       aItem.PrevTime  := aItem.LastTime;
       aItem.LastTime  := nTick;
      	cyclicNotify( aItem );
+      inc( iSnd );
     end;
-  end;
+
+    if iSnd > 0 then break;          
+  end;  
 end;
 
 function TExchange.Request(AMethod : TRESTRequestMethod;  AResource : string;  ABody : string;
@@ -385,6 +419,52 @@ begin
 end;
 
 // 인덱스를 리턴해준다..
+procedure TExchange.RestNotify(Sender: TObject);
+var
+   aReq : TRequest;
+   sTmp : string;
+   avg  : integer;
+   gap  : integer;
+begin
+  if Sender = nil then Exit;
+  try
+  	aReq := Sender as TRequest;
+	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
+
+    gap := (aReq.EnTime - aReq.StTime);
+    AccCnt:= AccCnt+1;
+    AccVal:= AccVal + gap;
+
+    avg := AccVal div AccCnt;
+
+    if avg > 500 then
+    begin
+      App.Log(llInfo, 'bt_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
+         aReq.StatusCode, aReq.Name, {RestThread.QCount,}AccCnt, MaxVal, MinVal ]  );
+    end;
+
+    if MaxVal < gap then begin
+      App.Log(llInfo, 'bt_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
+         aReq.StatusCode, aReq.Name,{ RestThread.QCount,} AccCnt, avg ]  );
+      MaxVal := gap;
+    end;
+
+    if MinVal > gap then begin
+      App.Log(llInfo, 'bt_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
+         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
+      MinVal := gap;
+    end;
+
+    if True then
+
+
+  finally
+		aReq.State := 2;
+  end;
+
+
+end;
+
 function TExchange.RestType(iType: integer): integer;
 begin
 

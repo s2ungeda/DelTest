@@ -88,7 +88,7 @@ begin
   // orderbook 을 위한 조회 타이머.
   FDepTimer  := App.Engine.QuoteBroker.Timers.New;
   FDepTimer.Enabled  := false;
-  FDepTimer.Interval := 50;
+  FDepTimer.Interval := 100;
   FDepTimer.OnTimer  := OnDepthTimer;
 
   Timer.OnTimer   := OnTimer;

@@ -33,6 +33,11 @@ type
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
 
+ 
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;    
+    procedure CyclicNotify( Sender : TObject ); override; 
+    procedure RestNotify( Sender : TObject ); override;    
+
     procedure RequestData( iMod : integer );
   end;
 
@@ -41,6 +46,7 @@ implementation
 uses
   GApp, UApiConsts
   , UBinanceParse
+  , UCyclicItems, URestRequests
   , REST.Types
   ;
 
@@ -57,6 +63,7 @@ begin
 
 end;
 
+
 destructor TBinanceFutures.Destroy;
 begin
 
@@ -67,6 +74,8 @@ function TBinanceFutures.ParsePrepareMaster: integer;
 begin
   gBinReceiver.ParsePrepareFuttMaster(MasterData);
 end;
+
+
 
 function TBinanceFutures.RequestCandleData(sUnit, sCode: string): boolean;
 var
@@ -220,29 +229,61 @@ begin
   
   Result := RequestFuttMaster
          and RequestFutTicker;
-//	if Result then
-//		MakeRest;
+         
+	if Result then
+		MakeRest;
 end;
+
 
 procedure TBinanceFutures.MakeRest;
 var
-	i : integer;
+  aItem : TCyclicItem;  
 begin
-//	SetLength( Rest, 2 );	
+  aItem := CyclicItems.New('orderbook');
+  aItem.Interval  := 250;
+  aItem.Index     := 0;
+  aItem.Resource	:= '/fapi/v1/ticker/bookTicker';  
+  aITem.Method		:= rmGET;                                          
 
-  for I := 0 to 1 do
+	MakeRestItems( 0 );     
+  MakeCyclicThread;  
+end;
+
+procedure TBinanceFutures.CyclicNotify(Sender: TObject);
+var
+  aReq  : TRequest;
+begin
+  if Sender = nil then Exit;       
+  aReq := Sender as TRequest;
+
+  if aReq.RequestAsync then
+  	aReq.State := 1;
+end;
+
+procedure TBinanceFutures.RestNotify(Sender: TObject);
+begin
+  if Sender = nil then Exit;
+  inherited  RestNotify( Sender )         
+end;
+
+
+
+procedure TBinanceFutures.ParseRequestData(iCode: integer; sName,
+  sData: string);
+begin
+  if sData = '' then
   begin
-		var info : TDivInfo;
-    info.Kind		:= GetExKind;
-    info.Market	:= MarketType;
-//    info.Division	:= i;
-    info.Index		:= i;
-    case i of
-    	0 : info.WaitTime	:= 50;
-      1 : info.WaitTime	:= 100;
-    end;
-    MakeRestThread( info );
+  	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );
+    Exit;
   end;
+
+  if iCode <> 200 then begin
+  	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
+    Exit;  	
+  end else
+		if sName = 'orderbook' then
+		  gBinReceiver.ParseFutAllOrderBook( sData );
+
 end;
 
 end.

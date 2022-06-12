@@ -90,7 +90,7 @@ begin
 //  end;
 
   Timer.OnTimer := OnTimer;
-  Timer.Interval:= 1000;
+  Timer.Interval:= 100;
   Result := true;
 end;
 
@@ -111,7 +111,7 @@ procedure TUpbitManager.OnTimer(Sender: TObject);
 begin
 //  thread ∑Œ ¥Î√º
 //  (Exchanges[mtSpot] as TUpbitSpot).RequestData;
-//	Exchanges[mtSpot].ProcCyclicWork;
+	Exchanges[mtSpot].ProcCyclicWork;
 end;
 
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;
