@@ -104,103 +104,6 @@ begin
 end;
 
 
-procedure TUpbitSpot.CyclicNotify(Sender: TObject);
-var
-//	aItem : TCyclicItem;
-  aReq  : TRequest;
-  sNm, sRsrc  : string;
-begin
-
-
-  if Sender = nil then Exit;       
-  aReq := Sender as TRequest;
-
-  try
-//  	aReq	:= GetReqItems;
-//    if (aReq <> nil) and ( aReq.State <> 1 ) then
-//    begin
-//			aReq.Req.Params.Clear;
-//
-//      case aItem.index of
-//      	1 : sRsrc	:=  '/v1/orderbook';
-//        2 : sRsrc	:=  '/v1/ticker';
-//        3 : sRsrc	:=  '/v1/status/wallet';
-//      end;
-
-      if aReq.Seq = 2 then
-      begin
-        var sToken : string;
-        sToken := GetSig(0);
-        aReq.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );            
-      end else
-      	aReq.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
-
-//      aReq.SetParam(rmGET, sRsrc, aITem.Name);
-
-			if aReq.RequestAsync then
-      	aReq.State := 1;
-//      if RestThread <> nil then
-//        RestThread.PushQueue( aReq );
-//    end else
-//    if (aReq <> nil) and ( aReq.State = 1 ) then
-//    begin
-//      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
-//    end;
-    
-  
-  except
-//  	on e : exception do
-//	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
-//      , aItem.Name, e.Message ]  );
-  end;       
-end;
-
-procedure TUpbitSpot.RestNotify(Sender: TObject);
-var
-   aReq : TRequest;
-   sTmp : string;
-   gap, avg  : integer;
-
-begin
-  if Sender = nil then Exit;
-  inherited  RestNotify( Sender );
-  
-//  if Sender = nil then Exit;
-//  try
-//  	aReq := Sender as TRequest;
-//	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
-//
-//    gap := (aReq.EnTime - aReq.StTime);
-//    AccCnt:= AccCnt+1;
-//    AccVal:= AccVal + gap;
-//
-//    avg := AccVal div AccCnt;
-//
-//    if avg > 200 then
-//    begin
-//      App.Log(llInfo, 'up_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
-//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, MaxVal, MinVal ]  );
-//    end;
-//
-//    if MaxVal < gap then begin
-//      App.Log(llInfo, 'up_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
-//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
-//      MaxVal := gap;
-//    end;
-//
-//    if MinVal > gap then begin
-//      App.Log(llInfo, 'up_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
-//         aReq.StatusCode, aReq.Name, {RestThread.QCount,}  AccCnt, avg ]  );
-//      MinVal := gap;
-//    end;
-//
-//  finally
-//		aReq.State := 2;
-//  end;
-
-
-//procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);  
-end;
 
 
 
@@ -250,42 +153,7 @@ end;
 	// pri query       초당 30회, 분당 900회   -- 분당 30인거 같음..
   // order           초당 8회, 분당 200회
 
-procedure TUpbitSpot.MakeRest;
-var
-  aItem : TCyclicItem;  
 
-begin
-
-  aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 250;
-  aItem.Index     := 0;
-  aItem.Resource	:= '/v1/orderbook';  
-  aITem.Method		:= rmGET;
-
-  aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 250;
-  aItem.Index     := 1;
-  aItem.Resource	:= '/v1/ticker';
-  aITem.Method		:= rmGET;
-
-  aItem := CyclicItems.New('status');
-  aItem.Interval  := 3000;
-  aItem.Index     := 2;  
-  aItem.Resource	:= '/v1/status/wallet';
-  aITem.Method		:= rmGET;                                             
-	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
-	MakeRestItems( 3 );      
-
-//  info.Kind		:= GetExKind;
-//  info.Market	:= MarketType;
-//  info.Index	:= 0;
-//  info.WaitTime := 20;
-//  // rest thread
-//  MakeRestThread( info );       
-	// cyclic thread .. 리커버리 끝나면  resume..
-//  MakeCyclicThread;
-  
-end;
 
 
 
@@ -389,7 +257,7 @@ begin
     else if sName = 'ticker' then
     	gUpReceiver.ParseSpotTicker2(sData)
     else if sName = 'status' then
-    	gUpReceiver.ParseDNWSate( sData );     
+    	gUpReceiver.ParseDNWSate( sData );
 end;
 
 procedure TUpbitSpot.RequestData;
@@ -719,6 +587,98 @@ begin
     App.Log( llError,  '%s Async Request Error : %s ( status : %d, %s)' , [ TExchangeKindDesc[GetExKind]
     ,  Sender.Response.Content ,  Sender.Response.StatusCode, Sender.Response.StatusText ]  );
   end;
+end;
+
+
+procedure TUpbitSpot.MakeRest;
+var
+  aItem : TCyclicItem;
+
+begin
+
+  aItem := CyclicItems.New('orderbook');
+  aItem.Interval  := 250;
+  aItem.Index     := 0;
+  aItem.Resource	:= '/v1/orderbook';
+  aITem.Method		:= rmGET;
+
+  aItem := CyclicItems.New('ticker');
+  aItem.Interval  := 250;
+  aItem.Index     := 1;
+  aItem.Resource	:= '/v1/ticker';
+  aITem.Method		:= rmGET;
+
+  aItem := CyclicItems.New('status');
+  aItem.Interval  := 3000;
+  aItem.Index     := 2;
+  aItem.Resource	:= '/v1/status/wallet';
+  aITem.Method		:= rmGET;
+	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
+	MakeRestItems( 3 );
+  MakeCyclicThread;
+
+end;
+
+procedure TUpbitSpot.CyclicNotify(Sender: TObject);
+var
+//	aItem : TCyclicItem;
+  aReq  : TRequest;
+  sNm, sRsrc  : string;
+begin
+
+
+  if Sender = nil then Exit;
+  aReq := Sender as TRequest;
+
+  try
+//  	aReq	:= GetReqItems;
+//    if (aReq <> nil) and ( aReq.State <> 1 ) then
+//    begin
+//			aReq.Req.Params.Clear;
+//
+//      case aItem.index of
+//      	1 : sRsrc	:=  '/v1/orderbook';
+//        2 : sRsrc	:=  '/v1/ticker';
+//        3 : sRsrc	:=  '/v1/status/wallet';
+//      end;
+
+      if aReq.Seq = 2 then
+      begin
+        var sToken : string;
+        sToken := GetSig(0);
+        aReq.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      end else
+      	aReq.Req.AddParameter('markets', FMarketParam, pkGETorPOST);
+
+//      aReq.SetParam(rmGET, sRsrc, aITem.Name);
+
+			if aReq.RequestAsync then
+      	aReq.State := 1;
+//      if RestThread <> nil then
+//        RestThread.PushQueue( aReq );
+//    end else
+//    if (aReq <> nil) and ( aReq.State = 1 ) then
+//    begin
+//      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
+//    end;
+
+
+  except
+//  	on e : exception do
+//	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
+//      , aItem.Name, e.Message ]  );
+  end;
+end;
+
+procedure TUpbitSpot.RestNotify(Sender: TObject);
+var
+   aReq : TRequest;
+   sTmp : string;
+   gap, avg  : integer;
+
+begin
+  if Sender = nil then Exit;
+  inherited  RestNotify( Sender );
 end;
 
 

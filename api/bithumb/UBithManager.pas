@@ -119,7 +119,7 @@ begin
   end;
 
 //  (Exchanges[mtSpot] as TBithSpot).RequestData;
-  Exchanges[mtSpot].ProcCyclicWork;
+//  Exchanges[mtSpot].ProcCyclicWork;
 end;
 
 

@@ -120,43 +120,7 @@ begin
 		MakeRest;
 end;
 
-procedure TBithSpot.MakeRest;
-var
-  aItem : TCyclicItem;  
-  info : TDivInfo;
-begin
-	// request item 을 메모리에 미리 만들어둠..생성/해제 줄이기 위해.
-//	MakeRestItems( 50 );      
-//
-//  info.Kind		:= GetExKind;
-//  info.Market	:= MarketType;
-//  info.Index	:= 0;
-//  info.WaitTime := 20;
-//  // rest thread
-//  MakeRestThread( info );
 
-  aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 250;
-  aItem.Index     := 1;
-  aItem.Resource	:= '/public/orderbook/ALL_KRW'; 
-  aITem.Method		:= rmGET;   
-
-  aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 250;
-  aItem.Index     := 2;
-  aItem.Resource	:= '/public/ticker/ALL_KRW'; 
-  aITem.Method		:= rmGET;
-
-  aItem := CyclicItems.New('status');
-  aItem.Interval  := 3000;
-  aItem.Index     := 3;
-  aItem.Resource	:= '/public/assetsstatus/ALL'; 
-  aITem.Method		:= rmGET;
-
-  MakeRestItems( 3 );  
-	// cyclic thread .. 리커버리 끝나면  resume..  
-//	MakeCyclicThread;
-end;
 
 
 function TBithSpot.RequestTicker: boolean;
@@ -237,102 +201,9 @@ begin
   end;
 end;
 
-procedure TBithSpot.CyclicNotify(Sender: TObject);
-var
-	aItem : TCyclicItem;
-  aReq  : TRequest;
-  sNm, sRsrc  : string;
-begin
 
-  if Sender = nil then Exit;       
-  aReq := Sender as TRequest;
 
-  if aReq.RequestAsync then
-  	aReq.State := 1;     
 
-//  if Sender = nil then Exit;       
-//  aItem := Sender as TCyclicItem;
-////  aReq := Sender as TRequest;
-//
-//  try
-//  
-//  	aReq	:= GetReqItems;
-//    if (aReq <> nil) and ( aReq.State <> 1 ) then
-//    begin
-//			aReq.Req.Params.Clear;
-//
-//      case aItem.index of
-//        1 : sRsrc:= '/public/orderbook/ALL_KRW';       
-//        2 : sRsrc:= '/public/ticker/ALL_KRW'; 		
-//        3 : sRsrc:= '/public/assetsstatus/ALL';	
-//      end; 
-//
-//      aReq.SetParam(rmGET, sRsrc, aITem.Name);
-//
-//      if RestThread <> nil then
-//        RestThread.PushQueue( aReq );       
-//        
-//    end else
-//    if (aReq <> nil) and ( aReq.State = 1 ) then
-//    begin
-//      App.DebugLog('%s, %s State = 1 !!! ', [TExShortDesc[GetExKind] , aItem.Name] );
-//    end; 
-//  
-//  except
-//  	on e : exception do
-//	  	App.Log(llError, '%s %s CyclicNotify Error : %s', [ TExShortDesc[GetExKind]
-//      	,aItem.Name , e.Message ]  );
-//  end;
-end;
-
-procedure TBithSpot.RestNotify(Sender: TObject);
-var
-   aReq : TRequest;
-   sTmp : string;
-   avg  : integer;
-   gap  : integer;
-begin
-  if Sender = nil then Exit;
-  inherited  RestNotify( Sender );
-  
-//  try
-//  	aReq := Sender as TRequest;
-//	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
-//
-//    inherited  RestNotify( Sender );
-//
-//    gap := (aReq.EnTime - aReq.StTime);
-//    AccCnt:= AccCnt+1;
-//    AccVal:= AccVal + gap;
-//
-//    avg := AccVal div AccCnt;
-//
-//    if avg > 200 then
-//    begin
-//      App.Log(llInfo, 'bt_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
-//         aReq.StatusCode, aReq.Name, {RestThread.QCount,}AccCnt, MaxVal, MinVal ]  );
-//    end;
-//
-//    if MaxVal < gap then begin
-//      App.Log(llInfo, 'bt_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
-//         aReq.StatusCode, aReq.Name,{ RestThread.QCount,} AccCnt, avg ]  );
-//      MaxVal := gap;
-//    end;
-//
-//    if MinVal > gap then begin
-//      App.Log(llInfo, 'bt_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
-//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
-//      MinVal := gap;
-//    end;
-//
-//    if True then
-//
-//
-//  finally
-//		aReq.State := 2;
-//  end;
-
-end;
 
 function TBithSpot.RequestOrderBook: boolean;
 var
@@ -592,6 +463,62 @@ begin
     App.Log( llError,  '%s Async Request Error : %s ( status : %d, %s)' , [ TExchangeKindDesc[GetExKind]
     ,  Sender.Response.Content ,  Sender.Response.StatusCode, Sender.Response.StatusText ]  );
   end;
+end;
+
+procedure TBithSpot.MakeRest;
+var
+  aItem : TCyclicItem;
+  info : TDivInfo;
+begin
+
+  aItem := CyclicItems.New('orderbook');
+  aItem.Interval  := 250;
+  aItem.Index     := 1;
+  aItem.Resource	:= '/public/orderbook/ALL_KRW';
+  aITem.Method		:= rmGET;
+
+  aItem := CyclicItems.New('ticker');
+  aItem.Interval  := 250;
+  aItem.Index     := 2;
+  aItem.Resource	:= '/public/ticker/ALL_KRW';
+  aITem.Method		:= rmGET;
+
+  aItem := CyclicItems.New('status');
+  aItem.Interval  := 3000;
+  aItem.Index     := 3;
+  aItem.Resource	:= '/public/assetsstatus/ALL';
+  aITem.Method		:= rmGET;
+
+  MakeRestItems( 3 );
+	// cyclic thread .. 리커버리 끝나면  resume..
+	MakeCyclicThread;
+end;
+
+procedure TBithSpot.CyclicNotify(Sender: TObject);
+var
+	aItem : TCyclicItem;
+  aReq  : TRequest;
+  sNm, sRsrc  : string;
+begin
+
+  if Sender = nil then Exit;
+  aReq := Sender as TRequest;
+
+  if aReq.RequestAsync then
+  	aReq.State := 1;
+
+end;
+
+procedure TBithSpot.RestNotify(Sender: TObject);
+var
+   aReq : TRequest;
+   sTmp : string;
+   avg  : integer;
+   gap  : integer;
+begin
+  if Sender = nil then Exit;
+  inherited  RestNotify( Sender );
+
 end;
 
 end.

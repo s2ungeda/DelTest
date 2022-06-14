@@ -16,6 +16,7 @@ type
     FState: integer;
     FSeq: integer;
     FInterval: integer;
+    FThreadID: int64;
     function GetContent: string;
     function GetStatusCode: integer;
     function GetStatusText: string;
@@ -47,6 +48,7 @@ type
     property Rsp : TRESTResponse read FRsp;
     property Client  : TRESTClient  read FClient;
     property ReqThread : TRESTExecutionThread read FReqThread;
+    property ThreadID  : int64 read FThreadID;
     property Name : string read FName;
     property StatusCode : integer read GetStatusCode;
     property StatusText : string  read GetStatusText;
@@ -191,6 +193,7 @@ begin
   FReqThread := FReq.ExecuteAsync(ASyncProc);
   StTime := GetTickCount;
   Result := FReqThread <> nil;
+  FThreadID := FReqThread.ThreadID;
 end;
 
 procedure TRequest.SetParam(aSeq, aInterval: integer);

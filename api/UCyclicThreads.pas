@@ -9,7 +9,7 @@ uses
   ;
 
 const
-  INTERVAL = 100;
+  INTERVAL = 50;
 
 type      
 
@@ -75,12 +75,14 @@ var
 begin
   { Place thread code here }
 
+
+
   while not Terminated do
   begin
 //    WaitForSingleObject( FMutex,  INTERVAL );
                                                 
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
-    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;           
+    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
 
     iSnd := 0;
     
@@ -109,18 +111,21 @@ begin
           bSend := true;
       end;
 
-      if bSend and (aItem.State <> 1) then begin
+//      if (i = 2) and ( bSend ) then
+//        aItem.EnTime := 2;
+
+      if (bSend) and (aItem.State <> 1)  then begin
         aItem.PrevTime  := aItem.LastTime;
         aItem.LastTime  := nTick;
         FData := aItem;
-        Synchronize( SyncProc );  
+//        Synchronize( SyncProc );
+        FOnNotify( FData );
         inc( iSnd );
       end;
 			// 루프 한번에 한건만 조회 하기 위해..
-      if iSnd > 0 then break;                        
+//      if iSnd > 0 then break;
+      Application.ProcessMessages;
     end;
-
-    Application.ProcessMessages;
   end;
 
 end;

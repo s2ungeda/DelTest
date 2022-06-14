@@ -194,6 +194,7 @@ begin
   end
   else begin
     FPass := 'wnrdj111';
+//    FPass := 'dalin1!@';
     Button1Click( nil );
   end;
 end;
