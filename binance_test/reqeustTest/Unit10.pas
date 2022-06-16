@@ -212,17 +212,17 @@ begin
 //  aItem.Interval  := 2000;
 //  aItem.Index     := 3;
 
-//  aItem := Cyclics.New('orderbook');
-//  aItem.Interval  := 200;
-//  aItem.Index     := 1;
-//
-//  aItem := Cyclics.New('ticker');
-//  aItem.Interval  := 200;
-//  aItem.Index     := 2;
+  aItem := Cyclics.New('orderbook');
+  aItem.Interval  := 500;
+  aItem.Index     := 1;
 
-  aItem := Cyclics.New('assetsstatus');
-  aItem.Interval  := 3000;
-  aItem.Index     := 3;
+  aItem := Cyclics.New('ticker');
+  aItem.Interval  := 500;
+  aItem.Index     := 2;
+
+//  aItem := Cyclics.New('assetsstatus');
+//  aItem.Interval  := 3000;
+//  aItem.Index     := 3;
 
   FCclThr:= TCyclicThread.Create(Cyclics, OnNotify);
   FCclThr.Resume;
@@ -385,7 +385,7 @@ begin
         sToken := GetSig(0);
         aReq.Req.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );      
 
-        memo1.Lines.Add( format('status  thread id : %d' , [  GetCurrentThreadID ]  )   );        
+//        memo1.Lines.Add( format('status  thread id : %d' , [  GetCurrentThreadID ]  )   );        
       end;
 
       aReq.SetParam(rmGET, sRsrc, aITem.Name);

@@ -101,12 +101,15 @@ end;
 
 procedure TCyclicThread.Execute;
 var
-  I, gap : Integer;
+  idx, I, gap : Integer;
   aItem : TCyclicItem;
   nTick : DWORD;
   bSend : boolean;
+  
 begin
   { Place thread code here }
+
+  idx := 0;
 
   while not Terminated do
   begin
@@ -115,13 +118,15 @@ begin
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
     if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
 
+    if idx >= FItems.Count then
+    	idx := 0;
 
-    for I := 0 to FItems.Count-1 do
-    begin
+//    for I := 0 to FItems.Count-1 do
+//    begin
 
       if Terminated then continue;
 
-      aItem := FItems.Cyclic[i];
+      aItem := FItems.Cyclic[idx];
       if aItem = nil then continue;
 
       bSend := false;
@@ -144,11 +149,14 @@ begin
         aItem.PrevTime  := aItem.LastTime;
         aItem.LastTime  := nTick;
         FData := aItem;
-        Synchronize( SyncProc );
+        FOnNotify( aItem );
+//        Synchronize( SyncProc );
       end;
-    end;
+//    end;
 
-    Application.ProcessMessages;
+    inc( idx );
+
+  //  Application.ProcessMessages;
   end;
 
 end;
