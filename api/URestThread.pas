@@ -61,7 +61,7 @@ begin
 end;
 procedure TRestThread.Execute;
 begin
-  inherited;
+
   while not Terminated do
   begin
     if not( FEvent.WaitFor( FDivInfo.WaitTime ) in [wrSignaled] ) then

@@ -311,14 +311,14 @@ begin
 
   if iCode <> 200 then begin
   	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
-    Exit;  	
+    Exit;
   end else
 		if sName = 'orderbook' then
 			gBithReceiver.ParseSpotOrderBook( sData )
     else if sName = 'ticker' then
     	gBithReceiver.ParseTicker( sData )
     else if sName = 'status' then
-    	gBithReceiver.ParseDnwState( sData );    
+    	gBithReceiver.ParseDnwState( sData );
   
 end;
 
@@ -472,13 +472,13 @@ var
 begin
 
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 250;
+  aItem.Interval  := 500;
   aItem.Index     := 1;
   aItem.Resource	:= '/public/orderbook/ALL_KRW';
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 250;
+  aItem.Interval  := 500;
   aItem.Index     := 2;
   aItem.Resource	:= '/public/ticker/ALL_KRW';
   aITem.Method		:= rmGET;

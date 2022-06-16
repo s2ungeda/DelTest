@@ -240,20 +240,20 @@ var
   aItem : TCyclicItem;  
 begin
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 250;
+  aItem.Interval  := 500;
   aItem.Index     := 0;
   aItem.Resource	:= '/fapi/v1/ticker/bookTicker';  
   aITem.Method		:= rmGET;                                          
 
 	MakeRestItems( 0 );     
-  MakeCyclicThread;  
+  MakeCyclicThread;
 end;
 
 procedure TBinanceFutures.CyclicNotify(Sender: TObject);
 var
   aReq  : TRequest;
 begin
-  if Sender = nil then Exit;       
+  if Sender = nil then Exit;
   aReq := Sender as TRequest;
 
   if aReq.RequestAsync then

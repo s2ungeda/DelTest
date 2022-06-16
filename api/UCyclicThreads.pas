@@ -9,7 +9,7 @@ uses
   ;
 
 const
-  INTERVAL = 50;
+  INTERVAL = 100;
 
 type      
 
@@ -79,10 +79,10 @@ begin
 
   while not Terminated do
   begin
-//    WaitForSingleObject( FMutex,  INTERVAL );
+    WaitForSingleObject( FMutex,  INTERVAL );
                                                 
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
-    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
+//    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
 
     iSnd := 0;
     
@@ -94,7 +94,7 @@ begin
       aItem := TRequest( FItems.Items[i] );
       if aItem = nil then continue;
 
-      bSend := false;     
+      bSend := false;
       nTick := GetTickCount;
 
       if aITem.LastTime <= 0 then
@@ -118,13 +118,13 @@ begin
         aItem.PrevTime  := aItem.LastTime;
         aItem.LastTime  := nTick;
         FData := aItem;
-//        Synchronize( SyncProc );
-        FOnNotify( FData );
+        Synchronize( SyncProc );
+//        FOnNotify( FData );
         inc( iSnd );
       end;
 			// 루프 한번에 한건만 조회 하기 위해..
 //      if iSnd > 0 then break;
-      Application.ProcessMessages;
+//      Application.ProcessMessages;
     end;
   end;
 

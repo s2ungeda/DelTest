@@ -37,6 +37,10 @@ type
     FAccVal: int64;
     FMaxVal: int64;
     FMinVal: int64;
+    FRestExet: TRESTExecutionThread;
+
+  protected
+    function IsAsyncWaiting : boolean;
 
   public   
 
@@ -88,6 +92,7 @@ type
     property RestReq: TRESTRequest read FRestReq;
     property RestRes: TRESTResponse read FRestRes;      
     //
+    property RestExet      : TRESTExecutionThread read FRestExet write FRestExet;
     property RestThread    : TRestThread read FRestThread;
     property CyclicThreads : TCyclicThread read  FCyclicThreads; 
     property CyclicItems	 : TCyclicItems read FCyclicItems;
@@ -133,6 +138,8 @@ begin
 
   FRestReq.Response := FRestRes;
 
+  FRestExet:= nil;
+
   FParent := aObj;
   FMarketType := aMarketType;
   FMarketIdx  := integer(FMarketType);
@@ -141,7 +148,7 @@ begin
 
 //  Rest	:= nil;
 
-  FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;     
+  FRestReq.OnHTTPProtocolError :=  OnHTTPProtocolError;
 
   // Req 를 100 개 미리 만들어둠..
   FReqItems:= TList.Create;
@@ -216,6 +223,14 @@ begin
 
   Result := TRequest( FReqItems.Items[ FReqIndex ]);
   inc( FReqIndex );
+end;
+
+function TExchange.IsAsyncWaiting: boolean;
+begin
+  Result := true;
+  if ( FRestExet = nil ) or
+   (( FRestExet <> nil ) and ( FRestExet.Finished ))  then
+    Result := false;
 end;
 
 procedure TExchange.MakeRestItems( iCount : integer );

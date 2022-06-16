@@ -54,7 +54,7 @@ type
     procedure RequestAvailableAmt( aSymbol : TSymbol );
     
     
-    procedure CyclicNotify( Sender : TObject ); override; 
+    procedure CyclicNotify( Sender : TObject ); override;
     procedure RestNotify( Sender : TObject ); override;
 
     function RequestDNWState : boolean; override;
@@ -250,14 +250,17 @@ begin
 
   if iCode <> 200 then begin
   	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
-    Exit;  	
+    Exit;
   end else
 		if sName = 'orderbook' then
 			gUpReceiver.ParseSpotOrderBook( sData )
     else if sName = 'ticker' then
     	gUpReceiver.ParseSpotTicker2(sData)
-    else if sName = 'status' then
+    else if sName = 'status' then begin
+      App.Log(llInfo, 'test', '%d, %s : %s', [ iCode, sName, Copy(sData, 1, 100 ) ]  );
     	gUpReceiver.ParseDNWSate( sData );
+    end;
+
 end;
 
 procedure TUpbitSpot.RequestData;
@@ -597,13 +600,13 @@ var
 begin
 
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 250;
+  aItem.Interval  := 500;
   aItem.Index     := 0;
   aItem.Resource	:= '/v1/orderbook';
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 250;
+  aItem.Interval  := 500;
   aItem.Index     := 1;
   aItem.Resource	:= '/v1/ticker';
   aITem.Method		:= rmGET;
@@ -624,8 +627,10 @@ var
 //	aItem : TCyclicItem;
   aReq  : TRequest;
   sNm, sRsrc  : string;
+  iCnt : integer;
 begin
 
+//  if IsAsyncWaiting then Exit;
 
   if Sender = nil then Exit;
   aReq := Sender as TRequest;
@@ -652,8 +657,17 @@ begin
 
 //      aReq.SetParam(rmGET, sRsrc, aITem.Name);
 
-			if aReq.RequestAsync then
+//      iCnt := 0;
+//      while IsAsyncWaiting do begin
+//        sleep(10);
+//        App.DebugLog('waiting (%02d) : %s - %', [iCnt, aReq.Name] );
+//        inc(iCnt);
+//      end;
+
+			if aReq.RequestAsync then begin
+        RestExet := aReq.ReqThread;
       	aReq.State := 1;
+      end;
 //      if RestThread <> nil then
 //        RestThread.PushQueue( aReq );
 //    end else
@@ -680,7 +694,5 @@ begin
   if Sender = nil then Exit;
   inherited  RestNotify( Sender );
 end;
-
-
 
 end.
