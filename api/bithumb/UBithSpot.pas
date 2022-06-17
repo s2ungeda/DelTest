@@ -472,13 +472,13 @@ var
 begin
 
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 500;
+  aItem.Interval  := 1000;
   aItem.Index     := 1;
   aItem.Resource	:= '/public/orderbook/ALL_KRW';
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 500;
+  aItem.Interval  := 1000;
   aItem.Index     := 2;
   aItem.Resource	:= '/public/ticker/ALL_KRW';
   aITem.Method		:= rmGET;

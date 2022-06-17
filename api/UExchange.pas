@@ -176,8 +176,6 @@ begin
     FRestThread.Terminate;
 //                           
   FCyclicItems.Free;
-
-  FReqItems.Free;
   
 //  if Rest <> nil then
 //    for i := 0 to High(Rest) do   
@@ -189,6 +187,8 @@ begin
   FRestRes.Free;
 	FRestReq.Free;
 	FRESTClient.Free;
+
+  FReqItems.Free;
 
   inherited;
 end;  

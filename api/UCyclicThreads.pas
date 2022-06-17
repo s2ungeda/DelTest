@@ -74,24 +74,23 @@ var
   bSend : boolean;
 begin
   { Place thread code here }
-
-
+  iSnd := 0;
 
   while not Terminated do
   begin
-    WaitForSingleObject( FMutex,  INTERVAL );
-                                                
+    WaitForSingleObject( Handle,  INTERVAL );
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
-//    if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
+//      if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
 
-    iSnd := 0;
-    
-    for I := 0 to FItems.Count-1 do
-    begin
+      if iSnd >= FItems.Count then
+        iSnd := 0;
+
+//    for I := 0 to FItems.Count-1 do
+//    begin
 
       if Terminated then break;
 
-      aItem := TRequest( FItems.Items[i] );
+      aItem := TRequest( FItems.Items[iSnd] );
       if aItem = nil then continue;
 
       bSend := false;
@@ -119,13 +118,14 @@ begin
         aItem.LastTime  := nTick;
         FData := aItem;
         Synchronize( SyncProc );
-//        FOnNotify( FData );
-        inc( iSnd );
+//        FOnNotify( aItem );
       end;
+
+      inc( iSnd );
 			// 루프 한번에 한건만 조회 하기 위해..
 //      if iSnd > 0 then break;
-//      Application.ProcessMessages;
-    end;
+      Application.ProcessMessages;
+//    end;
   end;
 
 end;

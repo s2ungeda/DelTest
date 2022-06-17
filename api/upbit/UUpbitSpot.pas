@@ -257,7 +257,7 @@ begin
     else if sName = 'ticker' then
     	gUpReceiver.ParseSpotTicker2(sData)
     else if sName = 'status' then begin
-      App.Log(llInfo, 'test', '%d, %s : %s', [ iCode, sName, Copy(sData, 1, 100 ) ]  );
+//      App.Log(llInfo, 'test', '%d, %s : %s', [ iCode, sName, Copy(sData, 1, 100 ) ]  );
     	gUpReceiver.ParseDNWSate( sData );
     end;
 
@@ -600,13 +600,13 @@ var
 begin
 
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 500;
+  aItem.Interval  := 1000;
   aItem.Index     := 0;
   aItem.Resource	:= '/v1/orderbook';
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('ticker');
-  aItem.Interval  := 500;
+  aItem.Interval  := 1000;
   aItem.Index     := 1;
   aItem.Resource	:= '/v1/ticker';
   aITem.Method		:= rmGET;

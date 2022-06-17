@@ -78,9 +78,10 @@ begin
     asShow :
       begin
         //
-        App.Engine.ApiManager.StartRequest;
         App.Engine.ApiManager.SubscribeAll;
+        App.Engine.ApiManager.StartRequest;
         FrmDalinMain.Show;
+
       end;
   end;
 end;

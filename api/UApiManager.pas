@@ -274,7 +274,9 @@ procedure TApiManager.StartRequest;
 var
   i :  TExchangeKind;
 begin
-//  FExManagers[ekUpbit].StartRequest;  exit;
+//  FExManagers[ekUpbit].StartRequest;
+//  FExManagers[ekBithumb].StartRequest;
+//  exit;
   for I := ekBinance to High(TExchangeKind) do
   	FExManagers[i].StartRequest;
 end;

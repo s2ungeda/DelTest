@@ -352,7 +352,7 @@ var
   aItem : TCyclicItem;  
 begin
   aItem := CyclicItems.New('status');
-  aItem.Interval  := 1000;
+  aItem.Interval  := 3000;
   aItem.Index     := 0;
   aItem.Resource	:= '/sapi/v1/asset/assetDetail';  
   aITem.Method		:= rmGET;                                          

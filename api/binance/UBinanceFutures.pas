@@ -240,7 +240,7 @@ var
   aItem : TCyclicItem;  
 begin
   aItem := CyclicItems.New('orderbook');
-  aItem.Interval  := 500;
+  aItem.Interval  := 1000;
   aItem.Index     := 0;
   aItem.Resource	:= '/fapi/v1/ticker/bookTicker';  
   aITem.Method		:= rmGET;                                          
