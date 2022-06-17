@@ -244,7 +244,7 @@ begin
   begin
     data := Symbol1.DataTrace.Kip;
     sTmp := Format('%s : %s %% = %s, %s, %s', [ FormatDateTime('hh:nn:ss',  data.LastTime)
-      , FmtString( 2, data.Kip ),  Symbol1.PriceToStr( data.CurPrice ), FmtString( 2, data.OsPrice )
+      , FmtString( 2, data.Kip ),  Symbol1.PriceToStr( data.CurPrice ), FmtString( 4, data.OsPrice )
       , FmtString( 1, data.ExRate ) ]);
     mKip.Lines.Insert(0, sTmp );
     LastCnt1 := Symbol1.DataTrace.Kip.Cnt;

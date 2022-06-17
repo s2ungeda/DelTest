@@ -258,7 +258,7 @@ begin
     	gUpReceiver.ParseSpotTicker2(sData)
     else if sName = 'status' then begin
 //      App.Log(llInfo, 'test', '%d, %s : %s', [ iCode, sName, Copy(sData, 1, 100 ) ]  );
-    	gUpReceiver.ParseDNWSate( sData );
+     	gUpReceiver.ParseDNWSate( sData );
     end;
 
 end;
