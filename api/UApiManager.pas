@@ -32,11 +32,16 @@ type
     function ConnectAll: boolean;    
     function DisConnectAll : boolean;
 
+    function RequestBalance : boolean; 
+    function RequestPositons : boolean;
+    function RequestOrders: boolean;
+
     procedure StartRequest;
 
     procedure MakeCloseData;
     procedure RequestExRate;
     procedure CheckCount;
+
 
     function Sub(aQuote: TQuote) : boolean;
     function UnSub(aQuote:TQuote): boolean;
@@ -252,6 +257,8 @@ TBinanceSpotNMargin.RequestMaster
 	бщ
 TBinanceFutures.RequestMaster
 }
+
+
 procedure TApiManager.RequestExRate;
 begin
   FExRate.RequestData;
@@ -269,6 +276,8 @@ begin
 
   Result := true;
 end;
+
+
 
 procedure TApiManager.StartRequest;
 var
@@ -303,9 +312,7 @@ begin
     if not FExManagers[i].SubscribeAll then
       Exit (false);
     sleep(100);
-  end;
-
-
+  end;      
   Result := true;
 
 end;
@@ -361,6 +368,62 @@ begin
   end;
 
   Result := true;
+end;
+
+function TApiManager.RequestBalance: boolean;
+var
+  i :  TExchangeKind;
+begin
+
+	Result := FExManagers[ekBithumb].RequestBalance;
+  Exit;
+  
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].RequestBalance then
+      Exit (false);    
+  end;
+
+  Result := true;
+
+end;
+
+function TApiManager.RequestOrders;
+var
+  i :  TExchangeKind;
+begin
+
+	Result := FExManagers[ekBithumb].RequestOrders;
+  Exit;
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].ConnectAll then
+      Exit (false);        
+  end;
+
+  Result := true;
+
+end;
+
+function TApiManager.RequestPositons;
+var
+  i :  TExchangeKind;
+begin
+
+  Exit;
+	Result := FExManagers[ekBithumb].RequestBalance;
+
+
+  for I := ekBinance to High(TExchangeKind) do
+  begin
+    if not FExManagers[i].ConnectAll then
+      Exit (false);    
+  end;
+
+  Result := true;
+
 end;
 
 

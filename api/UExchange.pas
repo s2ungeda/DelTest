@@ -38,7 +38,6 @@ type
     FMaxVal: int64;
     FMinVal: int64;
     FRestExet: TRESTExecutionThread;
-
   protected
     function IsAsyncWaiting : boolean;
 
@@ -54,7 +53,9 @@ type
     function RequestAsync( aHandler: TCompletionHandler; AMethod : TRESTRequestMethod;  AResource : string  ) : boolean;
 
     procedure SetBaseUrl(url : string); inline;
-    procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; inline;
+    procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind = pkGETorPOST) ; overload; inline;
+    procedure SetParam( const aName, aValue : string;  aKind : TRESTRequestParameterKind ; 
+    	const aOpts: TRESTRequestParameterOptions) ; overload; inline;
     procedure Set406;
 
     procedure GetCodeList( var aList : TStringList ) ;
@@ -66,6 +67,10 @@ type
     function RequestMaster : boolean ; virtual; abstract;
     function RequestDNWState : boolean; virtual; abstract;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
+
+    function RequestBalance : boolean; virtual; abstract;    
+    function RequestPositons : boolean; virtual; abstract;
+    function RequestOrders: boolean; virtual; abstract;
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
     // cyclicthread notify
@@ -533,6 +538,12 @@ procedure TExchange.SetParam(const aName, aValue: string;
 begin
   FRestReq.AddParameter(aName, aValue, aKind);
 end;
+
+procedure TExchange.SetParam(const aName, aValue: string;
+  aKind: TRESTRequestParameterKind; const aOpts: TRESTRequestParameterOptions);
+begin
+  FRestReq.AddParameter(aName, aValue, aKind, aOpts);
+end;  
 
 
 end.

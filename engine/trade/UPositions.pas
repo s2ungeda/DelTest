@@ -32,6 +32,7 @@ type
     destructor Destroy; override;
 
 //    procedure AddFill(aFill: TFill);
+    procedure CalcOpenPL ;
 
     property Account: TAccount read FAccount write FAccount;
     property Symbol: TSymbol read FSymbol write FSymbol;    
@@ -42,8 +43,8 @@ type
 
     property EntryDate: TDateTime read FEntryDate;    
 
-	  property EntryPL: Double read FEntryPL;
-    property EntryOTE: Double read FEntryOTE;
+	  property EntryPL: Double read FEntryPL;			 // 실현손익
+    property EntryOTE: Double read FEntryOTE;    // 평가금액
 
     property LastPL : Double read GetLastPL write FLastPL;
 
@@ -64,12 +65,15 @@ type
     function FindOrNew(aAccount: TAccount; aSymbol: TSymbol): TPosition;
     function New(aAccount: TAccount; aSymbol: TSymbol;
       dVolume: double = 0.0; dAvgPrice: Double = 0.0;
-      dtEntry: TDateTime = 0.0): TPosition;
+      dtEntry: Double = 0.0): TPosition;
+
 
     procedure UpdatePosition;
     function GetSymbolPL( aAccount: TAccount; aSymbol : TSymbol ) : Double;
     function GetPL( aAccount : TAccount ) : double;
     function GetOpenPL( aAccount : TAccount ) : double;
+
+
 
     // 주문 제한 ( 신규
     function CheckOrderLimit( aAcnt : TAccount; aSymbol : TSymbol; iSide : integer;
@@ -86,6 +90,15 @@ uses
 	;  
 
 { TPosition }
+
+procedure TPosition.CalcOpenPL;
+begin
+	case FSymbol.Spec.Market of
+    mtSpot		: FEntryOTE := FVolume  * FSymbol.Last;
+    mtFutures	: 
+    	;
+  end;
+end;
 
 constructor TPosition.Create(aColl: TCollection);
 begin
@@ -303,7 +316,7 @@ begin
 end;
 
 function TPositions.New(aAccount: TAccount; aSymbol: TSymbol; dVolume,
-  dAvgPrice: Double; dtEntry: TDateTime): TPosition;
+  dAvgPrice: Double; dtEntry: Double): TPosition;
 begin
   Result := nil;
 

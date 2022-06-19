@@ -35,6 +35,7 @@ type
     Button16: TButton;
     Button17: TButton;
     edtUid: TEdit;
+    Button18: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -55,6 +56,7 @@ type
     procedure Button15Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
     procedure Button17Click(Sender: TObject);
+    procedure Button18Click(Sender: TObject);
   private
     procedure DoLog(sData: string);
     procedure LogFileWrite( stData: string);
@@ -94,7 +96,9 @@ uses
   Web.HTTPApp,
   IdMultipartFormData,
   System.Hash,
-  Uencrpyts
+  Uencrpyts  ,
+
+  System.Threading
   ;
 
 {$R *.dfm}
@@ -506,7 +510,7 @@ begin
   restReq.Resource := sTmp;
 
   sTime    := Gettamptime2(13 );
-  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=BTC&payment_currency=KRW'));
+  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=TRX&payment_currency=KRW'));
   sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
@@ -526,7 +530,7 @@ begin
   restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
 
   restReq.AddParameter('endPoint', '/info/account', TRESTRequestParameterKind.pkREQUESTBODY);
-  restReq.AddParameter('order_currency', 'BTC', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
 
   restReq.Method   := rmPOST;
@@ -534,6 +538,95 @@ begin
   memo1.Lines.Add( restRes.JSONValue.ToString );
 end;
 
+
+procedure TForm3.Button18Click(Sender: TObject);
+var
+  sCode, sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
+
+begin
+
+
+
+  try
+
+   //	TParallel.For( 0, aCodes.Count-1, procedure(i:integer)      
+
+
+    	sCode := 'APM'; //aCodes[i];
+      restClient.BaseURL := 'https://api.bithumb.com';
+      sTmp    := '/info/orders';
+      restReq.Resource := sTmp;
+
+      sTime    := Gettamptime2(13 );
+      sValue := HTTPEncode(UTF8Encode('endPoint=/info/orders&order_currency='+sCode));
+      sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);  
+      sValue := '/info/orders' +  chr(0) + sValue +  chr(0 ) + sTime;
+      sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+      sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+
+      restReq.Params.Clear;
+
+      restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+      restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+      restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+
+      restReq.AddParameter('endPoint', '/info/orders', TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('order_currency', sCode, TRESTRequestParameterKind.pkREQUESTBODY);
+
+
+      restReq.Method   := rmPOST;
+      restReq.Execute;  
+      memo1.Lines.Add( restRes.JSONValue.ToString );
+
+      //
+
+    	sCode := 'APM'; //aCodes[i];
+      restClient.BaseURL := 'https://api.bithumb.com';
+      sTmp    := '/info/user_transactions';
+      restReq.Resource := sTmp;
+
+      sTime    := Gettamptime2(13 );
+      sValue := HTTPEncode(UTF8Encode('endPoint=/info/user_transactions&order_currency='+sCode+'&payment_currency=KRW'));
+      sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);  
+      sValue := '/info/user_transactions' +  chr(0) + sValue +  chr(0 ) + sTime;
+      sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+      sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+
+      restReq.Params.Clear;
+
+      restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+      restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+      restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+
+      restReq.AddParameter('endPoint', '/info/user_transactions', TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('order_currency', sCode, TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
+
+
+      restReq.Method   := rmPOST;
+      restReq.Execute;  
+      memo1.Lines.Add( restRes.JSONValue.ToString );             
+  
+ 
+  finally
+
+  end;
+
+end;
 
 
 procedure TForm3.Button8Click(Sender: TObject);
@@ -937,7 +1030,7 @@ begin
 	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';    
     sJson  := 'market=KRW-TRX&side=bid&volume=60&price=90&order_type=limit';
 
-    sOut  := vHash.gethashstring( sJson, SHA512 );    
+    sOut  := vHash.gethashstring( sJson, SHA512 );
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );    
@@ -975,6 +1068,8 @@ begin
    	aObj.Free;
   end;
 end;
+
+
 
 procedure TForm3.Button7Click(Sender: TObject);
 var

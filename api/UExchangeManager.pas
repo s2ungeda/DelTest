@@ -44,6 +44,11 @@ type
     function InitMarketWebSockets : boolean ; virtual; abstract;
     function SubscribeAll : boolean; virtual; abstract;
     function MakeCloseData : boolean; virtual; abstract;
+
+    function RequestBalance : boolean; virtual; abstract;    
+    function RequestPositons : boolean; virtual; abstract;
+    function RequestOrders: boolean; virtual; abstract;
+        
     procedure UnSubscribeAll ; virtual; abstract;
 
 

@@ -5,6 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON , USymbols, UExchangeManager
+  , UAccounts , UPositions, UOrders
   , UApiTypes, UOtherData
   ;
 
@@ -32,6 +33,9 @@ type
     procedure ParseSpotOrderBook( aData : string ); overload;
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
     procedure ParseCandleData( aKind: TMajorSymbolKind;  sUnit , aData : string );
+
+    procedure ParseBalance( aData : string );
+    procedure ParseOrders( aData : string );
 
     // private
     procedure ParseAccounts( aData : string );
@@ -139,8 +143,139 @@ end;
 // 24 는 0 시기준 -> 뒤에서 부터 24까지만..
 // 30 분 은 날자 파싱해서..오늘날자 까지만. 만.
 
-procedure TBithParse.ParseAccounts(aData: string);
+procedure TBithParse.ParseAccounts(aData: string);         
 begin
+
+end;
+
+procedure TBithParse.ParseBalance(aData: string);
+var
+  aObj, aBals : TJsonObject;
+  iResult : integer;
+  aAcnt	: TAccount;
+  aPos  : TPosition;
+  aSymbol: TSymbol;
+  sCode : string;
+  I: Integer;
+  
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseBalance data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aObj := nil;
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;  
+
+  try
+    iResult := StrToInt( aObj.GetValue('status').Value );
+    if iResult <> 0 then begin
+      App.Log(llError, 'Request Result %d (ParseBalance)', [ iResult ] );
+      Exit;
+    end;  
+
+    aBals	:= aObj.GetValue('data') as TJsonObject;    
+    if aBals = nil then Exit;    
+
+    aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind);
+    if aAcnt = nil then Exit;
+  //   TSettleCurType = ( scNone, scKRW, scUSDT, scBTC );
+  	aAcnt.TradeAmt[scKRW]			:= aBals.GetValue<double>('total_krw', 0.0);
+    aAcnt.AvailableAmt[scKRW]	:= aBals.GetValue<double>('available_krw', 0.0);
+
+//  	aAcnt.TradeAmt[scBTC]			:= aObj.GetValue<double>('total_btc', 0.0);
+//    aAcnt.AvailableAmt[scBTC]	:= aObj.GetValue<double>('available_btc', 0.0);    
+
+    for I := 0 to FParent.Codes.Count-1 do
+		begin
+    	sCode := FParent.Codes[i] ;
+      aSymbol	:= App.Engine.SymbolCore.FindSymbol( ekBithumb, sCode );
+      if aSymbol = nil then continue;            
+			sCode	:= LowerCase( aSymbol.Code );
+      var dVal, dPrice : double;  dVal := 0;  dPrice := 0;
+      
+      dVal := aBals.GetValue<double>( 'total_'+sCode , 0 );
+      if isZero( dVal ) then continue;    
+                       
+      dPrice:= aBals.GetValue<double>( 'xcoin_last_'+sCode , 0 );      
+      aPos	:= App.Engine.TradeCore.Positions[ekBithumb].New( aAcnt, aSymbol, dVal, dPrice );    
+      aPos.CalcOpenPL;
+    end;
+		  
+  finally
+    if aObj <> nil  then aObj.Free;    
+  end;
+end;
+
+procedure TBithParse.ParseOrders(aData: string);
+var
+  aObj, aObj2 : TJsonObject;
+  aArr : TJsonArray;
+  aVal : TJsonValue;
+  iResult : integer;
+  aAcnt	: TAccount;
+  aOrder : TOrder;
+  aSymbol: TSymbol;
+  sCode, sOrderId : string;
+  I, iSide : Integer;
+  dPrice , dVolume : double;
+  
+begin
+
+  if aData = '' then
+  begin
+    App.Log(llError, '%s ParseOrders data is empty', [ TExchangeKindDesc[FParent.ExchangeKind] ] ) ;
+    Exit;
+  end;
+
+  aObj := nil;
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;  
+
+  try
+    iResult := StrToInt( aObj.GetValue('status').Value );
+    if iResult <> 0 then begin
+      App.Log(llError, 'Request Result %d (ParseOrders) : %s', [ iResult, aData ] );
+      Exit;
+    end;  
+
+    aArr	:= aObj.GetValue('data') as TJsonArray;    
+    if aArr = nil then Exit;    
+
+    aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind);
+    if aAcnt = nil then Exit;
+
+    for I := 0 to aArr.Size-1 do
+    begin
+    	aVal	:= aArr.Get(i);
+      sCode	:= aVal.GetValue<string>('order_currency', '');
+      if sCode = '' then continue;
+
+    	aSymbol := App.Engine.SymbolCore.FindSymbol(ekBithumb, sCode);
+      if aSymbol = nil then continue;
+
+      sOrderId:= aVal.GetValue<string>('order_id');
+      aOrder	:= App.Engine.TradeCore.Orders[ekBithumb].Find( aAcnt, aSymbol, sOrderId);
+
+      if aOrder = nil then
+      begin
+
+      	iSide	:= ifThen( aVal.GetValue<string>('type') = 'bid', 1, -1 );
+        dVolume	:= aVal.GetValue<double>( 'units', 0 );
+        dPrice	:= aVal.GetValue<double>( 'price', 0 );
+      
+        aOrder	:= App.Engine.TradeCore.Orders[ekBithumb].NewOrder( aAcnt
+        	, aSymbol, iSide, dVolume, pcLimit, dPrice, tmGTC );
+
+
+      end;       
+    
+    end;   
+
+		  
+  finally
+    if aObj <> nil  then aObj.Free;    
+  end;
 
 end;
 
@@ -287,6 +422,8 @@ begin
   end;
 
 end;
+
+
 
 procedure TBithParse.ParseSocketData(aMarket: TMarketType; aData: string);
 var

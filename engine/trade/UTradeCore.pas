@@ -29,6 +29,10 @@ type
     constructor Create;
     destructor Destroy; override;      
 
+    procedure AccountLoad;
+
+    function FindAccount( ekType : TExchangeKind ) : TAccount;
+
     property Accounts: TAccountArray read FAccounts;
     property Orders: TOrderArray read FOrders;
     property Fills: TFillArray read FFills;
@@ -37,7 +41,24 @@ type
 
 implementation
 
+uses
+	GApp
+  ;
+
 { TTradeCore }
+
+procedure TTradeCore.AccountLoad;
+var
+  I: TExchangeKind;
+  aAcnt : TAccount;
+begin  
+
+  for I := ekBinance to High( TExchangeKind ) do
+  begin
+  	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtSpot )
+    	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I    );
+  end;
+end;
 
 constructor TTradeCore.Create;
 var
@@ -68,6 +89,13 @@ begin
   end;
 
   inherited;
+end;
+
+function TTradeCore.FindAccount(ekType: TExchangeKind): TAccount;
+begin
+	Result := nil;
+	if FAccounts[ekType] <> nil then
+  	Result := FAccounts[ekType].Find(ektype);
 end;
 
 end.

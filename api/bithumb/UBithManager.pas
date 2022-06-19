@@ -27,10 +27,15 @@ type
     function InitMarketWebSockets : boolean ; override;
     function SubscribeAll : boolean; override;
     procedure UnSubscribeAll ; override;
+
+    function RequestBalance : boolean; override;
+    function RequestPositons : boolean; override;
+    function RequestOrders: boolean; override;
+    
     function MakeCloseData : boolean ; override;
 
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
-    function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
+    function UnSubscrib( aSymbol : TSymbol ) : boolean; override;    
 
     procedure OnDepthTimer(Sender: TObject);
     procedure OnSendDoneEvent(  Sender : TObject );
@@ -130,6 +135,7 @@ begin
 end;
 
 
+
 procedure TBithManager.OnSendDoneEvent(Sender: TObject);
 begin
   if Sender = FParse then
@@ -174,6 +180,22 @@ end;
 procedure TBithManager.UnSubscribeAll;
 begin
   inherited;
+
+end;
+
+
+function TBithManager.RequestBalance: boolean;
+begin
+	Result := Exchanges[mtSpot].RequestBalance;
+end;
+
+function TBithManager.RequestOrders: boolean;
+begin
+	Result := Exchanges[mtSpot].RequestOrders;
+end;
+
+function TBithManager.RequestPositons: boolean;
+begin
 
 end;
 

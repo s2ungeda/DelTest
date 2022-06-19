@@ -28,6 +28,9 @@ type
     procedure parseOrderBook;
     procedure parseTicker;
     procedure MakeRest;
+
+    function EncodePath( sRrsc, sPoint, sTime  : string ) : string;
+    
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -45,6 +48,10 @@ type
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
 
+	  function RequestBalance : boolean; override;
+    function RequestPositons : boolean; override;
+    function RequestOrders: boolean; override;
+
   end;
 
 //var
@@ -53,10 +60,11 @@ type
 implementation
 
 uses
-  GApp   , UApiConsts
+  GApp , GLibs, UApiConsts ,  UEncrypts
   , UBithParse, URestItems ,UCyclicItems, URestRequests
   , USymbolUtils
   , Math
+  , Web.HTTPApp, idcodermime, IdGlobal
   ;
 
 { TBinanceSpotNMargin }
@@ -77,6 +85,23 @@ begin
 
   inherited;
 end;          
+
+function TBithSpot.EncodePath(sRrsc, sPoint, sTime : string): string;
+var
+	sValue : string;
+begin
+	sValue := HTTPEncode(UTF8Encode(sPoint));
+  sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
+
+  Result := sRrsc + chr(0) + sValue +  chr(0 ) + sTime;
+end;
 
 function TBithSpot.ParsePrepareMaster : integer;
 var
@@ -262,6 +287,8 @@ begin
   //  LeaveCriticalSection(CriticalSection);
   end;
 end;
+
+
 
 function TBithSpot.RequestCandleData(sUnit, sCode: string): boolean;
 var
@@ -454,6 +481,114 @@ begin
    // LeaveCriticalSection(CriticalSection);
   end;
 
+end;
+
+
+
+function TBithSpot.RequestBalance: boolean;
+var
+	sRsrc, sJson, sOut, sTime, sData, sVal, sSig : string;
+  sParam1 : string;
+begin
+  try
+
+  	SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    
+    sParam1	:= 'ALL';
+    sRsrc := '/info/balance';
+    sTime := GetTimestamp;
+    sVal	:= EncodePath( sRsrc, Format('endPoint=%s&currency=%s', [ sRsrc, sParam1] ), sTime );
+
+    sSig	:= CalculateHMACSHA512( sVal, App.Engine.ApiConfig.GetSceretKey( GetExKind, mtSpot) );
+    sData	:= TIdEncoderMIME.EncodeString( sSig, IndyTextEncoding_UTF8 );
+
+// 		Set406;
+
+  	SetParam('Api-Key', App.Engine.ApiConfig.GetApiKey( GetExKind, mtSpot), TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+		SetParam('Api-Sign', sData , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+		SetParam('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+
+    SetParam('endPoint', sRsrc, TRESTRequestParameterKind.pkREQUESTBODY);
+    SetParam('currency', sParam1, TRESTRequestParameterKind.pkREQUESTBODY);    
+
+    if Request( rmPOST, sRsrc, '', sJson, sOut ) then
+    begin
+      gBithReceiver.ParseBalance( sJson );
+    end else
+    begin
+      App.Log( llError, '', 'Failed %s RequestBalance (%s, %s)',
+        [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+      Exit( false );
+    end;
+    
+	except
+  end;
+
+  Result := true;
+end;
+
+function TBithSpot.RequestPositons: boolean;
+begin
+  try
+    
+	except
+  end;
+
+  Result := true;
+end;
+
+function TBithSpot.RequestOrders: boolean;
+var
+	sRsrc, sJson, sOut, sTime, sData, sVal, sSig : string;
+  sParam1 : string;
+  I: Integer;
+  aSymbol : TSymbol;
+begin
+  try
+
+  	SetBaseUrl( App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtSpot ) );
+    
+    sParam1	:= 'ALL';
+    sRsrc := '/info/orders';
+
+
+    for I := 0 to App.Engine.SymbolCore.Symbols[ekBithumb].Count-1 do
+		begin
+
+    	sParam1	:= App.Engine.SymbolCore.Symbols[ekBithumb].Symbols[i].Code;
+    
+      sTime := GetTimestamp;
+      sVal	:= EncodePath( sRsrc, Format('endPoint=%s&order_currency=%s', [ sRsrc, sParam1] ), sTime );
+
+      sSig	:= CalculateHMACSHA512( sVal, App.Engine.ApiConfig.GetSceretKey( GetExKind, mtSpot) );
+      sData	:= TIdEncoderMIME.EncodeString( sSig, IndyTextEncoding_UTF8 );
+
+  // 		Set406;
+
+      SetParam('Api-Key', App.Engine.ApiConfig.GetApiKey( GetExKind, mtSpot), TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+      SetParam('Api-Sign', sData , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+      SetParam('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+
+      SetParam('endPoint', sRsrc, TRESTRequestParameterKind.pkREQUESTBODY);
+      SetParam('order_currency', sParam1, TRESTRequestParameterKind.pkREQUESTBODY);    
+
+      if Request( rmPOST, sRsrc, '', sJson, sOut ) then
+      begin
+        gBithReceiver.ParseOrders( sJson );
+      end else
+      begin
+        App.Log( llError, '', 'Failed %s RequestOrders (%s, %s)',
+          [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+        Exit( false );
+      end;  
+      
+	    sleep(30);
+    end;
+    
+	except
+  end;
+
+  Result := true;
 end;
 
 procedure TBithSpot.OnHTTPProtocolError(Sender: TCustomRESTRequest);

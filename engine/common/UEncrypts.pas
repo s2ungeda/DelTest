@@ -10,6 +10,7 @@ uses
 
 
 function CalculateHMACSHA256(const value, salt: String): String;
+function CalculateHMACSHA512(const value, salt: String): String;
 function GetUUID : string;
 
 implementation
@@ -31,6 +32,25 @@ begin
     hmac.Free;
   end;
 end;
+
+ function CalculateHMACSHA512(const value, salt: String): String;
+var
+  hmac: TIdHMACSHA512;
+  hash: TIdBytes;
+begin
+  LoadOpenSSLLibrary;
+  if not TIdHashSHA512.IsAvailable then
+    raise Exception.Create('SHA512 hashing is not available!');
+  hmac := TIdHMACSHA512.Create;
+  try
+    hmac.Key := IndyTextEncoding_UTF8.GetBytes(salt);
+    hash := hmac.HashValue(IndyTextEncoding_UTF8.GetBytes(value));
+    Result := LowerCase(ToHex(hash));
+  finally
+    hmac.Free;
+  end;
+
+ end;
 
 function GetUUID : string;
 var
