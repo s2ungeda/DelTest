@@ -55,8 +55,15 @@ begin
 
   for I := ekBinance to High( TExchangeKind ) do
   begin
-  	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtSpot )
-    	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I    );
+    if i = ekBinance then
+    begin
+    	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtSpot )
+         	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I,  amSpot   );
+    	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtFutures )
+        	,App.Engine.ApiConfig.GetSceretKey( I, mtFutures )   , I  , amFuture  );
+    end else
+    	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtSpot )
+      	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I    );
   end;
 end;
 

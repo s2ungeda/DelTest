@@ -4,7 +4,12 @@ uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON  //, Rest.Json , Rest.Types
   , UApiTypes    , UExchangeManager
+  , UAccounts, UPositions, UOrders
   ;
+
+const
+  SUCC_CODE = 200;
+
 type
   TBinanceParse = class
   private
@@ -26,6 +31,7 @@ type
     procedure ParseMarginPair( aData : string );
     procedure ParseDNWState( aData : string );
     procedure ParseSpotTicker( aData : string );
+    procedure ParseSpotBalance(aData : string );
 
     procedure ParseFuttMaster( aData : string );
     function  ParsePrepareFuttMaster( aData : string ) : boolean;
@@ -716,6 +722,58 @@ begin
   end;
 end;
 
+procedure TBinanceParse.ParseSpotBalance(aData: string);
+var
+  aObj, aObj2 : TJsonObject;
+  aArr, aArr2 : TJsonArray;
+  aVal : TJsonValue;
+  iRes : integer;
+  sTmp : string;
+  i, j : integer;
+  //
+  aAcnt : TAccount;
+  aSymbol : TSymbol;
+  aPos    : TPosition;
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseSpotBalance data is empty') ;
+    Exit;
+  end;
+
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+    iRes := aObj.GetValue<integer>('code');
+    if iRes <> SUCC_CODE then
+    begin
+      sTmp  := aObj.GetValue('msg').Value;
+      App.Log(llError, '%s ParseBalance Result %d %s',
+        [ TExShortDesc[FParent.ExchangeKind], iRes, sTmp ] );
+      Exit;
+    end;
+
+    aArr  := aObj.GetValue('snapshotVos') as TJsonArray;
+
+    for I := aArr.Size-1 downto 0 do
+    begin
+      aObj2 := aArr.Get(i).FindValue('data') as TJsonObject;
+      aArr2 := aObj2.GetValue('balances') as TJsonArray;
+
+      for j := 0 to aArr2.Size-1 do
+      begin
+        aVal  := aArr2.Get(j);
+
+
+      end;
+
+      break;
+    end;
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
+end;
+
 
 procedure TBinanceParse.ParseSpotTrade(aJson: TJsonObject);
 var
@@ -759,6 +817,8 @@ begin
     Update( dtTime );
   end;
 end;
+
+
 
 
 procedure TBinanceParse.ParseSpotBookTicker(aJson: TJsonObject);

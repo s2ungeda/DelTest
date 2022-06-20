@@ -37,6 +37,9 @@ type
     function RequestMaster : boolean ; override;
     function RequestDNWState : boolean; override;
 
+	  function RequestBalance : boolean; override;
+    function RequestOrders: boolean; override;
+
   end;
 
 implementation
@@ -106,6 +109,11 @@ begin
 end;
 
 
+
+function TBinanceSpotNMargin.RequestOrders: boolean;
+begin
+
+end;
 
 // 저장해놓은 마스터 string 를 다시 파싱하면 됨.
 function TBinanceSpotNMargin.RequestSpotMaster: boolean;
@@ -224,6 +232,35 @@ end;
 procedure TBinanceSpotNMargin.ReceiveDNWState;
 begin
   gBinReceiver.ParseDNWState( RestReq.Response.Content );
+end;
+
+function TBinanceSpotNMargin.RequestBalance: boolean;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+begin
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+  SetParam('type', 'SPOT');
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+  if Request( rmGET, '/sapi/v1/accountSnapshot', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseDNWState( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestBalance (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
+
+  Result := true;
+
 end;
 
 function TBinanceSpotNMargin.RequestDNWState : boolean;
