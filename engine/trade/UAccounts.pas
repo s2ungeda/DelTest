@@ -2,29 +2,53 @@ unit UAccounts;
 interface
 uses
   system.Classes, system.SysUtils
+  , USymbols
   , UTypes, UApiTypes
   ;
 type
+
+  TBalance = class
+  public
+    Free    : double;
+    Locked  : double;
+//    Asset   : string;
+//    Currency: string;
+    Symbol  : TSymbol;
+    constructor Create;
+    procedure SetItem( dFree, dLock : double; aSymbol : TSymbol );
+    function  Represent : string;
+  end;
+
   TAcntAmtArray = array [TSettleCurType] of double;
+
 	TAccount = class( TCollectionItem )
   private
     FAccountType: TAccountMarketType;
     FExchangeKind: TExchangeKind;
     FApiKey: string;
     FPriKey: string;
+    FBalances: TStrings;
     function GetName: string;
   public
     AvailableAmt :  array [TSettleCurType] of double;            // 주문가능금액
     TradeAmt     :  array [TSettleCurType] of double;            // 약정금액 ( 보유자산 )
+
     constructor Create( aColl : TCollection ); override;
     destructor Destroy; override;
+
+    function New( sCode : string ): TBalance;
+    function Find( sCode : string): TBalance;
+
     property AccountType  : TAccountMarketType read FAccountType write FAccountType;
     property ExchangeKind : TExchangeKind read FExchangeKind write FExchangeKind;
 
     property ApiKey : string read FApiKey;
     property PriKey : string read FPriKey;
     property Name	  : string read GetName;
+
+    property Balances : TStrings read FBalances;
   end;
+
   TAccounts = class(TCollection)
   private
     FPresentName: string;
@@ -69,15 +93,42 @@ begin
     TradeAmt[i]			:= 0.0;
     AvailableAmt[i]	:= 0.0;
   end;
+
+  FBalances := TStringList.Create;
 end;
 destructor TAccount.Destroy;
 begin
+  FBalances.Free;
   inherited;
 end;
+
+
 function TAccount.GetName: string;
 begin       
 	Result := TExchangeKindShortDesc[ FExchangeKind ]+'.'+ TAccountMarketTypeDesc[ FAccountType];
 end;
+
+function TAccount.New(sCode: string): TBalance;
+begin
+  Result := Find(sCode);
+  if Result = nil then
+  begin
+    Result := TBalance.Create;
+    FBalances.AddObject( sCode, Result );
+  end ;
+end;
+
+function TAccount.Find(sCode: string): TBalance;
+var
+  iRes : integer;
+begin
+  iRes := FBalances.IndexOf( sCode );
+  if iRes < 0 then
+    Result := nil
+  else
+    Result := FBalances.Objects[iRes] as TBalance;
+end;
+
 {procedure TAccount.SetAvailableAmt(const Value: TAcntAmtArray);
 begin
   FAvailableAmt := Value;
@@ -236,4 +287,37 @@ end;
 function TAccountList.Represent: String;
 begin
 end;
+{ TBalance }
+
+constructor TBalance.Create;
+begin
+  Free    := 0.0;
+  Locked  := 0.0;
+  Symbol  := nil;
+end;
+
+function TBalance.Represent: string;
+begin
+
+  Result := 'None';
+
+  if Symbol <> nil then
+  begin
+    Result :=   TExChangeKindDesc[ Symbol.Spec.ExchangeType ]
+      + ' , ' + TMarketTypeDesc[ Symbol.Spec.Market ]
+      + ' , ' + Symbol.Spec.BaseCode
+      + ' , ' + Symbol.Spec.SettleCode
+      + ' , ' + Format('%.*n', [ 8, Free ] )
+      + ' , ' + Format('%.*n', [ 8, Locked ] );
+
+  end;
+end;
+
+procedure TBalance.SetItem(dFree, dLock: double; aSymbol: TSymbol);
+begin
+  Free    := dFree;
+  Locked  := dLock;
+  Symbol  := aSymbol;
+end;
+
 end.

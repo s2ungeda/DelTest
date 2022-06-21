@@ -19,6 +19,9 @@ type
     edtSec: TLabeledEdit;
     refreshTimer: TTimer;
     btnSort: TButton;
+    cbAuto2: TCheckBox;
+    edtSec2: TLabeledEdit;
+    reLoadTimer: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
@@ -29,9 +32,11 @@ type
     procedure cbAutoClick(Sender: TObject);
     procedure RefreshClick(Sender: TObject);
     procedure btnSortClick(Sender: TObject);
+    procedure reLoadTimerTimer(Sender: TObject);
+    procedure cbAuto2Click(Sender: TObject);
   private
     FFontSize: integer;
-    FRow , FSaveRow , FTerm, FCount   : integer;
+    FRow , FSaveRow , FTerm, FCount, FCount2, FTerm2   : integer;
     FSymbols : TList;
     FPrecision : integer;
     FFontName: string;
@@ -70,7 +75,7 @@ uses
 procedure TFrmDnwStates.FormActivate(Sender: TObject);
 begin
   //refreshTimer.Interval := StrToInt( edtSec.Text );
-  refreshTimer.Enabled := true;
+//  refreshTimer.Enabled := true;
 end;
 procedure TFrmDnwStates.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -110,6 +115,9 @@ begin
   FCount    := 0;
   FTerm     := StrToInt( edtSec.Text );
   FPrecision:= App.GetPrecision;
+
+  FCount2   :=0;
+  FTerm2    := StrToInt(edtSec2.Text);
 //  for I := 0 to prcTbl2_TitleCnt - 1 do
 //  begin
 //    sgQuote.Cells[i,0] := prcTbll2_Title[i];
@@ -522,12 +530,20 @@ begin
   refreshTimer.Enabled := cbAuto.Checked;
 end;
 
+procedure TFrmDnwStates.cbAuto2Click(Sender: TObject);
+begin
+  FTerm2 := StrToInt( edtSec2.Text );
+  reLoadTimer.Enabled := cbAuto2.Checked;
+  FCount2  := 0;
+end;
+
 procedure TFrmDnwStates.cbAutoClick(Sender: TObject);
 begin
   FTerm := StrToInt( edtSec.Text );
   refreshTimer.Enabled := cbAuto.Checked;
   FCount  := 0;
 end;
+
 procedure TFrmDnwStates.ClearGrid;
 var
   j : TExchangeKind;
@@ -552,6 +568,9 @@ begin
   if aStorage = nil  then Exit;
   edtSec.Text     := aStorage.FieldByName('Second' ).AsStringDef('10');
   cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
+
+  edtSec2.Text     := aStorage.FieldByName('Second2' ).AsStringDef('10');
+  cbAuto2.Checked  := aStorage.FieldByName('Auto2' ).AsBooleanDef(true);
 end;
 
 procedure TFrmDnwStates.RefreshClick(Sender: TObject);
@@ -578,11 +597,24 @@ begin
   end;
   inc(FCount);
 end;
+procedure TFrmDnwStates.reLoadTimerTimer(Sender: TObject);
+begin
+  if FCount2 >= FTerm2 then
+  begin
+    btnSortClick( nil );
+    FCount2 := 0;
+  end;
+  inc(FCount2);
+end;
+
 procedure TFrmDnwStates.SaveEnv(aStorage: TStorage);
 begin
   if aStorage = nil  then Exit;
   aStorage.FieldByName('Second' ).AsString := edtSec.Text;
   aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
+
+  aStorage.FieldByName('Second2' ).AsString := edtSec2.Text;
+  aStorage.FieldByName('Auto2' ).AsBoolean  := cbAuto2.Checked;
 end;
 
 end.

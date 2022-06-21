@@ -15,6 +15,7 @@ type
 
 function AppDir : String;
 function ComposeFilePath(stDirs: array of String; cDelimiter: Char = '/'): String;
+function FileVersionToStr(FileName: String): String;
 
 //----------------------------------------
 function GetPrecision( aText : string ) : integer;
@@ -50,12 +51,8 @@ function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; 
 function CheckZero( dVal : double ) : boolean;
 
 
-
-
-
-
-
 implementation
+
 
 function AppDir : String;
 begin
@@ -92,6 +89,34 @@ begin
 
     // remove double delimiters
   Result := StringReplace(Result, cDelimiter + cDelimiter, cDelimiter, [rfReplaceAll]);
+end;
+
+
+function FileVersionToStr(FileName: String): String;
+var
+  Size, Size2: DWord;
+  pT, pT2: Pointer;
+begin
+  Result := '';
+  Size := GetFileVersionInfoSize(PChar(FileName), Size2);
+  if Size > 0 then
+  begin
+    GetMem(Pt, Size);
+    try
+      GetFileVersionInfo(PChar(FileName), 0, Size, Pt);
+      VerQueryValue(Pt, '\', Pt2, Size2);
+      with TVSFixedFileInfo(Pt2^) do
+      begin
+        Result := IntToStr(HiWord(dwFileVersionMS)) + '.' +//major version
+                  IntToStr(LoWord(dwFileVersionMS)) + '.' +//minor version
+                  IntToStr(HiWord(dwFileVersionLS)) + '.' +//release
+                  IntToStr(LoWord(dwFileVersionLS));       //build
+      end;
+    finally
+      FreeMem(Pt);
+    end;//try
+  end;//if
+
 end;
 
 

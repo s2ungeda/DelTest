@@ -81,14 +81,13 @@ begin
     WaitForSingleObject( Handle,  INTERVAL );
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
 //      if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
+    if Terminated then break;
 
       if iSnd >= FItems.Count then
         iSnd := 0;
 
 //    for I := 0 to FItems.Count-1 do
 //    begin
-
-      if Terminated then break;
 
       aItem := TRequest( FItems.Items[iSnd] );
       if aItem = nil then continue;

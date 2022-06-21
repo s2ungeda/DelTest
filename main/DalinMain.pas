@@ -90,6 +90,8 @@ begin
 
   App.Log(llInfo, '', '---start---');
 
+  Caption := Format('%s ver.%s', [Caption  , FileVersionToStr(Application.ExeName)]);
+
 end;
 
 procedure TFrmDalinMain.DalinStatusEvent(asType: TAppStatus);

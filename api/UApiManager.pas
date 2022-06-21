@@ -375,7 +375,8 @@ var
   i :  TExchangeKind;
 begin
 
-	Result := FExManagers[ekBithumb].RequestBalance;
+	Result := FExManagers[ekBinance].RequestBalance and
+            FExManagers[ekBithumb].RequestBalance;
   Exit;
   
 

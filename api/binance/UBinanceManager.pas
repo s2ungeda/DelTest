@@ -29,6 +29,10 @@ type
     procedure UnSubscribeAll ; override;
     function MakeCloseData : boolean ; override;
 
+    function RequestBalance : boolean; override;
+    function RequestPositons : boolean; override;
+    function RequestOrders: boolean; override;
+
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
 
@@ -133,6 +137,22 @@ procedure TBinanceManager.OnTimer(Sender: TObject);
 begin
   // 1초에 한번
   //Exchanges[mtSpot].RequestDNWState;
+
+end;
+
+function TBinanceManager.RequestBalance: boolean;
+begin
+  Result := Exchanges[mtSpot].RequestBalance
+    and Exchanges[mtFutures].RequestBalance
+end;
+
+function TBinanceManager.RequestOrders: boolean;
+begin
+
+end;
+
+function TBinanceManager.RequestPositons: boolean;
+begin
 
 end;
 

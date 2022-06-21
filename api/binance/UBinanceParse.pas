@@ -729,11 +729,13 @@ var
   aVal : TJsonValue;
   iRes : integer;
   sTmp : string;
+  dTmp, dTmp2, dVol : double;
   i, j : integer;
   //
   aAcnt : TAccount;
   aSymbol : TSymbol;
   aPos    : TPosition;
+  aBal    : TBalance;
 begin
   if aData = '' then
   begin
@@ -754,6 +756,9 @@ begin
 
     aArr  := aObj.GetValue('snapshotVos') as TJsonArray;
 
+    aAcnt := App.Engine.TradeCore.FindAccount( Fparent.ExchangeKind, amSpot );
+    if aAcnt = nil then Exit;
+
     for I := aArr.Size-1 downto 0 do
     begin
       aObj2 := aArr.Get(i).FindValue('data') as TJsonObject;
@@ -763,6 +768,32 @@ begin
       begin
         aVal  := aArr2.Get(j);
 
+        sTmp  := aVal.GetValue<string>('asset', '');
+        if sTmp = '' then continue;
+
+        if sTmp = 'USDT' then
+        begin
+          aAcnt.AvailableAmt[scUSDT] := aVal.GetValue<double>('free', 0 );
+          dTmp  := aVal.GetValue<double>('locked', 0 );
+          aAcnt.TradeAmt[scUSDT]  :=  aAcnt.AvailableAmt[scUSDT] + dTmp;
+        end else
+        begin
+          dTmp  := aVal.GetValue<double>('free', 0 );
+          dTmp2 := aVal.GetValue<double>('locked', 0 );
+          dVol  := dTmp + dTmp2 ;
+
+          if CheckZero( dVol ) then
+            continue;
+
+          aSymbol := App.Engine.SymbolCore.FindSymbol( ekBinance, sTmp+'USDT');
+          if aSymbol = nil then continue;
+
+          aBal  := aAcnt.New( sTmp );
+          if aBal <> nil then begin
+            aBal.SetItem(dTmp, dTmp2, aSymbol);
+            App.DebugLog('balance : %s', [ aBal.Represent ] );
+          end;
+        end;
 
       end;
 

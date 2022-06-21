@@ -2,6 +2,7 @@ unit UUpbitWebSockets;
 interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
+  , UQuoteTimers
   , UWebSockets  , USymbols
   , UApiTypes
   ;
@@ -11,6 +12,10 @@ type
     FMarketType: TMarketType;
     FSubList: TStrings;
     FParam, FParam2 : string;
+
+    FTimer   : TQuoteTimer;
+    FSendList: TStrings;
+
     function GetDescript: string;
     procedure OnAfterConnect(Sender: TObject); override;
 //    procedure OnAfterDisconnect(Sender: TObject);  override;
@@ -27,6 +32,8 @@ type
       // 한종목씩
     procedure SubScribe( aSymbol : TSymbol ) ;
     procedure UnSubScribe( aSymbol : TSymbol ) ;
+
+    procedure OnSubTimer( Sender : TObject );
 
     procedure SubscribeAll; override;
     procedure MakeSubData; override;
@@ -56,10 +63,18 @@ begin
   begin
     HeartBeatOptions.Enabled := true;
   end;
+
+  FSendList:= TStringList.Create;
+
+  FTimer  := App.Engine.QuoteBroker.Timers.New;
+  FTimer.Interval := 500;
+  FTimer.OnTimer  := OnSubTimer;
+
 end;
 
 destructor TUpbitWebSocket.Destroy;
 begin
+  FSendList.Free;
   FSubList.Free;
   inherited;
 end;
@@ -125,6 +140,17 @@ begin
   gUpReceiver.ParseSocketData(FMarketType, S);
 end;
 
+procedure TUpbitWebSocket.OnSubTimer(Sender: TObject);
+var
+  sTmp : string;
+begin
+  if FSendList.Count <= 0 then Exit;
+
+  sTmp := FSendList[0];
+  FSendList.Delete(0);
+  SendData( sTmp );
+end;
+
 procedure TUpbitWebSocket.SubScribe(aSymbol: TSymbol);
 var
   sData : string;
@@ -147,12 +173,18 @@ begin
 
   if App.AppStatus <> asShow then Exit;
 
-  SendData( GetSubData );
+  //SendData( GetSubData );
+
+  if FTimer.Enabled then
+    FSendList.Add( GetSubData )
+  else
+    SendData( GetSubData );
 end;
 
 procedure TUpbitWebSocket.SubscribeAll;
 begin
   SendData( GetSubData );
+  FTimer.Enabled := true;
 end;
 
 procedure TUpbitWebSocket.UnSubScribe(aSymbol: TSymbol);

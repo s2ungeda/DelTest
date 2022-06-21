@@ -240,7 +240,7 @@ var
   sOut, sJson : string;
 begin
   sTime:= GetTimestamp;
-  data := Format('timestamp=%s', [sTime]);
+  data := Format('type=SPOT&timestamp=%s', [sTime]);
   sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
 
   SetParam('type', 'SPOT');
@@ -251,7 +251,7 @@ begin
   if Request( rmGET, '/sapi/v1/accountSnapshot', '', sJson, sOut ) then
   begin
 //    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    gBinReceiver.ParseDNWState( sJson );
+    gBinReceiver.ParseSpotBalance( sJson );
   end else
   begin
     App.Log( llError, '', 'Failed %s RequestBalance (%s, %s)',

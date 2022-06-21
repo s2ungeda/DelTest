@@ -235,9 +235,10 @@ begin
   try
     iResult := StrToInt( aObj.GetValue('status').Value );
     if iResult <> 0 then begin
-      App.Log(llError, 'Request Result %d (ParseOrders) : %s', [ iResult, aData ] );
+      if iResult <> 5600 then
+        App.Log(llError, 'Request Result %d (ParseOrders) : %s', [ iResult, aData ] );
       Exit;
-    end;  
+    end;
 
     aArr	:= aObj.GetValue('data') as TJsonArray;    
     if aArr = nil then Exit;    

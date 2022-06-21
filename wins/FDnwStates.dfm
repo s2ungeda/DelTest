@@ -83,13 +83,40 @@ object FrmDnwStates: TFrmDnwStates
         Text = '10'
       end
       object btnSort: TButton
-        Left = 7
+        Left = 155
         Top = 4
         Width = 50
         Height = 25
         Caption = 'Reload'
         TabOrder = 3
         OnClick = btnSortClick
+      end
+      object cbAuto2: TCheckBox
+        Left = 6
+        Top = 7
+        Width = 41
+        Height = 17
+        Anchors = [akRight, akBottom]
+        Caption = 'Auto'
+        Checked = True
+        State = cbChecked
+        TabOrder = 4
+        OnClick = cbAuto2Click
+      end
+      object edtSec2: TLabeledEdit
+        Left = 48
+        Top = 5
+        Width = 39
+        Height = 21
+        Alignment = taRightJustify
+        Anchors = [akRight, akBottom]
+        EditLabel.Width = 54
+        EditLabel.Height = 13
+        EditLabel.Caption = '('#45800#50948' : '#52488' )'
+        LabelPosition = lpRight
+        NumbersOnly = True
+        TabOrder = 5
+        Text = '10'
       end
     end
     object plLeftClient: TPanel
@@ -125,7 +152,12 @@ object FrmDnwStates: TFrmDnwStates
   end
   object refreshTimer: TTimer
     OnTimer = refreshTimerTimer
-    Left = 784
-    Top = 320
+    Left = 648
+    Top = 216
+  end
+  object reLoadTimer: TTimer
+    OnTimer = reLoadTimerTimer
+    Left = 648
+    Top = 160
   end
 end

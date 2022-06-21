@@ -60,28 +60,29 @@ begin
 
         // 계좌 생성
         App.Engine.TradeCore.AccountLoad;
+
         // 잔고 조회
         if not App.Engine.ApiManager.RequestBalance then
         begin
           App.Log(llError, '', 'Failed RequestBalance') ;
           ShowMessage('Failed RequestBalance');
           Exit;
-        end;        
+        end;
         // 포지션 조회
         if not App.Engine.ApiManager.RequestPositons then
         begin
           App.Log(llError, '', 'Failed RequestPositons') ;
           ShowMessage('Failed RequestPositons');
-          Exit;        
-        end; 
+          Exit;
+        end;
         // 미체결 주문 조회.
         if not App.Engine.ApiManager.RequestOrders then
         begin
           App.Log(llError, '', 'Failed RequestOrders') ;
           ShowMessage('Failed RequestOrders');
-          Exit;        
-        end;        
-        
+          Exit;
+        end;
+
         App.Engine.SymbolCore.PreSubscribe;
         App.AppStatus := asLoad;
       end;
@@ -94,7 +95,7 @@ begin
     asShow :
       begin
         //
-//        App.Engine.ApiManager.SubscribeAll;
+        App.Engine.ApiManager.SubscribeAll;
 //        App.Engine.ApiManager.StartRequest;
         FrmDalinMain.Show;
 

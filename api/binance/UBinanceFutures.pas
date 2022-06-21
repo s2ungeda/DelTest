@@ -39,14 +39,19 @@ type
     procedure RestNotify( Sender : TObject ); override;    
 
     procedure RequestData( iMod : integer );
+
+	  function RequestBalance : boolean; override;
+    function RequestPositons : boolean; override;
+    function RequestOrders: boolean; override;
   end;
 
 implementation
 
 uses
-  GApp, UApiConsts
+  GApp, GLibs, UApiConsts
   , UBinanceParse
   , UCyclicItems, URestRequests
+  , UEncrypts
   , REST.Types
   ;
 
@@ -76,6 +81,35 @@ begin
 end;
 
 
+
+function TBinanceFutures.RequestBalance: boolean;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+begin
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+
+  SetParam('type', 'SPOT');
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+  if Request( rmGET, '/sapi/v1/accountSnapshot', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseSpotBalance( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestBalance (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
+
+  Result := true;
+
+end;
 
 function TBinanceFutures.RequestCandleData(sUnit, sCode: string): boolean;
 var
@@ -234,6 +268,16 @@ begin
 		MakeRest;
 end;
 
+
+function TBinanceFutures.RequestOrders: boolean;
+begin
+
+end;
+
+function TBinanceFutures.RequestPositons: boolean;
+begin
+
+end;
 
 procedure TBinanceFutures.MakeRest;
 var
