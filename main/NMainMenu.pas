@@ -24,9 +24,13 @@ type
     N2: TMenuItem;
     MainWDC1: TMenuItem;
     test2: TMenuItem;
+    N3: TMenuItem;
+    N4: TMenuItem;
+    N5: TMenuItem;
     procedure Kimp1Click(Sender: TObject);
     procedure nExchangeClick(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
+    procedure N5Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -47,7 +51,7 @@ uses
   GApp, GAppForms ,
 
   DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors,
-  FRepresentWDC, FDataTest
+  FRepresentWDC, FDataTest , FOrderList
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -100,6 +104,12 @@ begin
       if aForm is TFrmRprsntWDC then
         (aForm as TFrmRprsntWDC).LoadEnv( aStorage);
 
+    //
+    ID_ORDER_LIST :
+    	if aForm is TFrmOrderList then
+      	(aForm as TFrmOrderList).LoadEnv( aStorage );
+    
+
   end;
 
 end;
@@ -128,6 +138,10 @@ begin
     ID_RPRSNT_WDC :
       if aForm is TFrmRprsntWDC then
         (aForm as TFrmRprsntWDC).SaveEnv( aStorage);
+
+    ID_ORDER_LIST :
+    	if aForm is TFrmOrderList then
+      	(aForm as TFrmOrderList).SaveEnv( aStorage );        
   end;
 end;
 
@@ -136,12 +150,13 @@ begin
   aForm := nil;
 
   case iFormID of
-    ID_KIMP_TABLE  : aForm := TFrmPriceTable.Create( FrmDalinMain );
-    ID_JUNG_KOPI  : aForm := TFrmJungKopi.Create( FrmDalinMain );
-    ID_DNW_STATE :  aForm := TFrmDnwStates.Create( FrmDalinMain );
-    ID_QUOTE_MONITOR :  aForm := TFrmQuoteMonitors.Create( FrmDalinMain );
-    ID_RPRSNT_WDC : aForm :=  TFrmRprsntWDC.Create( FrmDalinMain);
-    ID_TEST : aForm := TFrmTest.Create( FrmDalinMain );
+    ID_KIMP_TABLE  		: aForm := TFrmPriceTable.Create( FrmDalinMain );
+    ID_JUNG_KOPI  		: aForm := TFrmJungKopi.Create( FrmDalinMain );
+    ID_DNW_STATE 			: aForm := TFrmDnwStates.Create( FrmDalinMain );
+    ID_QUOTE_MONITOR 	: aForm := TFrmQuoteMonitors.Create( FrmDalinMain );
+    ID_RPRSNT_WDC 		: aForm := TFrmRprsntWDC.Create( FrmDalinMain);
+    ID_TEST 					: aForm := TFrmTest.Create( FrmDalinMain );
+    ID_ORDER_LIST 		: aForm := TFrmOrderList.Create( FrmDalinMain );
   end;
 end;
 
@@ -167,6 +182,17 @@ begin
   end;
 
 
+end;
+
+procedure TDataModule1.N5Click(Sender: TObject);
+begin
+  if (Sender = nil) or not (Sender is TComponent) then Exit;      
+
+  case (Sender as TComponent).Tag of
+    0 : ;
+    1 : App.Engine.FormBroker.Open(ID_ORDER_LIST, 0);
+    2 : ;
+  end;
 end;
 
 // Exchange & Account wins open

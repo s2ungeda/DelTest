@@ -9,6 +9,10 @@ const
   // Account & Exchange 10000 ~ 19999
   ID_DNW_STATE    = 20000;
 
+	ID_ORDER				= 25000;
+  ID_ORDER_LIST		= 25001;
+  ID_ACNT_INFO		= 25002;  
+
   // Order    20000 ~ 29999
 
   // Quote    30000 ~ 39999

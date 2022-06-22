@@ -21,6 +21,20 @@ object DataModule1: TDataModule1
     end
     object nOrder: TMenuItem
       Caption = #51452#47928
+      object N5: TMenuItem
+        Caption = #44060#48324#51452#47928#52285
+        OnClick = N5Click
+      end
+      object N3: TMenuItem
+        Tag = 1
+        Caption = #51452#47928#47532#49828#53944
+        OnClick = N5Click
+      end
+      object N4: TMenuItem
+        Tag = 2
+        Caption = #44228#51340#51221#48372
+        OnClick = N5Click
+      end
     end
     object nQuote: TMenuItem
       Caption = #49884#49464

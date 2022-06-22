@@ -97,7 +97,8 @@ uses
   URestThread in 'api\URestThread.pas',
   URestItems in 'api\URestItems.pas',
   UCyclicThreads in 'api\UCyclicThreads.pas',
-  UCyclicItems in 'api\UCyclicItems.pas';
+  UCyclicItems in 'api\UCyclicItems.pas',
+  FOrderList in 'wins\FOrderList.pas' {FrmOrderList};
 
 {$R *.res}
 begin
@@ -107,7 +108,6 @@ begin
   Application.CreateForm(TFrmDalinMain, FrmDalinMain);
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TFrmWinConfig, FrmWinConfig);
-  Application.CreateForm(TFrmTest, FrmTest);
   FrmDalinMain.Start;
   Application.Run;
 

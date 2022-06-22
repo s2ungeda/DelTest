@@ -267,6 +267,10 @@
         <DCCReference Include="api\URestItems.pas"/>
         <DCCReference Include="api\UCyclicThreads.pas"/>
         <DCCReference Include="api\UCyclicItems.pas"/>
+        <DCCReference Include="wins\FOrderList.pas">
+            <Form>FrmOrderList</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
