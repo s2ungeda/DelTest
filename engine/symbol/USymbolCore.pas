@@ -1001,7 +1001,7 @@ begin
       begin
         if dPrice > 100 - EPSILON then
           Result := 0
-        else if dPrice > 1 - EPSILON then
+        else if dPrice > 10 - EPSILON then
           Result := 1
         else if dPrice > 1 - EPSILON then
           Result := 2

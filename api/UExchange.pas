@@ -38,6 +38,7 @@ type
     FMaxVal: int64;
     FMinVal: int64;
     FRestExet: TRESTExecutionThread;
+    FField1: string;
   protected
     function IsAsyncWaiting : boolean;
 
@@ -81,7 +82,7 @@ type
     procedure RestNotify( Sender : TObject ); virtual; 
     procedure OnHTTPProtocolError(Sender: TCustomRESTRequest); virtual;
     function PrepareMaster : boolean;
-    function GetReqItems	 : TRequest;
+//    function GetReqItems	 : TRequest;
 //--------------------------------------------------------------
 		procedure MakeRestThread( aInfo : TDivInfo );
     procedure MakeCyclicThread;
@@ -108,6 +109,8 @@ type
 
     property MarketType : TMarketType read FMarketType;
     property MarketIdx  : integer read FMarketIdx;
+    // etc
+    property Field1 : string read FField1 write FField1;
 
     // 종목마스터 데이타.
     property MasterData : string read FMasterData;
@@ -219,16 +222,16 @@ end;
 
 
 
-function TExchange.GetReqItems: TRequest;
-begin
-	if FreqItems.Count <= 0 then Result := nil;
-  
-	if FReqIndex >= FReqItems.Count then
-  	FReqIndex := 0;
-
-  Result := TRequest( FReqItems.Items[ FReqIndex ]);
-  inc( FReqIndex );
-end;
+//function TExchange.GetReqItems: TRequest;
+//begin
+//	if FreqItems.Count <= 0 then Result := nil;
+//
+//	if FReqIndex >= FReqItems.Count then
+//  	FReqIndex := 0;
+//
+//  Result := TRequest( FReqItems.Items[ FReqIndex ]);
+//  inc( FReqIndex );
+//end;
 
 function TExchange.IsAsyncWaiting: boolean;
 begin
@@ -254,7 +257,7 @@ begin
 	for I := 0 to CyclicItems.Count-1 do    
   begin
   	aItem	:= CyclicItems.Cyclic[i];
-    aReq := TRequest.Create;        
+    aReq := TRequest.Create;
     aReq.init( sUrl, GetExKind = ekBithumb);
     aReq.SetParam( aItem.index, aItem.Interval );
     aReq.SetParam( aItem.Method, aItem.Resource, aItem.Name );
@@ -406,8 +409,6 @@ begin
         Exit( false );
       end;
 
-
-
       OutJson := FRestRes.Content;
       Result := true;
 
@@ -451,31 +452,29 @@ begin
   	aReq := Sender as TRequest;
 	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );
 
-    gap := (aReq.EnTime - aReq.StTime);
-    AccCnt:= AccCnt+1;
-    AccVal:= AccVal + gap;
-
-    avg := AccVal div AccCnt;
-
-    if avg > 500 then
-    begin
-      App.Log(llInfo, 'bt_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
-         aReq.StatusCode, aReq.Name, {RestThread.QCount,}AccCnt, MaxVal, MinVal ]  );
-    end;
-
-    if MaxVal < gap then begin
-      App.Log(llInfo, 'bt_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
-         aReq.StatusCode, aReq.Name,{ RestThread.QCount,} AccCnt, avg ]  );
-      MaxVal := gap;
-    end;
-
-    if MinVal > gap then begin
-      App.Log(llInfo, 'bt_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
-         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
-      MinVal := gap;
-    end;
-
-    if True then
+//    gap := (aReq.EnTime - aReq.StTime);
+//    AccCnt:= AccCnt+1;
+//    AccVal:= AccVal + gap;
+//
+//    avg := AccVal div AccCnt;
+//
+//    if avg > 500 then
+//    begin
+//      App.Log(llInfo, 'bt_latency', 'avg : %05d : %d, %s %d  (%d, %d) ', [ avg,
+//         aReq.StatusCode, aReq.Name, {RestThread.QCount,}AccCnt, MaxVal, MinVal ]  );
+//    end;
+//
+//    if MaxVal < gap then begin
+//      App.Log(llInfo, 'bt_latency', 'max : %05d : %d, %s %d (%d)', [ gap,
+//         aReq.StatusCode, aReq.Name,{ RestThread.QCount,} AccCnt, avg ]  );
+//      MaxVal := gap;
+//    end;
+//
+//    if MinVal > gap then begin
+//      App.Log(llInfo, 'bt_latency', 'min : %05d : %d, %s  %d (%d)', [ gap,
+//         aReq.StatusCode, aReq.Name, {RestThread.QCount,} AccCnt, avg ]  );
+//      MinVal := gap;
+//    end;
 
 
   finally

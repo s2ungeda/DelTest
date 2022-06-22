@@ -285,7 +285,8 @@ var
 begin
 //  FExManagers[ekUpbit].StartRequest;
 //  FExManagers[ekBithumb].StartRequest;
-//  exit;
+  FExManagers[ekBinance].StartRequest;
+  exit;
   for I := ekBinance to High(TExchangeKind) do
   	FExManagers[i].StartRequest;
 end;
@@ -344,7 +345,7 @@ begin
   begin
     if not FExManagers[i].ConnectAll then
       Exit (false);
-    sleep(200);
+    //sleep(200);
   end;
 
   Result := true;

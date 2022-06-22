@@ -298,6 +298,9 @@ begin
         SetData( 3, iRow , aSymbol );
       end;
 
+//      if iRow = 32 then
+//        iRow := 32;
+
       SetData( CurCol - 4, iRow, aSymbol );
       SetData( CurCol - 1, iRow, aSymbol );
 //      Cells[ CurCol - 4, iRow] := aSymbol.QtyToStr( aSymbol.Asks[0].Volume );// Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Asks[0].Volume ]);
@@ -311,6 +314,7 @@ begin
 
     Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
     Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
+
 
 
     if Cells[ CurCol , iRow] = Cells[ CurCol - 3, iRow] then
@@ -441,6 +445,8 @@ begin
         if ACol in [CurCol-3 .. CurCol -2] then
           if Objects[ ACol, ARow] <> nil then
           begin
+            if ARow = 32 then
+              iVal := integer( Objects[ACol, ARow] );
             iVal := integer( Objects[ACol, ARow] );
             if iVal > 0 then begin
               if ACol = CurCol-3 then

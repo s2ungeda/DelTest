@@ -76,12 +76,12 @@ begin
           Exit;
         end;
         // 미체결 주문 조회.
-        if not App.Engine.ApiManager.RequestOrders then
-        begin
-          App.Log(llError, '', 'Failed RequestOrders') ;
-          ShowMessage('Failed RequestOrders');
-          Exit;
-        end;
+//        if not App.Engine.ApiManager.RequestOrders then
+//        begin
+//          App.Log(llError, '', 'Failed RequestOrders') ;
+//          ShowMessage('Failed RequestOrders');
+//          Exit;
+//        end;
 
         App.Engine.SymbolCore.PreSubscribe;
         App.AppStatus := asLoad;
@@ -96,7 +96,7 @@ begin
       begin
         //
         App.Engine.ApiManager.SubscribeAll;
-//        App.Engine.ApiManager.StartRequest;
+        App.Engine.ApiManager.StartRequest;
         FrmDalinMain.Show;
 
       end;

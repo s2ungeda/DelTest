@@ -139,6 +139,9 @@ begin
       sts := sCode.Split(['-']);
       aSymbol := App.Engine.SymbolCore.FindSymbol(ekUpbit, sts[1]);
 
+//      if sts[1] = 'SC' then
+//        sCode := 'SC';
+
       if aSymbol = nil then continue;
 
       aSubArr := aVal.FindValue('orderbook_units') as TJsonArray;

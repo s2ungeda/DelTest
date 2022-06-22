@@ -312,6 +312,9 @@ var
 begin
 
 
+  if FSockDiv = TRADE_SOCK then
+    FSockDiv := TRADE_SOCK;
+
   if MessageType = mtText then begin
     sData := Encoding.Default.GetString(Data);
   end else

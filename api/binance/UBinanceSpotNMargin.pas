@@ -25,6 +25,7 @@ type
     function RequestDNWStateSync : boolean;
     procedure MakeRest;
 
+
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -36,6 +37,8 @@ type
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
     function RequestDNWState : boolean; override;
+
+    function RequestListenKey(bFirst: boolean): string;
 
 	  function RequestBalance : boolean; override;
     function RequestOrders: boolean; override;
@@ -234,6 +237,44 @@ begin
   gBinReceiver.ParseDNWState( RestReq.Response.Content );
 end;
 
+function TBinanceSpotNMargin.RequestListenKey(bFirst: boolean) : string;
+var
+  data, sig, sRrsc: string;
+  sOut, sJson : string;
+  aMethod : TRESTRequestMethod;
+  aObj  : TJsonObject;
+begin
+
+  REsult := '';
+  if bFirst then
+  begin
+    aMethod := rmPOST   ;
+    sRrsc   := '/api/v3/userDataStream';
+  end
+  else begin
+    aMethod := rmPUT;
+    sRrsc   := '/api/v3/userDataStream?listenKey='+Field1;
+  end;
+
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+
+  if Request( aMethod, sRrsc, '', sJson, sOut ) then
+  begin
+    if bFirst then
+      if RestRes.JSONValue <> nil then
+      begin
+        aObj  := RestRes.JSONValue as TJsonObject;
+        Result := aObj.GetValue('listenKey').Value;
+        Field1 := Result;
+      end;
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestListenKey (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit;
+  end;
+end;
+
 function TBinanceSpotNMargin.RequestBalance: boolean;
 var
   data, sig, sTime: string;
@@ -392,7 +433,11 @@ begin
   aItem.Interval  := 3000;
   aItem.Index     := 0;
   aItem.Resource	:= '/sapi/v1/asset/assetDetail';  
-  aITem.Method		:= rmGET;                                          
+  aITem.Method		:= rmGET;
+
+  aItem := CyclicItems.New('listenkey');
+  aItem.Interval  := 60000 * 20;
+  aItem.Index     := 1;
 
 	MakeRestItems( 0 );     
   MakeCyclicThread;  
@@ -415,7 +460,11 @@ begin
     aReq.Req.AddParameter('timestamp', sTime, pkGETorPOST);
     aReq.Req.AddParameter('signature', sig, pkGETorPOST);
     aReq.Req.AddParameter('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER);
-  end;       
+  end else
+  begin
+    RequestListenKey(false);
+    Exit;
+  end;
 
   if aReq.RequestAsync then
   	aReq.State := 1;

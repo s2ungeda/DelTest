@@ -51,6 +51,7 @@ uses
   , UApiConsts
   , UBithSpot
   , UBithWebSockets
+  , URestRequests
   ;
 { TBinanceManager }
 
@@ -129,9 +130,22 @@ end;
 
 
 procedure TBithManager.OnTimer(Sender: TObject);
+var
+  i, j : integer;
+  a : TRequest;
 begin
   //(Exchanges[mtSpot] as TBithSpot).RequestData(1);
   //inc( FCount);
+//  j := 0;
+//  for i:=0 to Exchanges[mtSpot].ReqItems.Count-1 do
+//  begin
+//    a := TRequest(Exchanges[mtSpot].ReqItems.Items[i]);
+//    j := j +  a.SndCnt ;
+//    a.SndCnt  := 0;
+//  end;
+//
+//  App.Log(llInfo,'rate', '%s req cnt : %d', [  TExchangeKindDesc[ExchangeKind] , j ] )  ;
+
 end;
 
 

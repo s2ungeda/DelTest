@@ -2,7 +2,7 @@ unit UTradeCore;
 interface
 uses
 	System.Classes, System.SysUtils, 
-  UAccounts, UFills, UOrders, UPositions ,
+  UAccounts, UFills, UOrders, UPositions , USymbols,
   UApiTypes, UApiConsts        
   ;
 type
@@ -25,6 +25,8 @@ type
     function FindAccount( ekType : TExchangeKind ) : TAccount;  overload;
     function FindAccount( ekType : TExchangeKind; aMarket : TAccountMarketType) : TAccount; overload;
 
+    function FindOrder( ekType : TExchangeKind; aAcnt : TAccount;
+      aSymbol : TSymbol; sID : string ) : TOrder;
 
     property Accounts: TAccountArray read FAccounts;
     property Orders: TOrderArray read FOrders;
@@ -85,6 +87,12 @@ begin
 	Result := nil;
 	if FAccounts[ekType] <> nil then
   	Result := FAccounts[ekType].Find(ektype, aMarket);
+end;
+
+function TTradeCore.FindOrder(ekType: TExchangeKind; aAcnt: TAccount;
+  aSymbol: TSymbol; sID: string): TOrder;
+begin
+  Result := Orders[ekType].Find( aAcnt, aSymbol, sID );
 end;
 
 function TTradeCore.FindAccount(ekType: TExchangeKind): TAccount;

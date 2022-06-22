@@ -48,7 +48,7 @@ implementation
 uses
   GApp , Math
   , UApiConsts
-  , UBinanceWebSockets, UBinanceFutures
+  , UBinanceWebSockets, UBinanceFutures, UBinanceSpotNMargin
   ;
 
 { TBinanceManager }
@@ -57,7 +57,7 @@ constructor TBinanceManager.Create(aExType: TExchangeKind);
 begin
   inherited Create( aExType );
 
-  FParse:= TBinanceParse.Create(self);    
+  FParse:= TBinanceParse.Create(self);
   FSeq	:= 0;
 end;
 
@@ -80,6 +80,7 @@ var
   iCount , iMode, i, j : integer;
   aList : TStringList;
   aSymbol : TSymbol;
+  sKey : string;
 begin
 
   iCount := 2;
@@ -89,7 +90,17 @@ begin
   QuoteSock[0].init( 'stream.binance.com:9443/ws' );
 
   QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, 1, mtFutures ) ;
-  QuoteSock[1].init( 'fstream.binance.com/ws' );
+//  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
+  QuoteSock[1].init( 'stream.binance.com/ws' ); // 테스트넷
+
+
+  sKey  := (Exchanges[mtSpot] as TBinanceSpotNMargin).RequestListenKey( true );
+  TradeSock[mtSpot]  := TBinanceWebSocket.Create(TRADE_SOCK, 0,  mtSpot ) ;
+  TradeSock[mtSpot].init( 'stream.binance.com:9443/ws/'+sKey );
+
+  sKey  := (Exchanges[mtFutures] as TBinanceFutures).RequestListenKey( true );
+  TradeSock[mtFutures]  := TBinanceWebSocket.Create(TRADE_SOCK, 1, mtFutures ) ;
+  TradeSock[mtFutures].init( 'stream.binancefuture.com/ws/'+sKey ); // 테스트넷
 
   Timer.OnTimer := OnTimer;
 

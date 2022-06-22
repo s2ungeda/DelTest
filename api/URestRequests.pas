@@ -17,6 +17,7 @@ type
     FSeq: integer;
     FInterval: integer;
     FThreadID: int64;
+    FSndCnt: int64;
     function GetContent: string;
     function GetStatusCode: integer;
     function GetStatusText: string;
@@ -61,6 +62,8 @@ type
     property Seq	 	: integer read FSeq		;
     property Interval	: integer read FInterval ;
 
+    property SndCnt : int64 read FSndCnt write FSndCnt;
+
   end;
 implementation
 
@@ -91,7 +94,8 @@ begin
   EnTime      := 0;
 
   LastTime := 0;
-  Count    := 0;  
+  Count    := 0;
+  FSndCnt  := 0;
 end;
 destructor TRequest.Destroy;
 begin
@@ -194,6 +198,7 @@ begin
   StTime := GetTickCount;
   Result := FReqThread <> nil;
   FThreadID := FReqThread.ThreadID;
+  inc( FSndCnt );
 end;
 
 procedure TRequest.SetParam(aSeq, aInterval: integer);

@@ -16,7 +16,7 @@ type
   private
     FIndex  : integer;
     FLastIndex : integer;
-      
+
     function RequestFuttMaster : boolean;
     function RequestFutTicker  : boolean;
 
@@ -24,7 +24,7 @@ type
     procedure AsyncFutAllTicker;
     procedure AsyncFutAllOrderBook;
     procedure MakeRest;
-    
+
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
@@ -33,12 +33,14 @@ type
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
 
- 
-    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;    
+
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
     procedure CyclicNotify( Sender : TObject ); override; 
     procedure RestNotify( Sender : TObject ); override;    
 
     procedure RequestData( iMod : integer );
+
+    function RequestListenKey( bFirst : boolean ) : string;
 
 	  function RequestBalance : boolean; override;
     function RequestPositons : boolean; override;
@@ -53,6 +55,7 @@ uses
   , UCyclicItems, URestRequests
   , UEncrypts
   , REST.Types
+  , System.JSON
   ;
 
 { TBinanceSpotNMargin }
@@ -89,17 +92,17 @@ var
 begin
   sTime:= GetTimestamp;
   data := Format('timestamp=%s', [sTime]);
-  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtSpot ) );
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtFutures ) );
 
-  SetParam('type', 'SPOT');
+
   SetParam('timestamp', sTime );
   SetParam('signature', sig );
-  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtFutures ), pkHTTPHEADER );
 
-  if Request( rmGET, '/sapi/v1/accountSnapshot', '', sJson, sOut ) then
+  if Request( rmGET, '/fapi/v2/account', '', sJson, sOut ) then
   begin
 //    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    gBinReceiver.ParseSpotBalance( sJson );
+    gBinReceiver.ParseFutBalance( sJson );
   end else
   begin
     App.Log( llError, '', 'Failed %s RequestBalance (%s, %s)',
@@ -237,6 +240,41 @@ begin
   Result := App.Engine.SymbolCore.Futures[ GetExKind].Count > 0;
 end;
 
+function TBinanceFutures.RequestListenKey(bFirst: boolean) : string;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
+  aMethod : TRESTRequestMethod;
+  aObj  : TJsonObject;
+begin
+
+  REsult := '';
+  if bFirst then aMethod := rmPOST
+  else begin
+    aMethod := rmPUT;
+    App.DebugLog('------------  listenkey update --------------' );
+  end;
+
+  SetBaseUrl(    App.Engine.ApiConfig.GetBaseUrl( GetExKind , mtFutures ) );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtFutures ), pkHTTPHEADER );
+
+  if Request( aMethod, '/fapi/v1/listenKey', '', sJson, sOut ) then
+  begin
+    if bFirst then
+      if RestRes.JSONValue <> nil then
+      begin
+        aObj  := RestRes.JSONValue as TJsonObject;
+        Result := aObj.GetValue('listenKey').Value;
+        Field1 := Result;
+      end;
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestListenKey (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit;
+  end;
+end;
+
 //function TBinanceFutures.RequestFuttMaster: boolean;
 //var
 //  sTmp, sOut, sJson : string;
@@ -275,7 +313,32 @@ begin
 end;
 
 function TBinanceFutures.RequestPositons: boolean;
+var
+  data, sig, sTime: string;
+  sOut, sJson : string;
 begin
+  sTime:= GetTimestamp;
+  data := Format('timestamp=%s', [sTime]);
+  sig  := CalculateHMACSHA256( data, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtFutures ) );
+
+
+  SetParam('timestamp', sTime );
+  SetParam('signature', sig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtFutures ), pkHTTPHEADER );
+
+  if Request( rmGET, '/fapi/v2/positionRisk ', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseFutPosition( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestPositons (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
+
+  Result := true;
+
 
 end;
 
@@ -287,9 +350,13 @@ begin
   aItem.Interval  := 1000;
   aItem.Index     := 0;
   aItem.Resource	:= '/fapi/v1/ticker/bookTicker';  
-  aITem.Method		:= rmGET;                                          
+  aITem.Method		:= rmGET;
 
-	MakeRestItems( 0 );     
+  aItem := CyclicItems.New('listenkey');
+  aItem.Interval  := 60000 * 20;    // 20Ка..
+  aItem.Index     := 1;
+
+	MakeRestItems( 0 );
   MakeCyclicThread;
 end;
 
@@ -300,14 +367,18 @@ begin
   if Sender = nil then Exit;
   aReq := Sender as TRequest;
 
-  if aReq.RequestAsync then
-  	aReq.State := 1;
+  if aReq.Seq = 1 then
+    RequestListenKey( false )
+  else begin
+    if aReq.RequestAsync then
+    	aReq.State := 1;
+  end;
 end;
 
 procedure TBinanceFutures.RestNotify(Sender: TObject);
 begin
   if Sender = nil then Exit;
-  inherited  RestNotify( Sender )         
+  inherited  RestNotify( Sender )
 end;
 
 

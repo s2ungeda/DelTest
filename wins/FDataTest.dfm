@@ -2,7 +2,7 @@
   Left = 0
   Top = 0
   Caption = 'TEST'
-  ClientHeight = 600
+  ClientHeight = 665
   ClientWidth = 593
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -70,7 +70,7 @@
   end
   object Panel1: TPanel
     Left = 8
-    Top = 177
+    Top = 206
     Width = 577
     Height = 194
     Caption = 'Panel1'
@@ -134,7 +134,7 @@
   end
   object Panel2: TPanel
     Left = 8
-    Top = 377
+    Top = 406
     Width = 577
     Height = 194
     Caption = 'Panel1'
@@ -384,11 +384,77 @@
       OnClick = Button6Click
     end
   end
+  object Panel4: TPanel
+    Left = 84
+    Top = 163
+    Width = 493
+    Height = 32
+    TabOrder = 13
+    Visible = False
+    object Label4: TLabel
+      Left = 8
+      Top = 9
+      Width = 3
+      Height = 13
+    end
+    object Button7: TButton
+      Tag = 3
+      Left = 225
+      Top = 6
+      Width = 49
+      Height = 22
+      Caption = #51333#47308
+      TabOrder = 0
+      OnClick = Button7Click
+    end
+    object Button8: TButton
+      Tag = 3
+      Left = 289
+      Top = 6
+      Width = 49
+      Height = 22
+      Caption = #51217#49549
+      TabOrder = 1
+      OnClick = Button8Click
+    end
+    object Button9: TButton
+      Tag = 3
+      Left = 358
+      Top = 6
+      Width = 49
+      Height = 22
+      Caption = 'Sub'
+      TabOrder = 2
+      Visible = False
+      OnClick = btnBTSubClick
+    end
+    object Button10: TButton
+      Tag = 3
+      Left = 430
+      Top = 6
+      Width = 49
+      Height = 22
+      Caption = 'UnSub'
+      TabOrder = 3
+      Visible = False
+      OnClick = Button6Click
+    end
+  end
+  object CheckBox1: TCheckBox
+    Tag = 3
+    Left = 25
+    Top = 171
+    Width = 49
+    Height = 17
+    Caption = #48148'Fut'
+    TabOrder = 14
+    OnClick = cbBTClick
+  end
   object kipTimer: TTimer
     Enabled = False
     OnTimer = kipTimerTimer
-    Left = 200
-    Top = 159
+    Left = 216
+    Top = 287
   end
   object wcdTimer: TTimer
     Enabled = False

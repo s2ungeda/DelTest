@@ -163,6 +163,13 @@ begin
     if QuoteSock <> nil then
       for i := 0 to High(QuoteSock) do
         QuoteSock[i].DoConnect;
+
+    if FExchangeKind = ekBinance then
+    begin
+      TradeSock[mtSpot].DoConnect;
+      TradeSock[mtFutures].DoConnect;
+    end;
+
   except
     on E : Exception do
     begin
@@ -189,6 +196,13 @@ begin
   if QuoteSock <> nil then
     for i := 0 to High(QuoteSock) do
       QuoteSock[i].DoDissConnect;
+
+  if FExchangeKind = ekBinance then
+  begin
+    if TradeSock[mtSpot] <> nil then TradeSock[mtSpot].DoDissConnect;
+    if TradeSock[mtFutures] <> nil then TradeSock[mtSpot].DoDissConnect;
+  end;
+
   Result := true;
 end;
 

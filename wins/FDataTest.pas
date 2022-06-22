@@ -52,6 +52,13 @@ type
     Button4: TButton;
     Button5: TButton;
     Button6: TButton;
+    Panel4: TPanel;
+    Label4: TLabel;
+    Button7: TButton;
+    Button8: TButton;
+    Button9: TButton;
+    Button10: TButton;
+    CheckBox1: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure CheckBox4Click(Sender: TObject);
     procedure kipTimerTimer(Sender: TObject);
@@ -65,6 +72,8 @@ type
     procedure btnBTSubClick(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure btnBTunsubClick(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
+    procedure Button8Click(Sender: TObject);
   private
     procedure kipLog;
     procedure wcdLog;
@@ -133,6 +142,20 @@ begin
   if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
     TBinanceWebSocket(App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1]).UnSubScribeAll;
 end;
+procedure TFrmTest.Button7Click(Sender: TObject);
+begin
+  if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures] <> nil  then
+    if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].GetSockState = 'Open' then
+      App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].DoDisConnect;
+end;
+
+procedure TFrmTest.Button8Click(Sender: TObject);
+begin
+  if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures] <> nil  then
+//    if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].GetSockState = 'Open' then
+      App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].DoConnect;
+end;
+
 procedure TFrmTest.Button1Click(Sender: TObject);
 var
   aKind : TExchangeKind;
@@ -181,6 +204,7 @@ begin
     2 : plBT.Visible  := cbBT.Checked;
     1 : plUp.Visible  := cbUp.Checked;
     0 : panel3.Visible:= cbBn.Checked;
+    3 : panel4.Visible:= CheckBox1.Checked;
   end;
 end;
 procedure TFrmTest.CheckBox4Click(Sender: TObject);
@@ -244,7 +268,7 @@ begin
   begin
     data := Symbol1.DataTrace.Kip;
     sTmp := Format('%s : %s %% = %s, %s, %s', [ FormatDateTime('hh:nn:ss',  data.LastTime)
-      , FmtString( 2, data.Kip ),  Symbol1.PriceToStr( data.CurPrice ), FmtString( 4, data.OsPrice )
+      , FmtString( 2, data.Kip ),  Symbol1.PriceToStr( data.CurPrice ), FmtString( 6, data.OsPrice )
       , FmtString( 1, data.ExRate ) ]);
     mKip.Lines.Insert(0, sTmp );
     LastCnt1 := Symbol1.DataTrace.Kip.Cnt;
@@ -259,7 +283,7 @@ begin
   begin
     data := Symbol2.DataTrace.Wcd;
     sTmp := Format('%s : %s = %s, %s', [ FormatDateTime('hh:nn:ss',  data.LastTime)
-      , FmtString( 1, data.Wcd ),  Symbol2.PriceToStr( data.CurPrice ), FmtString( 2, data.OsPrice )  ]);
+      , FmtString( 1, data.Wcd ),  Symbol2.PriceToStr( data.CurPrice ), FmtString( 6, data.OsPrice )  ]);
     mWcd.Lines.Insert(0, sTmp );
     LastCnt2 := Symbol2.DataTrace.Wcd.Cnt;
   end;
@@ -283,6 +307,10 @@ begin
   if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
     lbBN.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].GetSockState,
        App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvCnt ] );
+
+  if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures] <> nil  then
+    Label4.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].GetSockState,
+       App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].RcvCnt ] );
 end;
 
 procedure TFrmTest.FormCreate(Sender: TObject);

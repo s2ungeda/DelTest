@@ -9,14 +9,15 @@ type
 
   TBalance = class
   public
-    Free    : double;
+    Balance : double;
     Locked  : double;
 //    Asset   : string;
 //    Currency: string;
     Symbol  : TSymbol;
     constructor Create;
-    procedure SetItem( dFree, dLock : double; aSymbol : TSymbol );
+    procedure SetItem( dBal, dLock : double; aSymbol : TSymbol );
     function  Represent : string;
+    function  Available : double;
   end;
 
   TAcntAmtArray = array [TSettleCurType] of double;
@@ -206,7 +207,8 @@ begin
     Result := nil;
     Exit;
   end;
-  Result := Find(sKey);
+//  Result := Find(sKey);
+  Result := Find( aKind, aMarket );
   if Result = nil then
   begin
     Result := Add as TAccount;
@@ -289,9 +291,14 @@ begin
 end;
 { TBalance }
 
+function TBalance.Available: double;
+begin
+  Result := Balance - Locked;
+end;
+
 constructor TBalance.Create;
 begin
-  Free    := 0.0;
+  Balance := 0.0;
   Locked  := 0.0;
   Symbol  := nil;
 end;
@@ -307,15 +314,15 @@ begin
       + ' , ' + TMarketTypeDesc[ Symbol.Spec.Market ]
       + ' , ' + Symbol.Spec.BaseCode
       + ' , ' + Symbol.Spec.SettleCode
-      + ' , ' + Format('%.*n', [ 8, Free ] )
+      + ' , ' + Format('%.*n', [ 8, Balance ] )
       + ' , ' + Format('%.*n', [ 8, Locked ] );
 
   end;
 end;
 
-procedure TBalance.SetItem(dFree, dLock: double; aSymbol: TSymbol);
+procedure TBalance.SetItem(dBal, dLock: double; aSymbol: TSymbol);
 begin
-  Free    := dFree;
+  Balance := dBal;
   Locked  := dLock;
   Symbol  := aSymbol;
 end;
