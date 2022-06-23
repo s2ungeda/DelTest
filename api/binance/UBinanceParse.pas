@@ -61,7 +61,7 @@ uses
   , GLibs  , UTypes
   , UQuoteBroker
   , UOtherData
-  , USymbols
+  , USymbols  , UFills
   ;
 { TBinanceParse }
 constructor TBinanceParse.Create( aObj :TExchangeManager );
@@ -506,6 +506,8 @@ var
   aSymbol : TSymbol;
   aOrder  : TOrder;
 
+  iTime   : int64;
+  dtTime  : TDateTime;
   iSide   : integer;
   dOrderQty , dPrice : double;
   otType   : TOrderType;
@@ -549,6 +551,8 @@ begin
     aOrder := App.Engine.TradeCore.Orders[ekBinance].NewOrder( aAcnt, aSymbol,
       iSide, dOrderQty, pcValue, dPrice, tmGTC );
 
+    aOrder.ReduceOnly := aVal.GetValue<boolean>('R', false);
+    aOrder.OrderNo    := sID;
     if aOrder = nil then
     begin
       App.Log(llError, 'biance future not found order : %s, %s, %s, %s, %s ',
@@ -556,13 +560,47 @@ begin
           , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)  ]  );
       Exit;
     end ;
-
   end;
 
+  iTime := aJson.GetValue<int64>('T');
+  dtTime:= UnixTimeToDateTime( iTime );
 
+  sTmp  :=  aVal.FindValue('X').Value;
+  aStatus := GetOrderStatus( sTmp );
 
+  App.DebugLog('Binance Fut : %s, %s, %s, %s, %s, %s, %s ', [  sTmp, sID, sCode
+    , ifThenStr( iSide = 1, '매수','매도')
+    , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)
+    , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Post' )
+    ]  );
 
-  aStatus := GetOrderStatus( aVal.FindValue('X').Value );
+  case aStatus of
+    osActive    : App.Engine.TradeBroker.Accept( aOrder, dtTime, true ) ;
+    osFilled    :
+      begin
+        var aFill : TFill;
+        var dFillVol, dFillPrice, dAvgPrice : double;
+        var sTrdID : string;
+
+        dAvgPrice := aVal.GetValue<double>('ap', 0 );
+        dFillVol  := aVal.GetValue<double>('l', 0);
+        dFillPrice:= aVal.GetValue<double>('L', 0);
+        sTrdID    := aVal.GetValue<string>('t');
+
+        App.DebugLog('Binance Fut Fill : %s, %s, %s, %s, %s, %s ', [
+          sTmp, sID,
+          aSymbol.PriceToStr(dFillPrice), aSymbol.QtyToStr(dFillVol),
+          aSymbol.PriceToStr(dAvgPrice),  sTrdID
+        ]);
+
+        aFill := App.Engine.TradeCore.Fills[ekBinance].New( sTrdID, dtTime, now,
+          sID, aAcnt, aSymbol, dFillVol , iSide, dFillPrice);
+
+        App.Engine.TradeBroker.Fill( aOrder, aFill );
+      end;
+    osCanceled  : App.Engine.TradeBroker.Cancel( aOrder, 0 ) ;
+    osRejected  : App.Engine.TradeBroker.Accept( aOrder, dtTime, false );
+  end;
 
 
 end;

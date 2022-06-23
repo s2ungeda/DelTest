@@ -9,7 +9,7 @@ type
 	TAccountArray = array [TExchangeKind] of TAccounts;
   TOrderArray		= array [TExchangeKind] of TOrders;
   TFillArray		= array [TExchangeKind] of TFills;
-  TPositionArray= array [TExchangeKind] of TPositions; 
+  TPositionArray= array [TExchangeKind] of TPositions;
 
 	TTradeCore	= class
   private
@@ -24,6 +24,9 @@ type
 
     function FindAccount( ekType : TExchangeKind ) : TAccount;  overload;
     function FindAccount( ekType : TExchangeKind; aMarket : TAccountMarketType) : TAccount; overload;
+
+    function FindPosition( aAcnt : TAccount;  aSymbol : TSymbol ) : TPosition;
+    function NewPosition( aAcnt : TAccount;  aSymbol : TSymbol ) : TPosition;
 
     function FindOrder( ekType : TExchangeKind; aAcnt : TAccount;
       aSymbol : TSymbol; sID : string ) : TOrder;
@@ -74,10 +77,10 @@ var
 begin  
   for I := ekBinance to High( TExchangeKind ) do
   begin
+    FPositions[i].Free;
     FOrders[i].Free;
     FFills[i].Free;
     FAccounts[i].Free;
-    FPositions[i].Free;
   end;
   inherited;
 end;
@@ -93,6 +96,17 @@ function TTradeCore.FindOrder(ekType: TExchangeKind; aAcnt: TAccount;
   aSymbol: TSymbol; sID: string): TOrder;
 begin
   Result := Orders[ekType].Find( aAcnt, aSymbol, sID );
+end;
+
+function TTradeCore.FindPosition( aAcnt: TAccount;
+  aSymbol: TSymbol): TPosition;
+begin
+  Result := Positions[aAcnt.ExchangeKind].Find( aAcnt, aSymbol);
+end;
+
+function TTradeCore.NewPosition(aAcnt: TAccount; aSymbol: TSymbol): TPosition;
+begin
+  Result := Positions[aAcnt.ExchangeKind].New( aAcnt, aSymbol);
 end;
 
 function TTradeCore.FindAccount(ekType: TExchangeKind): TAccount;

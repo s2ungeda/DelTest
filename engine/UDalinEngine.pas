@@ -7,7 +7,7 @@ uses
   System.Classes,
 
   UFormBroker , UTradeCore, USymbolCore, UApiConfigManager ,
-  UApiManager,  UQuoteBroker, USymbolBroker
+  UApiManager,  UQuoteBroker, USymbolBroker, UTradeBroker
   ;
 
 type
@@ -20,6 +20,7 @@ type
     FQuoteBroker: TQuoteBrokerManager;
     FSymbolBroker: TSymbolBroker;
     FTradeCore: TTradeCore;
+    FTradeBroker: TTradeBroker;
   public
     constructor Create;
     destructor  Destroy; override;
@@ -30,6 +31,7 @@ type
     property ApiManager: TApimanager read FApiManager;
 
     property QuoteBroker : TQuoteBrokerManager read FQuoteBroker;
+    property TradeBroker: TTradeBroker read FTradeBroker;
     property SymbolBroker: TSymbolBroker read FSymbolBroker;
 
     property ApiConfig : TApiConfigManager read FApiConfig;
@@ -41,12 +43,13 @@ implementation
 
 constructor TDalinEngine.Create;
 begin
-  FApiConfig  := TApiConfigManager.Create;
-  FQuoteBroker:= TQuoteBrokerManager.Create;
-  FApiManager := TApimanager.Create;
-  FFormBroker := TFormBroker.Create;
-  FTradeCore	:= TTradeCore.Create;
-  FSymbolCore := TSymbolCore.Create;
+  FApiConfig    := TApiConfigManager.Create;
+  FQuoteBroker  := TQuoteBrokerManager.Create;
+  FTradeBroker  := TTradeBroker.Create;
+  FApiManager   := TApimanager.Create;
+  FFormBroker   := TFormBroker.Create;
+  FTradeCore	  := TTradeCore.Create;
+  FSymbolCore   := TSymbolCore.Create;
   FSymbolBroker := TSymbolBroker.Create;
 end;
 
@@ -58,6 +61,7 @@ begin
   FSymbolCore.Free;
   FApiConfig.Free;
   FQuoteBroker.Free;
+  FTradeBroker.Free;
   FSymbolBroker.Free;;
   inherited;
 end;

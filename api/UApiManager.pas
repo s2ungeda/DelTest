@@ -285,8 +285,8 @@ var
 begin
 //  FExManagers[ekUpbit].StartRequest;
 //  FExManagers[ekBithumb].StartRequest;
-//  FExManagers[ekBinance].StartRequest;
-//  exit;
+  FExManagers[ekBinance].StartRequest;
+  exit;
   for I := ekBinance to High(TExchangeKind) do
   	FExManagers[i].StartRequest;
 end;

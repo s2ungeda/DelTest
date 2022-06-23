@@ -98,7 +98,8 @@ uses
   URestItems in 'api\URestItems.pas',
   UCyclicThreads in 'api\UCyclicThreads.pas',
   UCyclicItems in 'api\UCyclicItems.pas',
-  FOrderList in 'wins\FOrderList.pas' {FrmOrderList};
+  FOrderList in 'wins\FOrderList.pas' {FrmOrderList},
+  UTradeBroker in 'engine\trade\UTradeBroker.pas';
 
 {$R *.res}
 begin

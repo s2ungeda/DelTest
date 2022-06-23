@@ -37,6 +37,7 @@ const
 
     // data ID
   DNW_EVENT = 100;
+  TRD_DATA  = 200;
 
     // event ID
   DNW_BOTH_TRUE = 101;
@@ -46,6 +47,19 @@ const
   DWN_WITHDRAW_TRUE = 105;
   DWN_WITHDRAW_FALSE= 106;
 
+    // order events
+  ORDER_NEW           = 201;
+  ORDER_ACCEPTED      = 202;
+  ORDER_REJECTED      = 203;
+  ORDER_CANCELED      = 204;
+  ORDER_FILLED        = 205;
+    // fill events
+  FILL_NEW            = 206;
+
+    // position Event;
+  POSITION_NEW        = 210;
+  POSITION_UPDATE     = 211;
+  POSITION_ABLEQTY    = 212;
 
 
 //  QTE_DATA = 200;

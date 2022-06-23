@@ -49,10 +49,14 @@ type
   end;
 
   function GetSettleType( sCur : string): TSettleCurType;
+  function ExKindToStr( aKind : TExchangeKind ) : string;
+  function MarketToStr( aType : TMarketType ) : string;
 
 implementation
 
-
+uses
+  UApiConsts
+  ;
 { TExchangeInfo }
 
 procedure TExchangeInfo.SetInfo(i:integer; stName: string; isMar, isFut, isDome: boolean);
@@ -74,6 +78,16 @@ begin
   else if sCur = 'BTC' then
     Result := scBTC
   else Result := scNone;
+end;
+
+function ExKindToStr( aKind : TExchangeKind ) : string;
+begin
+  Result := TExchangeKindDesc[ aKind ];
+end;
+
+function MarketToStr( aType : TMarketType ) : string;
+begin
+  Result := TMarketTypeDesc[ aType ];
 end;
 
 

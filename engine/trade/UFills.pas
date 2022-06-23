@@ -22,11 +22,15 @@ type
     FOrderNo: string;
     FVolume: Double;
     FAccount: TAccount;
-    FFillNo: string;       
+    FFillNo: string;
+    FSide: integer;
 
-    function Represent: String;        //
+     //
   public
     constructor Create(Coll: TCollection); override;
+
+    function Represent : string;
+    procedure Assign( aFill : TFill );
 
     property FillNo: string read FFillNo;
     property FillTime	: TDateTime read FFillTime;
@@ -35,9 +39,9 @@ type
     property Account: TAccount read FAccount;
     property Symbol: TSymbol read FSymbol;
     property Volume: Double read FVolume;
-    property Price: Double read FPrice;     
+    property Price: Double read FPrice;
+    property Side : integer read FSide;
 
-    procedure Assign( aFill : TFill );
   end;
 
   TFills = class(TCollection)
@@ -48,7 +52,7 @@ type
     constructor Create;
 
     function New(sFillNo: string; dtFillTime, dtEventTime: TDateTime; sOrderNo: string;
-      aAccount: TAccount; aSymbol: TSymbol; dVolume: double; dPrice: Double ): TFill;
+      aAccount: TAccount; aSymbol: TSymbol; dVolume: double; iSide : integer; dPrice: Double ): TFill;
 
     function Find( aAccount : TAccount; aSymbol : TSymbol; sFillNo : string ): TFill;
 
@@ -152,7 +156,7 @@ begin
 end;
 
 function TFills.New(sFillNo: string; dtFillTime, dtEventTime: TDateTime;
-  sOrderNo: string; aAccount: TAccount; aSymbol: TSymbol; dVolume,
+  sOrderNo: string; aAccount: TAccount; aSymbol: TSymbol; dVolume : double; iSide : integer;
   dPrice: Double): TFill;
 begin
   Result := Add as TFill;
@@ -165,6 +169,7 @@ begin
   Result.FVolume  	:= dVolume;
   Result.FPrice   	:= dPrice;
   Result.FEventTime := dtEventTime;
+  Result.FSide       := iSide;
 end;
 
 function TFills.Represent: String;

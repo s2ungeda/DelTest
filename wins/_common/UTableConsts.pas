@@ -55,9 +55,9 @@ const
   orderList_Title : array [0..orderList_TitleCnt-1] of string = ('거래소'
   	,'전략',	'종목코드',	'방향','주문가겨','수량'
     ,'평균가','체결량',		'상태','접수시각','주문번호');
-  orderList_Width : array [0..orderList_TitleCnt-1] of integer = (30
-  	,50, 60, 30, 80, 60
-    ,80, 60, 50, 60, 60);                                 
+  orderList_Width : array [0..orderList_TitleCnt-1] of integer = (50
+  	,50, 80, 30, 80, 60
+    ,80, 60, 50, 60, 80);
   
 
 function GetMajorRow( i : integer ) : integer;
