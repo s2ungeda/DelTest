@@ -16,9 +16,12 @@ type
     FCodes: TStrings;
     FTimer: TQuoteTimer;
     FDone: boolean;
+    FRcvCnt: int64;
+    FSndCnt: int64;
 
     function GetMarketCount: integer;
     function CreateMarket( aMarket : TMarketType ) :  TExchange;
+    function GetSndRcvCnt: string;
   public
 
     QuoteSock : array of TWebSocket;
@@ -51,11 +54,12 @@ type
         
     procedure UnSubscribeAll ; virtual; abstract;
 
-
     function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     procedure RequestDNWState; virtual; abstract;
 
+
+    function GetSndRcvCount : string;
     //  TExchangeMarketType
     property Exchanges   : TMarketArray read FExchanges write FExchanges;
     property MarketCount : integer read GetMarketCount;
@@ -66,13 +70,19 @@ type
     property Timer       : TQuoteTimer read FTimer write FTimer;
     property Done        : boolean read FDone write FDone;
 
+    // ·Î±×¿ë  snd, rcv count
+    property SndCnt : int64 read FSndCnt ;
+    property RcvCnt : int64 read FRcvCnt ;
+    property SndRcvCnt : string read GetSndRcvCnt;
+
   end;
 
 implementation
 uses
   GApp,  UApiConsts
   , UBinanceSpotNMargin, UBinanceFutures
-,   UBithSpot, UUpbitSpot
+  , UBithSpot, UUpbitSpot
+  , URestRequests
   ;
 
 { TExchangeManaager }
@@ -209,6 +219,31 @@ end;
 function TExchangeManager.GetMarketCount: integer;
 begin
   Result := Integer(High(TMarketType));
+end;
+
+function TExchangeManager.GetSndRcvCnt: string;
+begin
+  Result := GetSndRcvCount;
+//  Result := Format('%d, %d (%d)', [ FSndCnt, FRcvCnt, FSndCnt-FRcvCnt] );
+end;
+
+function TExchangeManager.GetSndRcvCount : string;
+var
+  aMarket : TMarketType;
+  i : integer;
+  a : TRequest;
+begin
+  aMarket := mtSpot;
+  if FExchangeKind = ekBinance then
+    aMarket := mtFutures;
+
+  for i:=0 to Exchanges[aMarket].ReqItems.Count-1 do
+  begin
+    a := TRequest( Exchanges[aMarket].ReqItems.Items[i] );
+    FSndCnt := FSndCnt + a.SndCnt;
+    FRcvCnt := FRcvCnt + a.RcvCnt;
+    Result := REsult + Format(' %s:%d,%d(%d)', [a.Name[1], a.SndCnt, a.RcvCnt, a.SndCnt - a.RcvCnt]);
+  end;
 end;
 
 procedure TExchangeManager.init;

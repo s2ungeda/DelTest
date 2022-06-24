@@ -211,7 +211,7 @@
   object plBT: TPanel
     Left = 84
     Top = 49
-    Width = 493
+    Width = 501
     Height = 32
     TabOrder = 8
     Visible = False
@@ -223,7 +223,7 @@
     end
     object btnBTDiscon: TButton
       Tag = 2
-      Left = 225
+      Left = 297
       Top = 6
       Width = 49
       Height = 22
@@ -233,7 +233,7 @@
     end
     object btnBTCon: TButton
       Tag = 2
-      Left = 289
+      Left = 348
       Top = 6
       Width = 49
       Height = 22
@@ -243,7 +243,7 @@
     end
     object btnBTSub: TButton
       Tag = 2
-      Left = 358
+      Left = 399
       Top = 6
       Width = 49
       Height = 22
@@ -253,7 +253,7 @@
     end
     object btnBTunsub: TButton
       Tag = 2
-      Left = 430
+      Left = 450
       Top = 6
       Width = 49
       Height = 22
@@ -275,7 +275,7 @@
   object plUP: TPanel
     Left = 84
     Top = 87
-    Width = 493
+    Width = 501
     Height = 32
     TabOrder = 10
     Visible = False
@@ -287,7 +287,7 @@
     end
     object btnUpDiscon: TButton
       Tag = 1
-      Left = 225
+      Left = 297
       Top = 6
       Width = 49
       Height = 22
@@ -297,7 +297,7 @@
     end
     object btnUpcon: TButton
       Tag = 1
-      Left = 289
+      Left = 348
       Top = 6
       Width = 49
       Height = 22
@@ -307,7 +307,7 @@
     end
     object btnUpsub: TButton
       Tag = 1
-      Left = 358
+      Left = 398
       Top = 6
       Width = 49
       Height = 22
@@ -317,7 +317,7 @@
     end
     object btnUpunsub: TButton
       Tag = 1
-      Left = 430
+      Left = 450
       Top = 6
       Width = 49
       Height = 22
@@ -337,7 +337,7 @@
   object Panel3: TPanel
     Left = 84
     Top = 125
-    Width = 493
+    Width = 501
     Height = 32
     TabOrder = 12
     Visible = False
@@ -348,7 +348,7 @@
       Height = 13
     end
     object Button3: TButton
-      Left = 225
+      Left = 297
       Top = 6
       Width = 49
       Height = 22
@@ -357,7 +357,7 @@
       OnClick = btnBTDisconClick
     end
     object Button4: TButton
-      Left = 289
+      Left = 348
       Top = 6
       Width = 49
       Height = 22
@@ -366,7 +366,7 @@
       OnClick = btnBTConClick
     end
     object Button5: TButton
-      Left = 358
+      Left = 399
       Top = 6
       Width = 49
       Height = 22
@@ -375,7 +375,7 @@
       OnClick = btnBTSubClick
     end
     object Button6: TButton
-      Left = 430
+      Left = 450
       Top = 6
       Width = 49
       Height = 22
@@ -387,7 +387,7 @@
   object Panel4: TPanel
     Left = 84
     Top = 163
-    Width = 493
+    Width = 501
     Height = 32
     TabOrder = 13
     Visible = False
@@ -399,7 +399,7 @@
     end
     object Button7: TButton
       Tag = 3
-      Left = 225
+      Left = 296
       Top = 6
       Width = 49
       Height = 22
@@ -409,7 +409,7 @@
     end
     object Button8: TButton
       Tag = 3
-      Left = 289
+      Left = 347
       Top = 6
       Width = 49
       Height = 22
@@ -419,7 +419,7 @@
     end
     object Button9: TButton
       Tag = 3
-      Left = 358
+      Left = 398
       Top = 6
       Width = 49
       Height = 22
@@ -430,7 +430,7 @@
     end
     object Button10: TButton
       Tag = 3
-      Left = 430
+      Left = 449
       Top = 6
       Width = 49
       Height = 22

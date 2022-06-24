@@ -17,6 +17,7 @@ type
     FFills: TFillArray;
     FAccounts: TAccountArray;
     FPositions: TPositionArray;
+    FTotalOrders: TOrderList;
   public
     constructor Create;
     destructor Destroy; override;      
@@ -35,6 +36,8 @@ type
     property Orders: TOrderArray read FOrders;
     property Fills: TFillArray read FFills;
     property Positions: TPositionArray read FPositions;
+
+    property TotalOrders : TOrderList read FTotalOrders;
   end;
 implementation
 uses
@@ -70,6 +73,7 @@ begin
     FAccounts[i]:= TAccounts.Create;
     FPositions[i]:= TPositions.Create;
   end;
+  FTotalOrders  := TOrderList.Create;
 end;
 destructor TTradeCore.Destroy;
 var
@@ -82,6 +86,7 @@ begin
     FFills[i].Free;
     FAccounts[i].Free;
   end;
+  FTotalOrders.Free;
   inherited;
 end;
 function TTradeCore.FindAccount(ekType: TExchangeKind;

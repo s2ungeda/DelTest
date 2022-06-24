@@ -140,8 +140,9 @@ begin
 //  for i:=0 to Exchanges[mtSpot].ReqItems.Count-1 do
 //  begin
 //    a := TRequest(Exchanges[mtSpot].ReqItems.Items[i]);
-//    j := j +  a.SndCnt ;
-//    a.SndCnt  := 0;
+//    SndCnt := SndCnt + a.SndCnt ;
+//    RcvCnt := RcvCnt
+//    //a.SndCnt  := 0;
 //  end;
 //
 //  App.Log(llInfo,'rate', '%s req cnt : %d', [  TExchangeKindDesc[ExchangeKind] , j ] )  ;

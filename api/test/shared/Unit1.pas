@@ -8,9 +8,25 @@ uses
   ;
 
 const
-  MAPFILESIZE = 500;
+  DATA_SIZE = 1024 * 100;
+  Q_SIZE = 5;
 
 type
+
+  TDataItem = packed record
+    ex     : char;
+    market : char;
+    data   : array [0..DATA_SIZE-1] of ansichar;
+    size   : array [0..4] of ansichar;
+  end;
+
+  PSharedData = ^TSharedData;
+  TSharedData = record
+    SharedData : array [0..Q_SIZE-1] of TDataItem;
+    WCnt, RCnt : integer;
+  end;
+
+
   TMmfThread = class(TThread)
   private
     hTerminate: THandle;
@@ -98,24 +114,30 @@ var
   llInit: Boolean;
   llRet, llValue: DWORD;
   llHandles: array[0..1] of THandle;
+  iSize, i : integer;
+  vData : PSharedData;
+  tmp : string;
+  item : TDataItem;
+  aaa : ansiString;
 begin
+  iSize  := SizeOf(TSharedData);
   hMapEvent := CreateEvent(nil, True, False, PChar('wowsniffDataReady'));
   if hMapEvent = 0 then RaiseLastOSError;
 
   hMapLock := CreateMutex(nil, False, PChar('wowsniffDataLock'));
   if hMapLock = 0 then RaiseLastOSError;
 
-  hMapping := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, MAPFILESIZE, PChar('wowsniff'));
+  hMapping := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar('wowsniff'));
   if hMapping = 0 then RaiseLastOSError;
   // Check if already exists
   llInit := (GetLastError() <> ERROR_ALREADY_EXISTS);
 
-  PMapData := MapViewOfFile(hMapping, FILE_MAP_WRITE, 0, 0, MAPFILESIZE);
+  PMapData := MapViewOfFile(hMapping, FILE_MAP_WRITE, 0, 0, iSize);
   if PMapData = nil then RaiseLastOSError;
   if llInit then
   begin
     // Init block to #0 if newly created
-    FillChar(PMapData^, MAPFILESIZE, 0);
+    FillChar(PMapData^, iSize, 0);
   end;
 
   llHandles[0] := hMapEvent;
@@ -131,8 +153,28 @@ begin
         if llRet = WAIT_OBJECT_0 then
         begin
           try
-            llValue := PDword(PMapData)^;
-            FData   := IntTostr(  llValue );
+
+            vData   := PSharedData( PMapData );
+            if vData.RCnt + 1 >= Q_SIZE then
+              i := 0
+            else
+              i := vData.RCnt + 1;
+            CopyMemory(@item, @(vData.SharedData[i])  , sizeof( TDataItem) )        ;
+
+            var ii : integer;
+
+
+            ii  := StrToInt(ansiString(item.size));
+            aaa := ansiString( item.data );
+            //setstring( aaa, PAnsiChar( item.data[0] ), ii );
+           // setstring(tmp, PChar(vData.SharedData[i].data ), 100);
+
+
+            FData   :=  Format('%d, %s', [ i, aaa ]);
+            vData.RCnt := i;
+
+//            llValue := PDword(PMapData)^;
+//            FData   := IntTostr(  llValue );
             Synchronize(SyncProc );
             ResetEvent(hMapEvent);
           finally

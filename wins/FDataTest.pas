@@ -298,15 +298,21 @@ procedure TFrmTest.wsTimerTimer(Sender: TObject);
 begin
   if ( App.Engine.ApiManager.ExManagers[ekUpbit] = nil ) then Exit;
   if ( App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock = nil ) then Exit;
+
   if App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0] <> nil  then
-    lbUp.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].GetSockState,
-       App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvCnt ] );
+    lbUp.Caption  := Format('%s : %d (%s)', [ App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].GetSockState,
+       App.Engine.ApiManager.ExManagers[ekUpbit].QuoteSock[0].RcvCnt,
+       App.Engine.ApiManager.ExManagers[ekUpbit].SndRcvCnt  ] );
+
   if App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0] <> nil  then
-    lbBT.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].GetSockState,
-       App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].RcvCnt ] );
+    lbBT.Caption  := Format('%s : %d (%s)', [ App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].GetSockState,
+       App.Engine.ApiManager.ExManagers[ekBithumb].QuoteSock[0].RcvCnt,
+       App.Engine.ApiManager.ExManagers[ekBithumb].SndRcvCnt  ] );
+
   if App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1] <> nil  then
-    lbBN.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].GetSockState,
-       App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvCnt ] );
+    lbBN.Caption  := Format('%s : %d (%s)', [ App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].GetSockState,
+       App.Engine.ApiManager.ExManagers[ekBinance].QuoteSock[1].RcvCnt,
+       App.Engine.ApiManager.ExManagers[ekBinance].SndRcvCnt  ] );
 
   if App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures] <> nil  then
     Label4.Caption  := Format('%s : %d', [ App.Engine.ApiManager.ExManagers[ekBinance].TradeSock[mtFutures].GetSockState,

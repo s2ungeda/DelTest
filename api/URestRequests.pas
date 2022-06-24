@@ -18,6 +18,7 @@ type
     FInterval: integer;
     FThreadID: int64;
     FSndCnt: int64;
+    FRcvCnt: int64;
     function GetContent: string;
     function GetStatusCode: integer;
     function GetStatusText: string;
@@ -63,6 +64,7 @@ type
     property Interval	: integer read FInterval ;
 
     property SndCnt : int64 read FSndCnt write FSndCnt;
+    property RcvCnt : int64 read FRcvCnt write FRcvCnt;
 
   end;
 implementation
@@ -72,6 +74,7 @@ implementation
 
 procedure TRequest.ASyncProc;
 begin
+  inc(FRcvCnt);
   if Assigned(FOnNotify) then
   begin
     EnTime  := GetTickCount;
@@ -96,6 +99,7 @@ begin
   LastTime := 0;
   Count    := 0;
   FSndCnt  := 0;
+  FRcvCnt  := 0;
 end;
 destructor TRequest.Destroy;
 begin

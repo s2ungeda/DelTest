@@ -128,7 +128,7 @@ type
     function NewOrder( aAccount: TAccount; aSymbol: TSymbol; iSide : integer; dOrderQty: double;
       pcValue: TPriceControl; dPrice: Double; tmValue: TTimeInForce  ): TOrder; overload;
     
-    function NewCancelOrder(aTarget: TOrder; iCancelQty: Integer ): TOrder;  
+    function NewCancelOrder(aTarget: TOrder; dCancelQty: double ): TOrder;
     function Represent: String;    
     
       // search
@@ -388,9 +388,11 @@ begin
     end;
   end;
 end;
+
 function TOrders.GetGroupID: integer;
 begin
 end;
+
 function TOrders.GetOrder(i: Integer): TOrder;
 begin
   if (i >= 0) and (i <= Count-1) then
@@ -398,14 +400,23 @@ begin
   else
     Result := nil;
 end;
-function TOrders.NewCancelOrder(aTarget: TOrder; iCancelQty: Integer): TOrder;
+
+function TOrders.NewCancelOrder(aTarget: TOrder; dCancelQty: double): TOrder;
 begin
+  if aTarget = nil then Exit;
+  aTarget.Modify := true;
 end;
+
+
 function TOrders.New: TOrder;
 begin
   Result := Add as TOrder;
   Result.FOnStateChanged := OrderStateChanged;
+  // 모든 주문 줄세우기 위해...
+  App.Engine.TradeCore.TotalOrders.Add( Result );
 end;
+
+
 function TOrders.NewOrder(aAccount: TAccount; aSymbol: TSymbol;  iSide : integer;
   dOrderQty: double; pcValue: TPriceControl; dPrice: Double;
   tmValue: TTimeInForce): TOrder;
@@ -414,7 +425,7 @@ begin
   if (aAccount = nil) or (aSymbol = nil) or ( CheckZero(dOrderQty)) then Exit;
 //  if not App.Engine.TradeCore.Positions.CheckOrderLimit( aAccount, aSymbol, iOrderQty, dPrice ) then
 //    Exit;
-  Result := New;           
+  Result := New;
   Result.FAccount := aAccount;
   Result.FSymbol := aSymbol;
   Result.FTarget := nil;
@@ -427,12 +438,11 @@ begin
   Result.FOrderNo := '';
   Result.FActiveQty := 0;
   Result.FFilledQty := 0;
-  Result.FCanceledQty := 0;     
+  Result.FCanceledQty := 0;
   Result.FRejectCode := '';
   Result.FAcptTime := 0;   
     // add to the queue
-  FNewOrders.Add(Result);    
-   
+  FNewOrders.Add(Result);
     // notify 화면에서 필요..
   if Assigned(FOnNew) then
     FOnNew(Result);

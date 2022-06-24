@@ -41,7 +41,7 @@ end;
 
 procedure TForm2.OnNotify(const S: string);
 begin
-  memo1.Lines.Add( s );
+  memo1.Lines.Add( Copy(s, 1, 100 ) );
 end;
 
 end.

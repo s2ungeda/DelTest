@@ -124,6 +124,7 @@ begin
 //  end;
 //
 //  App.Log(llInfo,'rate', '%s req cnt : %d', [  TExchangeKindDesc[ExchangeKind] , j ] )  ;
+
 end;
 
 function TUpbitManager.Subscrib(aSymbol: TSymbol): boolean;

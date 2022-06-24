@@ -1163,7 +1163,7 @@ end;
 procedure TForm3.restReqHTTPProtocolError(Sender: TCustomRESTRequest);
 begin
 
- // memo1.Lines.Add('error : ' + Sender.Response.Content);
+ memo1.Lines.Add('error : ' + Sender.Response.Content);
 end;
 
 
