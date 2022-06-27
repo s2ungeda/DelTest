@@ -3,7 +3,8 @@ program Project2;
 uses
   Vcl.Forms,
   Unit2 in 'Unit2.pas' {Form2},
-  uNamedShareMemory in 'uNamedShareMemory.pas';
+  uNamedShareMemory in 'uNamedShareMemory.pas',
+  USharedData in 'USharedData.pas';
 
 {$R *.res}
 

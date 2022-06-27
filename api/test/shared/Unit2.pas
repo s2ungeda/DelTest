@@ -5,26 +5,13 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, REST.Types,
-  REST.Client, Data.Bind.Components, Data.Bind.ObjectScope;
+  REST.Client, Data.Bind.Components, Data.Bind.ObjectScope
+  , USharedData
+  ;
 
-const
-  DATA_SIZE = 1024 * 100;
-  Q_SIZE = 5;
 
 type
 
-  TDataItem = packed record
-    ex     : char;
-    market : char;
-    data   : array [0..DATA_SIZE-1] of ansichar;
-    size   : array [0..4] of ansichar;
-  end;
-
-  PSharedData = ^TSharedData;
-  TSharedData = record
-    SharedData : array [0..Q_SIZE-1] of TDataItem;
-    WCnt, RCnt : integer;
-  end;
 
   TForm2 = class(TForm)
     Edit1: TEdit;
@@ -72,7 +59,7 @@ begin
 
   if hMapEvent = 0 then
   begin
-    hMapEvent := CreateEvent(nil, True, False, PChar('wowsniffDataReady'));
+    hMapEvent := CreateEvent(nil, False, False, PChar('wowsniffDataReady'));
     if hMapEvent = 0 then RaiseLastOSError;
   end;
 
@@ -107,29 +94,26 @@ end;
 procedure TForm2.Button1Click(Sender: TObject);
 var
   vData : PSharedData;
-  i, iTmp : integer;
   aItem : TDataItem;
   data, tmp : ansiString;
 begin
   LockMap;
   try
     vData := PSharedData( PMapData);
-    iTmp  := vData.WCnt;
-    if ( iTmp + 1 ) >= Q_SIZE Then
-      i := 0
-    else
-      i := iTmp + 1;
+
+    if vData.IsFull then Exit;
+    // 한칸 앞으로 이동 후 데이타 추가
+    vData.Rear := ( vData.Rear + 1 ) mod Q_SIZE;
 
     FillChar( aItem.data, DATA_SIZE, $0 );
-    data  := edit1.Text;//  FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', now);
+    data  :=  AnsiString( edit1.Text );
     aItem.ex  := 'A';
     aItem.market  := 'B';
-    tmp := Format('%4.4d', [ Length(data)]);
+    tmp := AnsiString( Format('%4.4d', [ Length(data)]) );
     move(  tmp[1],  aItem.size, sizeof(aItem.size));
     move(  data[1], aItem.data, Length(data) );
 
-    CopyMemory(@(vData.SharedData[i]), @aItem, sizeof(TDataItem));
-    vData.WCnt  := i;
+    CopyMemory(@(vData.SharedData[vData.Rear]), @aItem, sizeof(TDataItem));
 //    PDword(PMapData)^ := StrToInt(Edit1.Text);
     SetEvent(hMapEvent);
   finally
@@ -175,6 +159,7 @@ end;
 
 procedure TForm2.Timer1Timer(Sender: TObject);
 begin
+  Edit1.Text := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', now) ;
   Button1Click(nil);
 end;
 
@@ -182,5 +167,8 @@ procedure TForm2.UnlockMap;
 begin
   ReleaseMutex(hMapLock);
 end;
+
+{ TSharedData }
+
 
 end.

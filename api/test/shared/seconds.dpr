@@ -3,7 +3,8 @@ program seconds;
 uses
   Vcl.Forms,
   Unit3 in 'Unit3.pas' {Form2},
-  Unit1 in 'Unit1.pas';
+  Unit1 in 'Unit1.pas',
+  USharedData in 'USharedData.pas';
 
 {$R *.res}
 

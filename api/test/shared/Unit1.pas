@@ -4,28 +4,12 @@ interface
 
 uses
   System.Classes, System.SysUtils,
-  windows
+  windows,
+  USharedData
   ;
 
-const
-  DATA_SIZE = 1024 * 100;
-  Q_SIZE = 5;
 
 type
-
-  TDataItem = packed record
-    ex     : char;
-    market : char;
-    data   : array [0..DATA_SIZE-1] of ansichar;
-    size   : array [0..4] of ansichar;
-  end;
-
-  PSharedData = ^TSharedData;
-  TSharedData = record
-    SharedData : array [0..Q_SIZE-1] of TDataItem;
-    WCnt, RCnt : integer;
-  end;
-
 
   TMmfThread = class(TThread)
   private
@@ -121,7 +105,7 @@ var
   aaa : ansiString;
 begin
   iSize  := SizeOf(TSharedData);
-  hMapEvent := CreateEvent(nil, True, False, PChar('wowsniffDataReady'));
+  hMapEvent := CreateEvent(nil, False, False, PChar('wowsniffDataReady'));
   if hMapEvent = 0 then RaiseLastOSError;
 
   hMapLock := CreateMutex(nil, False, PChar('wowsniffDataLock'));
@@ -155,28 +139,43 @@ begin
           try
 
             vData   := PSharedData( PMapData );
-            if vData.RCnt + 1 >= Q_SIZE then
-              i := 0
-            else
-              i := vData.RCnt + 1;
-            CopyMemory(@item, @(vData.SharedData[i])  , sizeof( TDataItem) )        ;
 
-            var ii : integer;
+            var iWorkCnt : integer;  iWorkCnt := 0;
+
+            while ( not vData.IsEmpty ) and ( iWorkCnt < 10 ) do
+            begin
+              vData.Front := ( vData.Front + 1) mod Q_SIZE;
+              inc(iWorkCnt);
+              CopyMemory(@item, @(vData.SharedData[vData.Front])  , sizeof( TDataItem) )        ;
+              var ii : integer;
+              ii  := StrToInt(ansiString(item.size));
+              aaa := ansiString( item.data );
+              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
+              Synchronize(SyncProc );
+            end;
 
 
-            ii  := StrToInt(ansiString(item.size));
-            aaa := ansiString( item.data );
-            //setstring( aaa, PAnsiChar( item.data[0] ), ii );
-           // setstring(tmp, PChar(vData.SharedData[i].data ), 100);
-
-
-            FData   :=  Format('%d, %s', [ i, aaa ]);
-            vData.RCnt := i;
-
-//            llValue := PDword(PMapData)^;
-//            FData   := IntTostr(  llValue );
-            Synchronize(SyncProc );
-            ResetEvent(hMapEvent);
+//            if vData.IsEmpty then continue;
+//
+//            if vData.Count < 4 then continue;
+//
+//            for I := 0 to vData.Count-1 do
+//            begin
+//              if vData.IsEmpty then continue;
+//              vData.Front := ( vData.Front + 1) mod Q_SIZE;
+//              CopyMemory(@item, @(vData.SharedData[vData.Front])  , sizeof( TDataItem) )        ;
+//              var ii : integer;
+//              ii  := StrToInt(ansiString(item.size));
+//              aaa := ansiString( item.data );
+//              //setstring( aaa, PAnsiChar( item.data[0] ), ii );
+//             // setstring(tmp, PChar(vData.SharedData[i].data ), 100);
+//
+//              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
+//  //            llValue := PDword(PMapData)^;
+//  //            FData   := IntTostr(  llValue );
+//              Synchronize(SyncProc );
+//            end;
+//            ResetEvent(hMapEvent);
           finally
             ReleaseMutex(hMapLock);
           end;

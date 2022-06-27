@@ -99,7 +99,9 @@ uses
   UCyclicThreads in 'api\UCyclicThreads.pas',
   UCyclicItems in 'api\UCyclicItems.pas',
   FOrderList in 'wins\FOrderList.pas' {FrmOrderList},
-  UTradeBroker in 'engine\trade\UTradeBroker.pas';
+  UTradeBroker in 'engine\trade\UTradeBroker.pas',
+  UNormalOrder in 'wins\UNormalOrder.pas' {FrmNormalOrder},
+  UApiMaps in 'api\UApiMaps.pas';
 
 {$R *.res}
 begin

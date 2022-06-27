@@ -36,7 +36,8 @@ type
 implementation
 
 uses
-	Forms
+  GApp
+	, Forms
   ;
 
 { IntervalThread }
@@ -118,6 +119,14 @@ begin
         FData := aItem;
         Synchronize( SyncProc );
 //        FOnNotify( aItem );
+      end else
+      if (bSend) and ( aITem.State = 1 ) then
+      begin
+        if not aItem.CheckDelayTime(3000) then
+        begin
+          aItem.DoTimeout;
+          App.Log(llInfo, 'Req TimeOut %s %s ', [ aItem.Name, aItem.Req.Client.BaseURL ]  );
+        end;
       end;
 
       inc( iSnd );

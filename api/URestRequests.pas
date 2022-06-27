@@ -44,6 +44,10 @@ type
 
     procedure SetParam(  AMethod : TRESTRequestMethod;  AResource, AName : string ); overload;
     procedure SetParam(  aSeq, aInterval : integer ); overload;
+
+    procedure DoTimeout ;
+    function CheckDelayTime( iDelay : integer ) : boolean;
+
     
     procedure ASyncProc;
     property Req : TRESTRequest read FReq;
@@ -58,7 +62,7 @@ type
 
     property OnNotify : TNotifyEvent read FOnNotify write FOnNotify;
 
-    // 0 : no used  1 : request   2 : response
+    // 0 : no used  1 : request   2 : response   3 : timeout;
     property State  : integer read FState write FState;
     property Seq	 	: integer read FSeq		;
     property Interval	: integer read FInterval ;
@@ -80,6 +84,19 @@ begin
     EnTime  := GetTickCount;
     FOnNotify( Self );
   end;
+end;
+
+function TRequest.CheckDelayTime(iDelay: integer): boolean;
+var
+  dNow, dGap : DWORD;
+begin
+  Result := True;
+
+  dNow := GetTickCount;
+  dGap := dNow - StTime;
+
+  if dGap > iDelay then
+    Result := false;
 end;
 
 constructor TRequest.Create;
@@ -203,6 +220,11 @@ begin
   Result := FReqThread <> nil;
   FThreadID := FReqThread.ThreadID;
   inc( FSndCnt );
+end;
+
+procedure TRequest.DoTimeout;
+begin
+  FState := 3;
 end;
 
 procedure TRequest.SetParam(aSeq, aInterval: integer);

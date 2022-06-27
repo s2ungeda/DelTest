@@ -27,6 +27,8 @@ type
     procedure Cancel( aOrder : TOrder; dQty : double );
     procedure Fill( aOrder : TOrder; aFill : TFill );
 
+    procedure Send( aOrder : TOrder );
+
   end;
 
 implementation
@@ -115,7 +117,20 @@ begin
 
 end;
 
-//  Subscribe(Self, DNW_STATE, SymbolBrokerEventHandler);
+procedure TTradeBroker.Send(aOrder: TOrder);
+begin
+  case aOrder.Account.ExchangeKind of
+    ekBinance:
+      case aOrder.Symbol.Spec.Market of
+        mtSpot : ;
+//      mtFutures : App.Engine.ApiManager.ExManagers[ekBinance].SendOrder( aOrder );
+      end;
+    ekUpbit: ;
+    ekBithumb: ;
+  end;
+end;
+
+
 procedure TTradeBroker.Subscribe(Sender: TObject; iDataID: integer;
   aHandler: TDistributorEvent);
 begin

@@ -223,7 +223,7 @@
     end
     object btnBTDiscon: TButton
       Tag = 2
-      Left = 297
+      Left = 348
       Top = 6
       Width = 49
       Height = 22
@@ -233,7 +233,7 @@
     end
     object btnBTCon: TButton
       Tag = 2
-      Left = 348
+      Left = 399
       Top = 6
       Width = 49
       Height = 22
@@ -243,7 +243,7 @@
     end
     object btnBTSub: TButton
       Tag = 2
-      Left = 399
+      Left = 450
       Top = 6
       Width = 49
       Height = 22
@@ -253,12 +253,13 @@
     end
     object btnBTunsub: TButton
       Tag = 2
-      Left = 450
-      Top = 6
+      Left = 474
+      Top = 10
       Width = 49
       Height = 22
       Caption = 'UnSub'
       TabOrder = 3
+      Visible = False
       OnClick = btnBTunsubClick
     end
   end
@@ -287,7 +288,7 @@
     end
     object btnUpDiscon: TButton
       Tag = 1
-      Left = 297
+      Left = 347
       Top = 6
       Width = 49
       Height = 22
@@ -297,7 +298,7 @@
     end
     object btnUpcon: TButton
       Tag = 1
-      Left = 348
+      Left = 398
       Top = 6
       Width = 49
       Height = 22
@@ -307,7 +308,7 @@
     end
     object btnUpsub: TButton
       Tag = 1
-      Left = 398
+      Left = 448
       Top = 6
       Width = 49
       Height = 22
@@ -317,12 +318,13 @@
     end
     object btnUpunsub: TButton
       Tag = 1
-      Left = 450
-      Top = 6
+      Left = 474
+      Top = 10
       Width = 49
       Height = 22
       Caption = 'UnSub'
       TabOrder = 3
+      Visible = False
     end
   end
   object cbBN: TCheckBox
