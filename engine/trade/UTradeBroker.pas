@@ -119,15 +119,7 @@ end;
 
 procedure TTradeBroker.Send(aOrder: TOrder);
 begin
-  case aOrder.Account.ExchangeKind of
-    ekBinance:
-      case aOrder.Symbol.Spec.Market of
-        mtSpot : ;
-//      mtFutures : App.Engine.ApiManager.ExManagers[ekBinance].SendOrder( aOrder );
-      end;
-    ekUpbit: ;
-    ekBithumb: ;
-  end;
+  App.Engine.ApiManager.ExManagers[aOrder.Account.ExchangeKind].SendOrder( aOrder );
 end;
 
 

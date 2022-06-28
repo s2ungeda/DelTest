@@ -416,7 +416,7 @@ procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
 begin
 
   aFont   := clBlack;
-  dFormat := DT_CENTER ;
+//  dFormat := DT_CENTER ;
   aRect   := Rect;
   aBack   := clWhite;
 

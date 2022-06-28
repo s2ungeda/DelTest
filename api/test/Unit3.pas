@@ -36,6 +36,7 @@ type
     Button17: TButton;
     edtUid: TEdit;
     Button18: TButton;
+    Button19: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -381,7 +382,7 @@ procedure TForm3.Button13Click(Sender: TObject);
 var
   t,sig, data, key : string;
 begin
-  key := 'ZGzriTauLgOYQ35aNXlKJWFHf07CLxBLZ0i3yeIW7Fiht9gTJanPLGBRrp5FzFKf';         
+  key := 'ZGzriTauLgOYQ35aNXlKJWFHf07CLxBLZ0i3yeIW7Fiht9gTJanPLGBRrp5FzFKf';
 
   restClient.BaseURL := 'https://fapi.binance.com';
   restReq.Resource := '/fapi/v2/positionRisk';
@@ -405,7 +406,6 @@ begin
   memo1.Lines.Add( restRes.JSONValue.ToString );
 
 end;
-
 
 procedure TForm3.Button4Click(Sender: TObject);
 var
@@ -627,6 +627,7 @@ begin
   end;
 
 end;
+
 
 
 procedure TForm3.Button8Click(Sender: TObject);

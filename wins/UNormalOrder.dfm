@@ -25,7 +25,6 @@ object FrmNormalOrder: TFrmNormalOrder
     Align = alRight
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitHeight = 209
     object sgHoga: TStringGrid
       Left = 1
       Top = 1
@@ -44,6 +43,8 @@ object FrmNormalOrder: TFrmNormalOrder
       ScrollBars = ssNone
       ShowHint = False
       TabOrder = 0
+      OnDrawCell = sgHogaDrawCell
+      OnMouseDown = sgHogaMouseDown
     end
   end
   object Panel2: TPanel
@@ -53,7 +54,6 @@ object FrmNormalOrder: TFrmNormalOrder
     Height = 208
     Align = alLeft
     TabOrder = 1
-    ExplicitLeft = -5
     object edtQty: TLabeledEdit
       Left = 75
       Top = 31
@@ -63,6 +63,7 @@ object FrmNormalOrder: TFrmNormalOrder
       EditLabel.Height = 13
       EditLabel.Caption = #49688#47049
       LabelPosition = lpLeft
+      NumbersOnly = True
       TabOrder = 0
     end
     object edtPrice: TLabeledEdit
@@ -74,6 +75,7 @@ object FrmNormalOrder: TFrmNormalOrder
       EditLabel.Height = 13
       EditLabel.Caption = #45800#44032
       LabelPosition = lpLeft
+      NumbersOnly = True
       TabOrder = 1
     end
     object cbExKind: TComboBox

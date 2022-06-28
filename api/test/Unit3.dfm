@@ -208,6 +208,14 @@ object Form3: TForm3
     TabOrder = 21
     OnClick = Button18Click
   end
+  object Button19: TButton
+    Left = 658
+    Top = 142
+    Width = 75
+    Height = 25
+    Caption = 'order'
+    TabOrder = 22
+  end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'
     Params = <>

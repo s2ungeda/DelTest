@@ -7,7 +7,9 @@ uses
   
   REST.Types, REST.Client ,
 
-  URestRequests, URestThread, UCyclicThreads , UCyclicItems, 
+  URestRequests, URestThread, UCyclicThreads , UCyclicItems,
+
+  UOrders,
 
   UApiTypes
   ;
@@ -72,6 +74,7 @@ type
     function RequestBalance : boolean; virtual; abstract;    
     function RequestPositons : boolean; virtual; abstract;
     function RequestOrders: boolean; virtual; abstract;
+    function RequestOrder( aOrder : TOrder ) : boolean; virtual; abstract;
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
     // cyclicthread notify

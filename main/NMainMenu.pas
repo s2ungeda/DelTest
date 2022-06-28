@@ -51,7 +51,7 @@ uses
   GApp, GAppForms ,
 
   DalinMain, FPriceTable, FJungKopi , FDnwStates, FQuoteMonitors,
-  FRepresentWDC, FDataTest , FOrderList
+  FRepresentWDC, FDataTest , FOrderList, UNormalOrder
   ;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -109,7 +109,9 @@ begin
     	if aForm is TFrmOrderList then
       	(aForm as TFrmOrderList).LoadEnv( aStorage );
     
-
+    ID_ORDER :
+      if aForm is TFrmNormalOrder then
+        (aForm as TFrmNormalOrder).LoadEnv( aStorage );
   end;
 
 end;
@@ -141,7 +143,11 @@ begin
 
     ID_ORDER_LIST :
     	if aForm is TFrmOrderList then
-      	(aForm as TFrmOrderList).SaveEnv( aStorage );        
+      	(aForm as TFrmOrderList).SaveEnv( aStorage );
+
+    ID_ORDER :
+      if aForm is TFrmNormalOrder then
+        (aForm as TFrmNormalOrder).SaveEnv( aStorage );
   end;
 end;
 
@@ -157,6 +163,7 @@ begin
     ID_RPRSNT_WDC 		: aForm := TFrmRprsntWDC.Create( FrmDalinMain);
     ID_TEST 					: aForm := TFrmTest.Create( FrmDalinMain );
     ID_ORDER_LIST 		: aForm := TFrmOrderList.Create( FrmDalinMain );
+    ID_ORDER          : aForm := TFrmNormalOrder.Create( FrmDalinMain );
   end;
 end;
 
@@ -189,7 +196,7 @@ begin
   if (Sender = nil) or not (Sender is TComponent) then Exit;      
 
   case (Sender as TComponent).Tag of
-    0 : ;
+    0 : App.Engine.FormBroker.Open(ID_ORDER, 0);
     1 : App.Engine.FormBroker.Open(ID_ORDER_LIST, 0);
     2 : ;
   end;

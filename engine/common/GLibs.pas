@@ -24,6 +24,7 @@ function Get30TermIdx : integer;
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 function IfThenFloat(AValue: Boolean; const ATrue: double): string;
 function FmtString( iPre : integer; dVal : double ): string;
+
 //---------------------------------------- file
 
 function GetTimestamp(len: Integer = 13): string;

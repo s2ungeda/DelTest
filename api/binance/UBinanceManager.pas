@@ -7,6 +7,8 @@ uses
 
   UExchangeManager, USymbols, UBinanceParse , UQuoteTimers
 
+  , UOrders
+
   ,UApiTypes
 
   ;
@@ -32,6 +34,7 @@ type
     function RequestBalance : boolean; override;
     function RequestPositons : boolean; override;
     function RequestOrders: boolean; override;
+    function SendOrder( aOrder : TOrder ): boolean;
 
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; override;
@@ -91,7 +94,7 @@ begin
 
   QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, 1, mtFutures ) ;
 //  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
-  QuoteSock[1].init( 'stream.binance.com/ws' ); // 테스트넷
+  QuoteSock[1].init( 'stream.binancefuture.com/ws' ); // 테스트넷
 
 
   sKey  := (Exchanges[mtSpot] as TBinanceSpotNMargin).RequestListenKey( true );
@@ -193,6 +196,18 @@ begin
     Result := true;
   except
   end;
+end;
+
+function TBinanceManager.SendOrder(aOrder: TOrder): boolean;
+begin
+  Result := false;
+  if aOrder = nil then Exit;
+
+  case aOrder.Symbol.Spec.Market of
+    mtSpot: ;
+    mtFutures:  Result := Exchanges[mtFutures].RequestOrder( aOrder ) ;
+  end;
+
 end;
 
 function TBinanceManager.Subscrib(aSymbol: TSymbol): boolean;

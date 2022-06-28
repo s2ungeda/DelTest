@@ -296,7 +296,7 @@ begin
       end else
       if FMarketType = mtFutures then
       begin
-          aList.Add( SubList[i] +'@depth5' );
+          aList.Add( SubList[i] +'@depth5@100ms' );
           aList.Add( SubList[i] +'@aggTrade' );
 //          aList.Add( SubList[i] +'@miniTicker' );
       end ;

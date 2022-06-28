@@ -10,7 +10,7 @@ uses
 
   , USymbols, UOrders, UAccounts, UPositions
 
-  , UDistributor
+  , UDistributor, UStorage
 
   ;
 
@@ -36,10 +36,15 @@ type
     procedure cbExKindChange(Sender: TObject);
     procedure edtCodeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure sgHogaDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect;
+      State: TGridDrawState);
+    procedure sgHogaMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FExKind : TExchangeKind;
     FSymbol : TSymbol;
     FAccount: TAccount;
+    FCol, FRow : integer;
     procedure initControls;
     { Private declarations }
   public
@@ -48,6 +53,9 @@ type
       DataObj: TObject; EventID: TDistributorID);
     procedure TradeProc(Sender, Receiver: TObject; DataID: Integer;
       DataObj: TObject; EventID: TDistributorID);
+
+    procedure SaveEnv( aStorage : TStorage );
+    procedure LoadEnv( aStorage : TStorage );
   end;
 
 var
@@ -68,6 +76,13 @@ var
   dOrderQty, dPrice : double;
   aOrder  : TOrder;
 begin
+
+  if (edtQty.Text = '') or ( edtPrice.Text = '') then
+  begin
+    ShowMessage('필수항목 입력');
+    Exit;
+  end;
+
   if rbBuy.Checked then iSide := 1;
   if rbSell.Checked then iSide := -1;
 
@@ -85,8 +100,15 @@ begin
 end;
 
 procedure TFrmNormalOrder.cbExKindChange(Sender: TObject);
+var
+  aKind : TExchangeKind;
 begin
-  FExKind := TExchangeKind( cbExKind.ItemIndex );
+  aKind     := TExchangeKind( cbExKind.ItemIndex );
+
+  if aKind <> FExKind then
+    FSymbol := nil;
+
+  FExKind   := aKind;
   FAccount  := App.Engine.TradeCore.FindAccount( FExKind );
 end;
 
@@ -99,7 +121,7 @@ begin
   if Key = VK_RETURN then
   begin
     sText := edtCode.Text;
-    if (FSymbol <> nil ) and ( FSymbol.Spec.BaseCode = sText) then Exit;
+    //if (FSymbol <> nil ) and ( FSymbol.Spec.BaseCode = sText) then Exit;
     if sText <> '' then
     begin
       aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( sText, FExKind);
@@ -149,23 +171,97 @@ begin
 end;
 
 
-procedure TFrmNormalOrder.TradeProc(Sender, Receiver: TObject; DataID: Integer;
-  DataObj: TObject; EventID: TDistributorID);
+procedure TFrmNormalOrder.SaveEnv(aStorage: TStorage);
 begin
 
 end;
+
+procedure TFrmNormalOrder.sgHogaDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+  var
+    aFont, aBack : TColor;
+    dFormat : word;
+    aRect : TRect;
+    stTxt : string;
+begin
+
+  aFont := clBlack;
+  aBack := clWhite;
+  aRect := Rect;
+  dFormat := DT_RIGHT ;
+
+  with sgHoga do
+  begin
+    stTxt := Cells[ACol, ARow];
+
+    Canvas.Font.Color   := aFont;
+    Canvas.Brush.Color  := aBack;
+
+    if ACol = 1 then
+      dFormat := DT_CENTER;
+
+    aRect.Top := Rect.Top + 2;
+    if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
+      aRect.Right := aRect.Right - 2;
+    dFormat := dFormat or DT_VCENTER;
+
+    Canvas.FillRect( Rect);
+    DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
+  end;
+end;
+
+procedure TFrmNormalOrder.sgHogaMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+  var
+    aCol, aRow : integer;
+    sTxt : string;
+    dPrice: double;
+begin
+  sgHoga.MouseToCell( X, Y, aCol, aRow );
+
+  if FSymbol = nil then Exit;
+
+  sTxt := '';
+  if (aCol = 0) and ( aRow <=4) then begin
+    sTxt := sgHoga.Cells[aCol, aRow];
+    dPrice  := FSymbol.Asks[aRow].Price;
+  end
+  else if ( aCol = 2 ) and ( aRow > 4 ) then begin
+    sTxt := sgHoga.Cells[aCol, aRow];
+    dPrice  := FSymbol.Bids[aRow-5].Price;
+  end;
+
+  if sTxt <> '' then
+    edtPrice.Text := sTxt;
+
+end;
+
+procedure TFrmNormalOrder.LoadEnv(aStorage: TStorage);
+begin
+
+end;
+
+
 
 procedure TFrmNormalOrder.initControls;
 begin
   cbExKindChange( nil );
 end;
 
+
+procedure TFrmNormalOrder.TradeProc(Sender, Receiver: TObject; DataID: Integer;
+  DataObj: TObject; EventID: TDistributorID);
+begin
+
+end;
+
+
 procedure TFrmNormalOrder.QuoteProc(Sender, Receiver: TObject; DataID: Integer;
   DataObj: TObject; EventID: TDistributorID);
 var
   I: Integer;
 begin
-  if ( Receiver = Self ) or ( DataObj = FSymbol  ) then Exit;
+  if ( Receiver <> Self ) or ( DataObj = FSymbol  ) then Exit;
 
   with sgHoga do
   for I := 0 to Fsymbol.Asks.Count-1 do

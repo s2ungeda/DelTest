@@ -22,7 +22,7 @@ object DataModule1: TDataModule1
     object nOrder: TMenuItem
       Caption = #51452#47928
       object N5: TMenuItem
-        Caption = #44060#48324#51452#47928#52285
+        Caption = #51452#47928#52285
         OnClick = N5Click
       end
       object N3: TMenuItem

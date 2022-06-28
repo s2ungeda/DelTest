@@ -7,6 +7,8 @@ uses
 
   UExchange,
 
+  UOrders,
+
   UApiTypes
 
   ;
@@ -32,6 +34,7 @@ type
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean;override;
+    function RequestOrder( aOrder : TOrder ) : boolean;
 
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
@@ -306,6 +309,46 @@ begin
 		MakeRest;
 end;
 
+
+function TBinanceFutures.RequestOrder(aOrder: TOrder): boolean;
+var
+  sTime, sData , sSig, sJson, sOut : string;
+begin
+
+  sTime:= GetTimestamp;
+
+  sData := format('symbol=%s&side=%s&type=LIMIT&timeInForce=GTC&quantity=%s&price=%s'+
+  '&newClientOrderId=%s&timestamp=%s', [
+    aOrder.Symbol.OrgCode,
+    ifThenStr( aOrder.Side > 0 ,'BUY', 'SELL'),
+    format('%.*f', [ aOrder.Symbol.Spec.QtyPrecision, aOrder.OrderQty ] ),
+    format('%.*f', [ aOrder.Symbol.Spec.Precision, aOrder.Price ] ),
+    aOrder.LocalNo,
+    sTime
+  ]);
+
+  sSig  := CalculateHMACSHA256( sData, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtFutures ) );
+
+  SetParam('timestamp', sTime );
+  SetParam('signature', sSig );
+  SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtFutures ), pkHTTPHEADER );
+
+  if Request( rmPOST, '/fapi/v1/order', '', sJson, sOut ) then
+  begin
+//    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    gBinReceiver.ParseFutPosition( sJson );
+  end else
+  begin
+    App.Log( llError, '', 'Failed %s RequestPositons (%s, %s)',
+      [ TExchangeKindDesc[GetExKind], sOut, sJson] );
+    Exit(false);
+  end;
+
+  Result := true;
+
+
+
+end;
 
 function TBinanceFutures.RequestOrders: boolean;
 begin
