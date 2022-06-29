@@ -1,7 +1,7 @@
-object Form2: TForm2
+object FrmRestMain: TFrmRestMain
   Left = 0
   Top = 0
-  Caption = 'Form2'
+  Caption = 'REST'
   ClientHeight = 221
   ClientWidth = 800
   Color = clBtnFace
@@ -11,6 +11,7 @@ object Form2: TForm2
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96
@@ -30,7 +31,7 @@ object Form2: TForm2
     Left = 184
     Top = 48
   end
-  object RESTRequest1: TRESTRequest
+  object BinReq: TRESTRequest
     Client = RESTClient1
     Params = <>
     Response = RESTResponse1
@@ -46,7 +47,7 @@ object Form2: TForm2
     Left = 392
     Top = 48
   end
-  object RESTRequest2: TRESTRequest
+  object UpbReq: TRESTRequest
     Client = RESTClient2
     Params = <>
     Response = RESTResponse2
@@ -62,7 +63,7 @@ object Form2: TForm2
     Left = 688
     Top = 48
   end
-  object RESTRequest3: TRESTRequest
+  object BitReq: TRESTRequest
     Client = RESTClient3
     Params = <>
     Response = RESTResponse3

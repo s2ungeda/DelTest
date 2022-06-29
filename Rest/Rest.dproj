@@ -8,7 +8,7 @@
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
-        <MainSource>seconds.dpr</MainSource>
+        <MainSource>Rest.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -69,7 +69,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
-        <SanitizedProjectName>seconds</SanitizedProjectName>
+        <SanitizedProjectName>Rest</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;IndyIPCommon;RESTComponents;bindcompdbx;DBXInterBaseDriver;vcl;IndyIPServer;vclactnband;indy10sbridge270;vclFireDAC;IndySystem;bindcompvclsmp;tethering;svnui;bindcompvclwinx;dsnapcon;FireDACADSDriver;sbridge270;FireDACMSAccDriver;fmxFireDAC;XA_Session;vclimg;FireDAC;vcltouch;vcldb;bindcompfmx;svn;FireDACSqliteDriver;FireDACPgDriver;inetdb;soaprtl;DbxCommonDriver;fmx;FireDACIBDriver;fmxdae;xmlrtl;soapmidas;vcledge;fmxobj;vclwinx;MSICS_RAD21_Rtl;rtl;DbxClientDriver;CustomIPTransport;vcldsnap;dbexpress;IndyCore;XA_DataSet;vclx;bindcomp;appanalytics;dsnap;FireDACCommon;IndyIPClient;bindcompvcl;RESTBackendComponents;VCLRESTComponents;soapserver;dbxcds;VclSmp;adortl;vclie;bindengine;DBXMySQLDriver;CloudService;dsnapxml;FireDACMySQLDriver;dbrtl;IndyProtocols;inetdbxpress;FireDACCommonODBC;FireDACCommonDriver;inet;fmxase;$(DCC_UsePackage)</DCC_UsePackage>
@@ -128,12 +128,49 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Unit3.pas">
-            <Form>Form2</Form>
+        <DCCReference Include="USharedThread.pas"/>
+        <DCCReference Include="FRestMain.pas">
+            <Form>FrmRestMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Unit1.pas"/>
         <DCCReference Include="USharedData.pas"/>
+        <DCCReference Include="..\api\UApiConsts.pas"/>
+        <DCCReference Include="..\api\UApiTypes.pas"/>
+        <DCCReference Include="..\engine\common\GLibs.pas"/>
+        <DCCReference Include="..\engine\common\UConsts.pas"/>
+        <DCCReference Include="..\engine\common\UTypes.pas"/>
+        <DCCReference Include="..\engine\utils\ULogThread.pas"/>
+        <DCCReference Include="GApp.pas"/>
+        <DCCReference Include="..\api\UApiConfigManager.pas"/>
+        <DCCReference Include="..\engine\common\UConfig.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Encoding.Base64.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Hashing.HMAC.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.OpenSSL.Headers.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Signing.Base.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Signing.ECDSA.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Signing.RSA.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Types.Arrays.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Types.Bytes.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Types.JSON.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\Common\JOSE.Types.Utils.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Builder.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Consumer.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Consumer.Validators.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Context.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.Base.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.Builder.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWA.Compression.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWA.Encryption.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWA.Factory.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWA.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWA.Signing.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWE.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWK.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWS.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.JWT.pas"/>
+        <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.Parts.pas"/>
+        <DCCReference Include="..\engine\common\UEncrypts.pas"/>
+        <DCCReference Include="URestManager.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -152,7 +189,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">seconds.dpr</Source>
+                    <Source Name="MainSource">Rest.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -160,21 +197,21 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="Win32\Debug\seconds.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Dalin\Rest.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>Rest.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Dalin\Rest.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>Rest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\Rest.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>seconds.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\seconds.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win64">
-                        <RemoteName>seconds.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\seconds.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>seconds.rsm</RemoteName>
+                        <RemoteName>Rest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

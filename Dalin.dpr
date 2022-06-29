@@ -101,7 +101,8 @@ uses
   FOrderList in 'wins\FOrderList.pas' {FrmOrderList},
   UTradeBroker in 'engine\trade\UTradeBroker.pas',
   UNormalOrder in 'wins\UNormalOrder.pas' {FrmNormalOrder},
-  UApiMaps in 'api\UApiMaps.pas';
+  UApiMaps in 'api\UApiMaps.pas',
+  UDecimalHelper in 'engine\utils\UDecimalHelper.pas';
 
 {$R *.res}
 begin

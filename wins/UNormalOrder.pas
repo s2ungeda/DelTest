@@ -86,11 +86,8 @@ begin
   if rbBuy.Checked then iSide := 1;
   if rbSell.Checked then iSide := -1;
 
-  dOrderQty := StrToFloat( edtQty.Text );
-  dPrice    := StrToFloat( edtPrice.Text );
-
   aOrder  := App.Engine.TradeCore.Orders[FExKind].NewOrder( FAccount, FSymbol,
-    iSide, dOrderQty, pcLimit, dPrice, tmGTC );
+    iSide, edtQty.Text , pcLimit, edtPrice.Text, tmGTC );
 
   if aOrder <> nil then
   begin

@@ -31,7 +31,6 @@ type
     function GetApiKey( aExKind : TExchangeKind;  aMarket : TMarketType ) : string;
 
 
-
     property ToTalCnt : integer read GetTotal;
     property DomesticCnt : integer read FDomesticCnt;
     property OverseasCnt : integer read FOverseasCnt;

@@ -1,24 +1,27 @@
 unit UOrders;
+
 interface
 uses
 	System.Classes, System.SysUtils,
-  UAccounts, Usymbols,  UFills, 
-  UApiTypes, UTypes
+  UAccounts, Usymbols,  UFills,
+  UApiTypes, UTypes, UDecimalHelper
   ;
 type
   //------------------------------ order
   TOrderType 		= (otNormal, otChange, otCancel);
-  TPriceControl = (pcLimit, pcMarket );  
-  TTimeInForce 	= (tmGTC, tmFOK, tmIOC, tmPOST);  
+  TPriceControl = (pcLimit, pcMarket );
+  TTimeInForce 	= (tmGTC, tmFOK, tmIOC, tmPOST);
   TOrderState = (osReady,
                    // with server
                  osSent, osSrvAcpt, osSrvRjt,
                    // with exchange
                  osActive, osRejected, osFilled, osCanceled,
                  osConfirmed, osFailed);
+
   TOrderStates  = set of TOrderState;
   TOrder	= class;
   TOrderEvent = procedure(Order: TOrder) of object;
+
   TOrder = class(TCollectionItem)
   private
     FSymbol: TSymbol;
@@ -56,6 +59,8 @@ type
     FIsAccept: boolean;
     FModify: boolean;
     FReduceOnly: boolean;
+    FPriceBI: TBigInt;
+    FOrderQtyBI: TBigInt;
   public
     constructor Create(Coll: TCollection); override;
     destructor Destroy; override;
@@ -76,6 +81,7 @@ type
     property IsAccept : boolean read FIsAccept write FIsAccept;
     // cancel flag
     property Modify : boolean read FModify write FModify;
+
     property Side: Integer read FSide;
     property OrderQty: double read FOrderQty Write FOrderQty;
     property Price: Double read FPrice;
@@ -83,6 +89,7 @@ type
     property AvgPrice : double read FAvgPrice write FAvgPrice;
     // only binance - 잔고만큼 주문나감..
     property ReduceOnly: boolean read FReduceOnly write FReduceOnly;
+
 		property ActiveQty: double read FActiveQty write FActiveQty;
     property FilledQty: double read FFilledQty write FFilledQty;
     property CanceledQty: double read FCanceledQty  write FCanceledQty;     
@@ -92,11 +99,16 @@ type
     property State: TOrderState read FState write FState;
     property RejectCode: string read FRejectCode write FRejectCode;
     property Fills  : TFillList  read FFills;
+
     property SentTime	: TDateTime read FSentTime;
     property AcptTime	: TDateTime read FAcptTime write FAcptTime;
     property TradeTime: TDateTime read FTradeTime write FTradeTime;
-    property EventTime: TDateTime read FEventTime write FEventTime;      
-    property OnStateChanged: TOrderEvent read FOnStateChanged write FOnStateChanged;   
+    property EventTime: TDateTime read FEventTime write FEventTime;
+
+    property OrderQtyBI: TBigInt read FOrderQtyBI ;
+    property PriceBI: TBigInt read FPriceBI;
+
+    property OnStateChanged: TOrderEvent read FOnStateChanged write FOnStateChanged;
   end;
   
   TOrderList = class(TList)
@@ -127,6 +139,9 @@ type
     destructor Destroy; override;
     function NewOrder( aAccount: TAccount; aSymbol: TSymbol; iSide : integer; dOrderQty: double;
       pcValue: TPriceControl; dPrice: Double; tmValue: TTimeInForce  ): TOrder; overload;
+
+    function NewOrder( aAccount: TAccount; aSymbol: TSymbol; iSide : integer; sOrderQty: string;
+      pcValue: TPriceControl; sPrice: string; tmValue: TTimeInForce  ): TOrder; overload;
     
     function NewCancelOrder(aTarget: TOrder; dCancelQty: double ): TOrder;
     function Represent: String;    
@@ -408,6 +423,43 @@ begin
 end;
 
 
+function TOrders.NewOrder(aAccount: TAccount; aSymbol: TSymbol; iSide: integer;
+  sOrderQty: string; pcValue: TPriceControl; sPrice: string;
+  tmValue: TTimeInForce): TOrder;
+begin
+  Result := nil;
+  if (aAccount = nil) or (aSymbol = nil) or ( sOrderQty ='') or ( sPrice = '' ) then Exit;
+
+  Result := New;
+
+  Result.FAccount := aAccount;
+  Result.FSymbol := aSymbol;
+  Result.FTarget := nil;
+  Result.FOrderType := otNormal;
+  Result.FPriceControl := pcValue;
+  Result.FTimeInForce := tmValue;
+  Result.FOrderQtyBI.convert( sOrderQty );
+  Result.FPriceBI.convert( sPrice );
+
+  Result.OrderQty := Result.FOrderQtyBI.ToDouble;
+  Result.FPrice   := Result.FPriceBI.ToDouble;
+
+  Result.FSide :=  iSide;
+
+  Result.FOrderNo := '';
+  Result.FActiveQty := 0;
+  Result.FFilledQty := 0;
+  Result.FCanceledQty := 0;
+  Result.FRejectCode := '';
+  Result.FAcptTime := 0;
+    // add to the queue
+  FNewOrders.Add(Result);
+    // notify 화면에서 필요..
+  if Assigned(FOnNew) then
+    FOnNew(Result);
+
+end;
+
 function TOrders.New: TOrder;
 begin
   Result := Add as TOrder;
@@ -434,13 +486,13 @@ begin
   Result.FTimeInForce := tmValue;
   Result.FOrderQty := Abs(dOrderQty);
   Result.FSide :=  iSide;
-  Result.FPrice := dPrice;    
+  Result.FPrice := dPrice;
   Result.FOrderNo := '';
   Result.FActiveQty := 0;
   Result.FFilledQty := 0;
   Result.FCanceledQty := 0;
   Result.FRejectCode := '';
-  Result.FAcptTime := 0;   
+  Result.FAcptTime := 0;
     // add to the queue
   FNewOrders.Add(Result);
     // notify 화면에서 필요..
