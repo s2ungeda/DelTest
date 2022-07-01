@@ -93,8 +93,8 @@ begin
   QuoteSock[0].init( 'stream.binance.com:9443/ws' );
 
   QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, 1, mtFutures ) ;
-//  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
-  QuoteSock[1].init( 'stream.binancefuture.com/ws' ); // 테스트넷
+  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
+//  QuoteSock[1].init( 'stream.binancefuture.com/ws' ); // 테스트넷
 
 
   sKey  := (Exchanges[mtSpot] as TBinanceSpotNMargin).RequestListenKey( true );

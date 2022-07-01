@@ -53,6 +53,9 @@ type
     Edit3: TEdit;
     Edit4: TEdit;
     Button21: TButton;
+    Button22: TButton;
+    Button23: TButton;
+    Button24: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -78,6 +81,9 @@ type
     procedure Button20Click(Sender: TObject);
     procedure Edit4KeyPress(Sender: TObject; var Key: Char);
     procedure Button21Click(Sender: TObject);
+    procedure Button22Click(Sender: TObject);
+    procedure Button23Click(Sender: TObject);
+    procedure Button24Click(Sender: TObject);
   private
     procedure DoLog(sData: string);
     procedure LogFileWrite( stData: string);
@@ -505,6 +511,8 @@ begin
 
 end;
 
+
+
 procedure TForm3.Button4Click(Sender: TObject);
 var
   t,sig, data, key : string;
@@ -605,7 +613,7 @@ begin
   sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
-  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);  
+  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
   sValue := '/info/account' +  chr(0) + sValue +  chr(0 ) + sTime;
   sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
   sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
@@ -617,8 +625,94 @@ begin
   restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.Method   := rmPOST;
-  restReq.Execute;  
+  restReq.Execute;
   memo1.Lines.Add( restRes.JSONValue.ToString );
+end;
+
+procedure TForm3.Button22Click(Sender: TObject);
+var
+  sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
+begin
+  restClient.BaseURL := 'https://api.bithumb.com';
+  sTmp    := '/trade/place';
+  restReq.Resource := sTmp;
+  sTime    := Gettamptime2(13 );
+  sValue := HTTPEncode(UTF8Encode('endPoint=/trade/place&order_currency=TRX&payment_currency=KRW&units=6.2&price=81&type=bid'));
+  sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
+  sValue := '/trade/place' +  chr(0) + sValue +  chr(0 ) + sTime;
+  sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+  sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+  restReq.Params.Clear;
+  restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+  restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+  restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+  restReq.AddParameter('endPoint', '/trade/place', TRESTRequestParameterKind.pkREQUESTBODY);
+
+  restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('units', '6.2', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('price', '81', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('type', 'bid', TRESTRequestParameterKind.pkREQUESTBODY);
+
+  restReq.Method   := rmPOST;
+  restReq.Execute;
+  memo1.Lines.Add( restRes.JSONValue.ToString );
+end;
+
+procedure TForm3.Button23Click(Sender: TObject);
+var
+  sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
+begin
+  restClient.BaseURL := 'https://api.bithumb.com';
+  sTmp    := '/trade/cancel';
+  restReq.Resource := sTmp;
+  sTime    := Gettamptime2(13 );
+  sValue := HTTPEncode(UTF8Encode('endPoint=/trade/cancel&order_currency=TRX&payment_currency=KRW&order_id='+edtUid.Text+'&type=bid'));
+  sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
+  sValue := '/trade/cancel' +  chr(0) + sValue +  chr(0 ) + sTime;
+  sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+  sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+  restReq.Params.Clear;
+  restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+  restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+  restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+  restReq.AddParameter('endPoint', '/trade/cancel', TRESTRequestParameterKind.pkREQUESTBODY);
+
+  restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('order_id', edtUid.Text, TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('type', 'bid', TRESTRequestParameterKind.pkREQUESTBODY);
+
+  restReq.Method   := rmPOST;
+  restReq.Execute;
+  memo1.Lines.Add( restRes.JSONValue.ToString );
+
+end;
+
+procedure TForm3.Button24Click(Sender: TObject);
+var
+  stmp : string;
+  sts : TArray<string>;
+  i : integer;
+begin
+  stmp := edit3.Text;
+  sts  := stmp.Split(['|']);
+  for I := 0 to High(sts) do
+    memo1.Lines.Add( Format('%d : %s', [i, sts[i] ] ));
 end;
 
 procedure TForm3.Button18Click(Sender: TObject);

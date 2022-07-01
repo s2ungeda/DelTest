@@ -193,8 +193,8 @@ object Form3: TForm3
     OnClick = Button17Click
   end
   object edtUid: TEdit
-    Left = 96
-    Top = 152
+    Left = 48
+    Top = 157
     Width = 201
     Height = 21
     TabOrder = 20
@@ -250,6 +250,33 @@ object Form3: TForm3
     Caption = #49548#49688'->'#51221#49688
     TabOrder = 26
     OnClick = Button21Click
+  end
+  object Button22: TButton
+    Left = 280
+    Top = 128
+    Width = 75
+    Height = 25
+    Caption = #51452#47928
+    TabOrder = 27
+    OnClick = Button22Click
+  end
+  object Button23: TButton
+    Left = 280
+    Top = 159
+    Width = 75
+    Height = 25
+    Caption = #52712#49548
+    TabOrder = 28
+    OnClick = Button23Click
+  end
+  object Button24: TButton
+    Left = 809
+    Top = 48
+    Width = 75
+    Height = 25
+    Caption = 'Button24'
+    TabOrder = 29
+    OnClick = Button24Click
   end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'

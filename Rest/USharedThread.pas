@@ -7,8 +7,6 @@ uses
   windows,
   USharedData
   ;
-
-
 type
 
   TSharedThread = class(TThread)
@@ -18,8 +16,9 @@ type
     hMapEvent: THandle;
     hMapping: THandle;
     PMapData: Pointer;
-    FOnNotify: TGetStrProc;
+    FOnNotify: TNotifyEvent;
     FData : string;
+    FDataItem : TDataItem;
     { Private declarations }
   protected
     procedure Execute; override;
@@ -29,10 +28,10 @@ type
     procedure SyncProc;
 
   public
-    constructor Create( aCallBack : TGetStrProc );
+    constructor Create( aCallBack : TNotifyEvent );
     destructor Destroy; override;
 
-    property OnNotify : TGetStrProc read FOnNotify write FOnNotify;
+    property OnNotify : TNotifyEvent read FOnNotify write FOnNotify;
   end;
 
 implementation
@@ -70,7 +69,7 @@ implementation
 
 { Mmf }
 
-constructor TSharedThread.Create( aCallBack : TGetStrProc );
+constructor TSharedThread.Create( aCallBack : TNotifyEvent );
 begin
   FOnNotify := aCallBack;
   inherited Create(False);
@@ -147,11 +146,15 @@ begin
               vData.Front := ( vData.Front + 1) mod Q_SIZE;
               inc(iWorkCnt);
               CopyMemory(@item, @(vData.SharedData[vData.Front])  , sizeof( TDataItem) )        ;
-              var ii : integer;
-              ii  := StrToInt(ansiString(item.size));
-              aaa := ansiString( item.data );
-              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
+
+              FDataItem := item;
               Synchronize(SyncProc );
+
+//              var ii : integer;
+//              ii  := StrToInt(ansiString(item.size));
+//              aaa := ansiString( item.data );
+//              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
+//              Synchronize(SyncProc );
             end;
 
 
@@ -195,7 +198,8 @@ end;
 
 procedure TSharedThread.SyncProc;
 begin
-  FOnNotify( FData );
+//  if Assigned( FOnNotify ) then
+//    FOnNotify( FDataItem );
 end;
 
 procedure TSharedThread.TerminatedSet;

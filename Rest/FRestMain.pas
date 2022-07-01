@@ -68,13 +68,13 @@ begin
 
   initControls;
 
-  mt := TSharedThread.Create( OnNotify );
+//  mt := TSharedThread.Create( OnNotify );
 end;
 
 procedure TFrmRestMain.FormDestroy(Sender: TObject);
 begin
-  mt.Terminate;
-
+  if mt <> nil then
+    mt.Terminate;
   App.Free;
 end;
 

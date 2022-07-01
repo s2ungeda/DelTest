@@ -34,16 +34,57 @@ const
   
 
 
-  TMajorSymbolCode  : array [TMajorSymbolKind] of string = ('BTC', 'ETH', 'XRP');
+  TMajorSymbolCode        : array [TMajorSymbolKind] of string = ('BTC', 'ETH', 'XRP');
 
-  TExchangeKindDesc : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
-  TExchangeKindShortDesc : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
+  TExchangeKindDesc       : array [ TExchangeKind ] of string = ('Binace', 'Upbit', 'Bithumb');
+  TExchangeKindShortDesc  : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
   // short version ¿ßø°≤® ªÁøÎ«œ±‚ »˚µÎ...
-  TExShortDesc : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
-  TMarketTypeDesc : array [ TMarketType ] of string = ('Spot', 'Future');
-  TAccountMarketTypeDesc : array [ TAccountMarketType ] of string = ('All', 'Spot', 'Margin', 'Future');
+  TExShortDesc            : array [ TExchangeKind ] of string = ('BN', 'UP', 'BT');
+  TMarketTypeDesc         : array [ TMarketType ] of string = ('Spot', 'Future');
+  TAccountMarketTypeDesc  : array [ TAccountMarketType ] of string = ('All', 'Spot', 'Margin', 'Future');
+  TSettleCurTypeDesc      : array [ TSettleCurType ] of string = ('NONE', 'KRW', 'USDT', 'BTC' );
 
-  TSettleCurTypeDesc : array [ TSettleCurType ] of string = ('NONE', 'KRW', 'USDT', 'BTC' );
+  // πŸ¿Ã≥Ω ¡÷πÆ πËø≠ ¿Œµ¶Ω∫
+  BO_CNT = 8;
+  BO_CODE  = 0;
+  BO_LS    = 1;
+  BO_PRC   = 2;
+  BO_QTY   = 3;
+  BO_TYPE  = 4;
+  BO_CID   = 5;
+  BO_TIF   = 6;
+  BO_RDO   = 7;    // reduce only
+
+  // πŸ¿Ã≥Ω √Îº“ πËø≠ ¿Œµ¶Ω∫
+  BC_CNT = 2;
+  BC_OID  = 0;
+  BC_CODE = 1;
+
+  // æ˜∫Ò∆Æ
+  UO_CNT = 6;
+  UO_CODE  = 0;
+  UO_LS    = 1;
+  UO_PRC   = 2;
+  UO_QTY   = 3;
+  UO_TYPE  = 4;
+  UO_UID   = 5;
+
+  UC_CNT = 1;
+  UC_UID   = 0;
+
+  // ∫¯ΩÊ
+  TO_CNT = 5;
+  TO_CODE  = 0;
+  TO_LS    = 1;
+  TO_PRC   = 2;
+  TO_QTY   = 3;
+  TO_STT   = 4;
+
+  TC_CNT = 4;
+  TC_OID   = 0;
+  TC_CODE  = 1;
+  TC_LS    = 2;
+  TC_STT   = 3;
 
 implementation
 
