@@ -8,6 +8,8 @@ uses
   , UConfig, UTypes
 
   , ULogThread , UApiConfigManager
+
+  , URestManager
   ;
 
 type
@@ -29,6 +31,7 @@ type
     FConfig: TConfig;
 
     FPreFix : string;
+    FRestManasger: TRestManager;
     function  IsLogLevel(lLevel: TLogLevel): boolean;
 
   public
@@ -52,6 +55,8 @@ type
     property  RootDir: string read FRootDir write FRootDir;
     property  ApiConfig : TApiConfigManager read FApiConfig;
 
+    property  RestManager : TRestManager read FRestManasger;
+
     property  ErrorString : string read FErrorString write FErrorString;
 
   end;
@@ -73,6 +78,8 @@ begin
   FPreFix := 'Rest';
   FApiConfig    := TApiConfigManager.Create;
   FLog    := TLogThread.Create;
+
+  FRestManasger:= TRestManager.Create;
 end;
 
 procedure TApp.CreateWinConfig;
@@ -97,6 +104,7 @@ begin
   App.Log(llInfo, '', '--- Engine free ---');
   FLog.Terminate;
   FApiConfig.Free;
+  FRestManasger.Free;
   inherited;
 end;
 

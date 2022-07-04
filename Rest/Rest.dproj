@@ -171,6 +171,7 @@
         <DCCReference Include="..\libs\jwt\Source\JOSE\JOSE.Core.Parts.pas"/>
         <DCCReference Include="..\engine\common\UEncrypts.pas"/>
         <DCCReference Include="URestManager.pas"/>
+        <DCCReference Include="USharedConsts.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -197,9 +198,9 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Dalin\Rest.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>Rest.rsm</RemoteName>
+                <DeployFile LocalName="Win32\Debug\Rest.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Rest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -209,9 +210,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\Rest.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>Rest.exe</RemoteName>
+                <DeployFile LocalName="C:\Dalin\Rest.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>Rest.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

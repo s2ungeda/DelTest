@@ -41,7 +41,8 @@ uses
   JOSE.Core.JWT in '..\libs\jwt\Source\JOSE\JOSE.Core.JWT.pas',
   JOSE.Core.Parts in '..\libs\jwt\Source\JOSE\JOSE.Core.Parts.pas',
   UEncrypts in '..\engine\common\UEncrypts.pas',
-  URestManager in 'URestManager.pas';
+  URestManager in 'URestManager.pas',
+  USharedConsts in 'USharedConsts.pas';
 
 {$R *.res}
 

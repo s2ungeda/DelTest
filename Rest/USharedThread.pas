@@ -16,7 +16,7 @@ type
     hMapEvent: THandle;
     hMapping: THandle;
     PMapData: Pointer;
-    FOnNotify: TNotifyEvent;
+    FOnNotify: TSharedDataNotify;
     FData : string;
     FDataItem : TDataItem;
     { Private declarations }
@@ -28,13 +28,17 @@ type
     procedure SyncProc;
 
   public
-    constructor Create( aCallBack : TNotifyEvent );
+    constructor Create( aCallBack : TSharedDataNotify );
     destructor Destroy; override;
 
-    property OnNotify : TNotifyEvent read FOnNotify write FOnNotify;
+    property OnNotify : TSharedDataNotify read FOnNotify write FOnNotify;
   end;
 
 implementation
+
+uses
+  USharedConsts
+  ;
 
 { 
   Important: Methods and properties of objects in visual components can only be
@@ -69,7 +73,7 @@ implementation
 
 { Mmf }
 
-constructor TSharedThread.Create( aCallBack : TNotifyEvent );
+constructor TSharedThread.Create( aCallBack : TSharedDataNotify );
 begin
   FOnNotify := aCallBack;
   inherited Create(False);
@@ -85,10 +89,11 @@ end;
 
 procedure TSharedThread.DoTerminate;
 begin
-  if PMapData <> nil then UnmapViewOfFile(PMapData);
-  if hMapping <> 0 then CloseHandle(hMapping);
-  if hMapEvent <> 0 then CloseHandle(hMapEvent);
-  if hMapLock <> 0 then CloseHandle(hMapLock);
+  FOnNotify := nil;
+  if PMapData  <> nil then UnmapViewOfFile(PMapData);
+  if hMapping  <> 0   then CloseHandle(hMapping);
+  if hMapEvent <> 0   then CloseHandle(hMapEvent);
+  if hMapLock  <> 0   then CloseHandle(hMapLock);
   inherited;
 end;
 
@@ -198,8 +203,8 @@ end;
 
 procedure TSharedThread.SyncProc;
 begin
-//  if Assigned( FOnNotify ) then
-//    FOnNotify( FDataItem );
+  if Assigned( FOnNotify ) then
+    FOnNotify( FDataItem );
 end;
 
 procedure TSharedThread.TerminatedSet;

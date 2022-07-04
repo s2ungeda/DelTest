@@ -3,12 +3,10 @@ unit USharedData;
 interface
 
 uses
-  System.Classes
-  ;
+  System.Classes  ,
 
-const
-  DATA_SIZE = 1024 * 100;
-  Q_SIZE = 5;
+  USharedConsts
+  ;
 
 type
 
