@@ -69,8 +69,8 @@ begin
   initControls;
 
   App.RestManager.init( BinReq, UpbReq, BitReq );
-
-  mt := TSharedThread.Create( App.RestManager.OnSharedDataNotify );
+  mt := TSharedThread.Create( App.RestManager.OnSharedDataNotify, false );
+  App.RestManager.OnPushData := mt.PushData;
 end;
 
 procedure TFrmRestMain.FormDestroy(Sender: TObject);

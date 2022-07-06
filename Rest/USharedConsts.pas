@@ -6,7 +6,12 @@ const
   DATA_SIZE = 1024 * 100;
   Q_SIZE = 5;
 
-
+  // REST 입장에서..
+  REST_PUSH = 1;
+  REST_POP  = 0;
+  // Dalin 입장에서..
+  SHRD_PUSH = 0;
+  SHRE_POP  = 1;
   // 바이낸 주문 배열 인덱스
   BO_CNT = 8;
   BO_CODE  = 0;
@@ -54,6 +59,10 @@ const
   TR_REQ_ORD = 'O';     // 주문 조회..
   TR_REQ_POS = 'P';     // 포지션 조회..
   TR_REQ_BAL = 'B';     // 잔고 조회...
+
+  EX_BN = 'B';
+  EX_UP = 'U';
+  EX_BI = 'T';
 
 
 

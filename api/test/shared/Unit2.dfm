@@ -2,8 +2,8 @@ object Form2: TForm2
   Left = 0
   Top = 0
   Caption = 'Form2'
-  ClientHeight = 164
-  ClientWidth = 380
+  ClientHeight = 378
+  ClientWidth = 578
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -50,27 +50,36 @@ object Form2: TForm2
     TabOrder = 3
     OnClick = Button2Click
   end
+  object Memo1: TMemo
+    Left = 8
+    Top = 105
+    Width = 562
+    Height = 265
+    Lines.Strings = (
+      'Memo1')
+    TabOrder = 4
+  end
   object Timer1: TTimer
     Enabled = False
     OnTimer = Timer1Timer
-    Left = 104
-    Top = 88
+    Left = 144
+    Top = 48
   end
   object RESTClient1: TRESTClient
     BaseURL = 'https://api.binance.com'
     Params = <>
-    Left = 312
-    Top = 80
+    Left = 232
+    Top = 40
   end
   object req: TRESTRequest
     Client = RESTClient1
     Params = <>
     Response = res
-    Left = 264
-    Top = 72
+    Left = 208
+    Top = 40
   end
   object res: TRESTResponse
-    Left = 224
-    Top = 72
+    Left = 176
+    Top = 40
   end
 end

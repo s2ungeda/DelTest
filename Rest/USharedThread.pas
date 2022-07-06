@@ -3,8 +3,7 @@ unit USharedThread;
 interface
 
 uses
-  System.Classes, System.SysUtils,
-  windows,
+  Winapi.Windows, System.Classes, System.SysUtils,
   USharedData
   ;
 type
@@ -12,13 +11,24 @@ type
   TSharedThread = class(TThread)
   private
     hTerminate: THandle;
-    hMapLock: THandle;
-    hMapEvent: THandle;
-    hMapping: THandle;
-    PMapData: Pointer;
+
+    hMapLock: array [0..1] of THandle;
+    hMapEvent:array [0..1] of THandle;
+    hMapping: array [0..1] of THandle;
+    PMapData: array [0..1] of Pointer;
+
     FOnNotify: TSharedDataNotify;
     FData : string;
     FDataItem : TDataItem;
+    FIsMain   : boolean;
+
+    POP, PUSH : integer;
+
+    MapName, LockName, EvntName : array [0..1] of string;
+
+    procedure LockMap( idx : integer );
+    procedure UnlockMap( idx : integer );
+    procedure OpenMap;
     { Private declarations }
   protected
     procedure Execute; override;
@@ -28,8 +38,10 @@ type
     procedure SyncProc;
 
   public
-    constructor Create( aCallBack : TSharedDataNotify );
+    constructor Create( aCallBack : TSharedDataNotify; bMain : boolean );
     destructor Destroy; override;
+
+    procedure PushData( c1, c2 : char; s1, s2 : string );
 
     property OnNotify : TSharedDataNotify read FOnNotify write FOnNotify;
   end;
@@ -37,63 +49,64 @@ type
 implementation
 
 uses
-  USharedConsts
+
+   GLibs
+ // , GApp
+  , USharedConsts
   ;
 
-{ 
-  Important: Methods and properties of objects in visual components can only be
-  used in a method called using Synchronize, for example,
 
-      Synchronize(UpdateCaption);  
+constructor TSharedThread.Create( aCallBack : TSharedDataNotify; bMain : boolean );
 
-  and UpdateCaption could look like,
-
-    procedure Mmf.UpdateCaption;
-    begin
-      Form1.Caption := 'Updated in a thread';
-    end;
-    
-    or 
-    
-    Synchronize( 
-      procedure 
-      begin
-        Form1.Caption := 'Updated in thread via an anonymous method' 
-      end
-      )
-    );
-    
-  where an anonymous method is passed.
-  
-  Similarly, the developer can call the Queue method with similar parameters as 
-  above, instead passing another TThread class as the first parameter, putting
-  the calling thread in a queue with the other thread.
-    
-}
-
-{ Mmf }
-
-constructor TSharedThread.Create( aCallBack : TSharedDataNotify );
 begin
   FOnNotify := aCallBack;
+  // dalin : true   rest : false;
+  FIsMain   := bMain;
+  if FIsMain then begin
+    PUSH := 0; POP := 1;
+  end else begin
+    PUSH := 1; POP := 0;
+  end;
+
+  MapName[PUSH] := ifThenStr( FIsMain, 'dalinMap', 'restMap' );
+  LockName[PUSH]:= ifThenStr( FIsMain, 'dalinLock', 'restLock' ) ;
+  EvntName[PUSH]:= ifThenStr( FIsMain, 'dalinEvent', 'restEvent' );
+
+  MapName[POP] := ifThenStr(  FIsMain, 'restMap', 'dalinMap' );
+  LockName[POP]:= ifThenStr(  FIsMain, 'restLock', 'dalinLock' ) ;
+  EvntName[POP]:= ifThenStr(  FIsMain, 'restEvent', 'dalinEvent' );
+
   inherited Create(False);
   hTerminate := CreateEvent(nil, True, False, nil);
   if hTerminate = 0 then RaiseLastOSError;
+
+  OpenMap;
 end;
 
 destructor TSharedThread.Destroy;
 begin
-  if hTerminate <> 0 then CloseHandle(hTerminate)
+  if hTerminate <> 0 then CloseHandle(hTerminate);
+
+  UnmapViewOfFile(PMapData[PUSH]);
+  CloseHandle(hMapping[PUSH]);
+  CloseHandle(hMapLock[PUSH]);
+  CloseHandle(hMapEvent[PUSH]);
 
 end;
 
 procedure TSharedThread.DoTerminate;
 begin
   FOnNotify := nil;
-  if PMapData  <> nil then UnmapViewOfFile(PMapData);
-  if hMapping  <> 0   then CloseHandle(hMapping);
-  if hMapEvent <> 0   then CloseHandle(hMapEvent);
-  if hMapLock  <> 0   then CloseHandle(hMapLock);
+  // 내가 만든거..
+  UnmapViewOfFile(PMapData[PUSH]);
+  CloseHandle(hMapping[PUSH]);
+  CloseHandle(hMapLock[PUSH]);
+  CloseHandle(hMapEvent[PUSH]);
+  // 니가 만든거..
+  if PMapData[POP]  <> nil then UnmapViewOfFile(PMapData[POP]);
+  if hMapping[POP]  <> 0   then CloseHandle(hMapping[POP]);
+  if hMapEvent[POP] <> 0   then CloseHandle(hMapEvent[POP]);
+  if hMapLock[POP]  <> 0   then CloseHandle(hMapLock[POP]);
   inherited;
 end;
 
@@ -109,26 +122,26 @@ var
   aaa : ansiString;
 begin
   iSize  := SizeOf(TSharedData);
-  hMapEvent := CreateEvent(nil, False, False, PChar('wowsniffDataReady'));
-  if hMapEvent = 0 then RaiseLastOSError;
+  hMapEvent[POP] := CreateEvent(nil, False, False, PChar(EvntName[POP]));
+  if hMapEvent[POP] = 0 then RaiseLastOSError;
 
-  hMapLock := CreateMutex(nil, False, PChar('wowsniffDataLock'));
-  if hMapLock = 0 then RaiseLastOSError;
+  hMapLock[POP] := CreateMutex(nil, False, PChar(LockName[POP]));
+  if hMapLock[POP] = 0 then RaiseLastOSError;
 
-  hMapping := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar('wowsniff'));
-  if hMapping = 0 then RaiseLastOSError;
+  hMapping[POP] := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar(MapName[POP]));
+  if hMapping [POP]= 0 then RaiseLastOSError;
   // Check if already exists
   llInit := (GetLastError() <> ERROR_ALREADY_EXISTS);
 
-  PMapData := MapViewOfFile(hMapping, FILE_MAP_WRITE, 0, 0, iSize);
-  if PMapData = nil then RaiseLastOSError;
+  PMapData[POP] := MapViewOfFile(hMapping[POP], FILE_MAP_WRITE, 0, 0, iSize);
+  if PMapData[POP] = nil then RaiseLastOSError;
   if llInit then
   begin
     // Init block to #0 if newly created
-    FillChar(PMapData^, iSize, 0);
+    FillChar(PMapData[POP]^, iSize, 0);
   end;
 
-  llHandles[0] := hMapEvent;
+  llHandles[0] := hMapEvent[POP];
   llHandles[1] := hTerminate;
 
   while not Terminated do
@@ -137,55 +150,31 @@ begin
     case llRet of
       WAIT_OBJECT_0+0:
       begin
-        llRet := WaitForSingleObject(hMapLock, 5000);
+        llRet := WaitForSingleObject(hMapLock[POP], 5000);
         if llRet = WAIT_OBJECT_0 then
         begin
           try
 
-            vData   := PSharedData( PMapData );
-
+            vData   := PSharedData( PMapData[POP] );
             var iWorkCnt : integer;  iWorkCnt := 0;
 
             while ( not vData.IsEmpty ) and ( iWorkCnt < 10 ) do
             begin
+
               vData.Front := ( vData.Front + 1) mod Q_SIZE;
               inc(iWorkCnt);
               CopyMemory(@item, @(vData.SharedData[vData.Front])  , sizeof( TDataItem) )        ;
 
+ //             App.DebugLog('queue(%d) : %d, %d %s', [ vData.Count, vData.Front, vdata.Rear, item.ref ]    );
+
               FDataItem := item;
               Synchronize(SyncProc );
+              //App.DebugLog('---------- %d, %s, %s', [ FDataItem.size, AnsiString( FDataItem.data ), FDataItem.ref ] );
 
-//              var ii : integer;
-//              ii  := StrToInt(ansiString(item.size));
-//              aaa := ansiString( item.data );
-//              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
-//              Synchronize(SyncProc );
             end;
 
-
-//            if vData.IsEmpty then continue;
-//
-//            if vData.Count < 4 then continue;
-//
-//            for I := 0 to vData.Count-1 do
-//            begin
-//              if vData.IsEmpty then continue;
-//              vData.Front := ( vData.Front + 1) mod Q_SIZE;
-//              CopyMemory(@item, @(vData.SharedData[vData.Front])  , sizeof( TDataItem) )        ;
-//              var ii : integer;
-//              ii  := StrToInt(ansiString(item.size));
-//              aaa := ansiString( item.data );
-//              //setstring( aaa, PAnsiChar( item.data[0] ), ii );
-//             // setstring(tmp, PChar(vData.SharedData[i].data ), 100);
-//
-//              FData   :=  Format('%d, %03d :  %s', [ vData.Front, vData.Count, aaa ]);
-//  //            llValue := PDword(PMapData)^;
-//  //            FData   := IntTostr(  llValue );
-//              Synchronize(SyncProc );
-//            end;
-//            ResetEvent(hMapEvent);
           finally
-            ReleaseMutex(hMapLock);
+            UnlockMap(POP);
           end;
           // use llValue as needed...
           Continue;
@@ -199,6 +188,104 @@ begin
     if llRet <> WAIT_FAILED then SetLastError(llRet);
     RaiseLastOSError;
   end;
+end;
+
+
+procedure TSharedThread.PushData(c1, c2: char; s1, s2: string);
+var
+  vData : PSharedData;
+  aItem : TDataItem;
+  data, tmp : ansiString;
+begin
+
+  LockMap(PUSH);
+  try
+
+    vData := PSharedData( PMapData[PUSH] );
+
+    if vData.IsFull then Exit;
+    // 한칸 앞으로 이동 후 데이타 추가
+    vData.Rear := ( vData.Rear + 1 ) mod Q_SIZE;
+
+    FillChar( aItem.data, DATA_SIZE, $0 );
+    data  :=  s1;
+    aItem.exKind  := c1;
+    aItem.market  := c2;
+    aItem.ref     := s2;
+    aItem.size    := Length( data );
+
+//    tmp := AnsiString( Format('%4.4d', [ Length(data)]) );
+//    move(  tmp[1],  aItem.size, sizeof(aItem.size));
+    move(  data[1], aItem.data, Length(data) );
+
+    CopyMemory(@(vData.SharedData[vData.Rear]), @aItem, sizeof(TDataItem));
+//    PDword(PMapData)^ := StrToInt(Edit1.Text);
+    SetEvent(hMapEvent[PUSH]);
+
+  finally
+    UnlockMap(PUSH);
+  end;
+end;
+
+
+
+
+procedure TSharedThread.OpenMap;
+var
+  llInit: Boolean;
+  iSize : integer;
+begin
+  llInit := False;
+  iSize  := SizeOf(TSharedData);
+
+  if hMapEvent[PUSH] = 0 then
+  begin
+    hMapEvent[PUSH] := CreateEvent(nil, False, False, PChar(EvntName[PUSH]));
+    if hMapEvent[PUSH] = 0 then RaiseLastOSError;
+  end;
+
+  if hMapLock[PUSH] = 0 then
+  begin
+    hMapLock[PUSH] := CreateMutex(nil, False, PChar(LockName[PUSH]));
+    if hMapLock[PUSH] = 0 then RaiseLastOSError;
+  end;
+
+  if hMapping[PUSH] = 0 then
+  begin
+    hMapping[PUSH] := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar(MapName[PUSH]));
+    if hMapping[PUSH] = 0 then RaiseLastOSError;
+    // Check if already exists
+    llInit := (GetLastError() <> ERROR_ALREADY_EXISTS);
+  end;
+
+  if PMapData[PUSH] = nil then
+  begin
+    PMapData[PUSH] := MapViewOfFile(hMapping[PUSH], FILE_MAP_WRITE, 0, 0, iSize);
+    if PMapData[PUSH] = nil then RaiseLastOSError;
+
+    if llInit then
+    begin
+      // Init block to #0 if newly created
+      ZeroMemory(PMapData[PUSH], iSize);
+    end;
+  end;
+
+end;
+
+
+procedure TSharedThread.LockMap( idx : integer );
+var
+  llRet: DWORD;
+ begin
+  llRet := WaitForSingleObject(hMapLock[idx], 5000);
+  if llRet = WAIT_OBJECT_0 then Exit;
+  if llRet <> WAIT_FAILED then SetLastError(llRet);
+  RaiseLastOSError;
+end;
+
+procedure TSharedThread.UnlockMap( idx : integer );
+begin
+  ReleaseMutex(hMapLock[idx]);
 end;
 
 procedure TSharedThread.SyncProc;

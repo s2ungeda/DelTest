@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, REST.Types,
   REST.Client, Data.Bind.Components, Data.Bind.ObjectScope
-  , USharedData
+  , USharedData  , USharedThread
   ;
 
 
@@ -22,6 +22,7 @@ type
     req: TRESTRequest;
     res: TRESTResponse;
     Button2: TButton;
+    Memo1: TMemo;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -29,11 +30,16 @@ type
     procedure CheckBox1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
   private
+    FOnPushData: TSharedPushData;
     procedure LockMap;
     procedure UnlockMap;
     { Private declarations }
   public
     { Public declarations }
+    refCnt : integer;
+    mt : TSharedThread;
+    procedure OnSharedDataNotify( aData : TDataItem );
+    property OnPushData : TSharedPushData read FOnPushData write FOnPushData;
   end;
 
 var
@@ -47,6 +53,10 @@ var
 
 implementation
 
+uses
+  USharedConsts
+  ;
+
 {$R *.dfm}
 
 procedure OpenMap;
@@ -59,19 +69,19 @@ begin
 
   if hMapEvent = 0 then
   begin
-    hMapEvent := CreateEvent(nil, False, False, PChar('wowsniffDataReady'));
+    hMapEvent := CreateEvent(nil, False, False, PChar('dalinEvent'));
     if hMapEvent = 0 then RaiseLastOSError;
   end;
 
   if hMapLock = 0 then
   begin
-    hMapLock := CreateMutex(nil, False, PChar('wowsniffDataLock'));
+    hMapLock := CreateMutex(nil, False, PChar('dalinLock'));
     if hMapLock = 0 then RaiseLastOSError;
   end;
 
   if hMapping = 0 then
   begin
-    hMapping := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar('wowsniff'));
+    hMapping := CreateFileMapping(INVALID_HANDLE_VALUE, nil, PAGE_READWRITE, 0, iSize, PChar('dalinMap'));
     if hMapping = 0 then RaiseLastOSError;
     // Check if already exists
     llInit := (GetLastError() <> ERROR_ALREADY_EXISTS);
@@ -97,6 +107,13 @@ var
   aItem : TDataItem;
   data, tmp : ansiString;
 begin
+
+  data  :=  AnsiString( edit1.Text );
+  mt.PushData('B', 'F', data, IntToStr( refCnt ) );
+  inc( refCnt );
+
+  exit;
+
   LockMap;
   try
     vData := PSharedData( PMapData);
@@ -104,13 +121,16 @@ begin
     if vData.IsFull then Exit;
     // 한칸 앞으로 이동 후 데이타 추가
     vData.Rear := ( vData.Rear + 1 ) mod Q_SIZE;
-
+    inc( refCnt );
     FillChar( aItem.data, DATA_SIZE, $0 );
     data  :=  AnsiString( edit1.Text );
-    aItem.ex  := 'A';
-    aItem.market  := 'B';
-    tmp := AnsiString( Format('%4.4d', [ Length(data)]) );
-    move(  tmp[1],  aItem.size, sizeof(aItem.size));
+    aItem.exKind  := 'B';
+    aItem.market  := 'F';
+    aItem.trDiv   := 'P';
+    aItem.ref     := IntToStr( refCnt );
+    aItem.size    := Length( data );
+//    tmp := AnsiString( Format('%4.4d', [ Length(data)]) );
+//    move(  tmp[1],  aItem.size, sizeof(aItem.size));
     move(  data[1], aItem.data, Length(data) );
 
     CopyMemory(@(vData.SharedData[vData.Rear]), @aItem, sizeof(TDataItem));
@@ -136,15 +156,20 @@ end;
 
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-  OpenMap;
+//  OpenMap;
+  mt := TSharedThread.Create( OnSharedDataNotify, true);
+
+  refCnt := 0;
 end;
 
 procedure TForm2.FormDestroy(Sender: TObject);
 begin
-  UnmapViewOfFile(PMapData);
-  CloseHandle(hMapping);
-  CloseHandle(hMapLock);
-  CloseHandle(hMapEvent);
+  if mt <> nil then
+    mt.Terminate;
+//  UnmapViewOfFile(PMapData);
+//  CloseHandle(hMapping);
+//  CloseHandle(hMapLock);
+//  CloseHandle(hMapEvent);
 end;
 
 procedure TForm2.LockMap;
@@ -155,6 +180,15 @@ var
   if llRet = WAIT_OBJECT_0 then Exit;
   if llRet <> WAIT_FAILED then SetLastError(llRet);
   RaiseLastOSError;
+end;
+
+procedure TForm2.OnSharedDataNotify(aData: TDataItem);
+var
+  s : string;
+begin
+
+  s := Format( ' %s, %s, %s, %s ', [ aData.exKind, aData.market, ansistring(aData.data), aData.ref  ]);
+  memo1.Lines.Add( s )
 end;
 
 procedure TForm2.Timer1Timer(Sender: TObject);

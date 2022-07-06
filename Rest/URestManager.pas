@@ -17,12 +17,15 @@ type
   TRestManager = class
   private
     FRestReq : array [TExchangeKind] of TRESTRequest ;
+    FOnPushData: TSharedPushData;
 
     function CheckShareddData( var sArr : TArray<string>; sData: string;
                iCount : integer; aPrcName : string ) : boolean;
 
-    procedure RequestBinFutNewOrder( sData : string );
-    procedure RequestBinFutCnlOrder( sData : string );
+    procedure PushData( aExKind : TExchangeKind; aMarket : TMarketType;  sData, sRef : string );
+
+    procedure RequestBinFutNewOrder( sData, sRef : string );
+    procedure RequestBinFutCnlOrder( sData, sRef : string );
 
     function Request( aExKind : TExchangeKind; AMethod : TRESTRequestMethod;  AResource : string;
        var outJson, outRes : string ) : boolean;
@@ -31,6 +34,9 @@ type
     Destructor  Destroy; override;
     procedure init( bn, up, bt : TRESTRequest );
     procedure OnSharedDataNotify( aData : TDataItem );
+
+
+    property OnPushData : TSharedPushData read FOnPushData write FOnPushData;
   end;
 
 implementation
@@ -81,24 +87,53 @@ begin
   FrestReq[ekBithumb] := bt;
 end;
 
+
 procedure TRestManager.OnSharedDataNotify(aData: TDataItem);
 begin
+  App.DebugLog('%d, %s, %s', [ aData.size, AnsiString( aData.data ), aData.ref ] );
   case aData.exKind of
-    'b':  // binance
+    EX_BN:  // binance
       case aData.trDiv of
-        'n' : RequestBinFutNewOrder( AnsiString( aData.data )) ;
-        'c' : RequestBinFutCnlOrder( AnsiString( aData.data )) ;
+        TR_NEW_ORD : RequestBinFutNewOrder( AnsiString( aData.data ), aData.ref ) ;
+        TR_CNL_ORD : RequestBinFutCnlOrder( AnsiString( aData.data ), aData.ref ) ;
+        TR_REQ_POS : ;//
+
       end;
-    'u':  // upbit
+    EX_UP:  // upbit
       case aData.trDiv of
-        'n' : ;
-        'c' : ;
+        TR_NEW_ORD : ;
+        TR_CNL_ORD : ;
       end;
-    't':  // bithumb
+    EX_BI:  // bithumb
       case aData.trDiv of
-        'n' : ;
-        'c' : ;
+        TR_NEW_ORD : ;
+        TR_CNL_ORD : ;
       end;
+  end;
+
+  PushData( ekBinance, mtSpot, FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', now), aData.ref );
+end;
+
+procedure TRestManager.PushData( aExKind : TExchangeKind; aMarket : TMarketType;
+   sData, sRef: string);
+   var
+    c1, c2 : char;
+begin
+  if Assigned( FOnPushData ) then
+  begin
+    case aExKind of
+      ekBinance:c1 := EX_BN;
+      ekUpbit:  c1 := EX_UP;
+      ekBithumb:c1 := EX_BI;
+    end;
+
+    case aMarket of
+      mtSpot:   c2 := 'S';
+      mtFutures:c2 := 'F' ;
+    end;
+
+    FOnPushData( c1, c2, sData, sRef );
+
   end;
 end;
 
@@ -146,7 +181,7 @@ begin
 
 end;
 
-procedure TRestManager.RequestBinFutCnlOrder(sData: string);
+procedure TRestManager.RequestBinFutCnlOrder(sData, sRef: string);
 var
   sArr  : TArray<string>;
   sTime, sBody, sSig, outJson, outRes : string;
@@ -166,9 +201,11 @@ begin
     App.Log( llError, '', 'Failed %s RequestBinFutCnlOrder (%s, %s)',
     [ TExchangeKindDesc[ekBinance], outRes, outJson] );
 
+
+
 end;
 
-procedure TRestManager.RequestBinFutNewOrder(sData: string);
+procedure TRestManager.RequestBinFutNewOrder(sData, sRef: string);
 var
   sArr  : TArray<string>;
   sRsrc, outJson, outRes : string;

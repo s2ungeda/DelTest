@@ -129,7 +129,12 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uNamedShareMemory.pas"/>
-        <DCCReference Include="USharedData.pas"/>
+        <DCCReference Include="..\..\..\Rest\USharedThread.pas"/>
+        <DCCReference Include="..\..\..\Rest\USharedConsts.pas"/>
+        <DCCReference Include="..\..\..\Rest\USharedData.pas"/>
+        <DCCReference Include="..\..\..\engine\common\GLibs.pas"/>
+        <DCCReference Include="..\..\..\engine\common\UConsts.pas"/>
+        <DCCReference Include="..\..\..\engine\common\UTypes.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
