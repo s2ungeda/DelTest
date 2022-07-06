@@ -101,8 +101,11 @@ uses
   FOrderList in 'wins\FOrderList.pas' {FrmOrderList},
   UTradeBroker in 'engine\trade\UTradeBroker.pas',
   UNormalOrder in 'wins\UNormalOrder.pas' {FrmNormalOrder},
-  UApiMaps in 'api\UApiMaps.pas',
-  UDecimalHelper in 'engine\utils\UDecimalHelper.pas';
+  USharedManager in 'api\USharedManager.pas',
+  UDecimalHelper in 'engine\utils\UDecimalHelper.pas',
+  USharedConsts in 'Rest\USharedConsts.pas',
+  USharedData in 'Rest\USharedData.pas',
+  USharedThread in 'Rest\USharedThread.pas';
 
 {$R *.res}
 begin

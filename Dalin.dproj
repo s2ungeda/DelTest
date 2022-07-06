@@ -276,8 +276,11 @@
             <Form>FrmNormalOrder</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="api\UApiMaps.pas"/>
+        <DCCReference Include="api\USharedManager.pas"/>
         <DCCReference Include="engine\utils\UDecimalHelper.pas"/>
+        <DCCReference Include="Rest\USharedConsts.pas"/>
+        <DCCReference Include="Rest\USharedData.pas"/>
+        <DCCReference Include="Rest\USharedThread.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -319,12 +322,6 @@
                 <DeployFile LocalName="Win32\Debug\Dalin.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Dalin.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Dalin\Dalin.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>Dalin.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

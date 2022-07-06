@@ -41,7 +41,7 @@ type
     constructor Create( aCallBack : TSharedDataNotify; bMain : boolean );
     destructor Destroy; override;
 
-    procedure PushData( c1, c2 : char; s1, s2 : string );
+    procedure PushData( c1, c2, c3 : char; s1, s2 : string );
 
     property OnNotify : TSharedDataNotify read FOnNotify write FOnNotify;
   end;
@@ -191,11 +191,11 @@ begin
 end;
 
 
-procedure TSharedThread.PushData(c1, c2: char; s1, s2: string);
+procedure TSharedThread.PushData(c1, c2, c3: char; s1, s2: string);
 var
   vData : PSharedData;
   aItem : TDataItem;
-  data, tmp : ansiString;
+  data  : ansiString;
 begin
 
   LockMap(PUSH);
@@ -214,8 +214,6 @@ begin
     aItem.ref     := s2;
     aItem.size    := Length( data );
 
-//    tmp := AnsiString( Format('%4.4d', [ Length(data)]) );
-//    move(  tmp[1],  aItem.size, sizeof(aItem.size));
     move(  data[1], aItem.data, Length(data) );
 
     CopyMemory(@(vData.SharedData[vData.Rear]), @aItem, sizeof(TDataItem));

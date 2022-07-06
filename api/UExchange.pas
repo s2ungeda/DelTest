@@ -7,7 +7,7 @@ uses
   
   REST.Types, REST.Client ,
 
-  URestRequests, URestThread, UCyclicThreads , UCyclicItems,
+  URestRequests, {URestThread, }UCyclicThreads , UCyclicItems,
 
   UOrders,
 
@@ -33,7 +33,7 @@ type
     FCyclicThreads: TCyclicThread;
     FCyclicItems: TCyclicItems;
     FReqItems: TList;
-    FRestThread: TRestThread;
+//    FRestThread: TRestThread;
     FReqIndex	: integer;
     FAccCnt: int64;
     FAccVal: int64;
@@ -102,7 +102,7 @@ type
     property RestRes: TRESTResponse read FRestRes;      
     //
     property RestExet      : TRESTExecutionThread read FRestExet write FRestExet;
-    property RestThread    : TRestThread read FRestThread;
+//    property RestThread    : TRestThread read FRestThread;
     property CyclicThreads : TCyclicThread read  FCyclicThreads; 
     property CyclicItems	 : TCyclicItems read FCyclicItems;
     property ReqItems			 : TList read FReqItems;    
@@ -166,7 +166,7 @@ begin
 
   FCyclicItems:= TCyclicItems.Create;
   FCyclicThreads:= nil;
-  FRestThread		:= nil;
+  //FRestThread		:= nil;
   FReqIndex			:= 0;
 
   FAccCnt:= 0;
@@ -183,8 +183,8 @@ begin
 
 	if FCyclicThreads <> nil then
   	FCyclicThreads.Terminate;
-  if FRestThread <> nil then  
-    FRestThread.Terminate;
+//  if FRestThread <> nil then
+//    FRestThread.Terminate;
 //                           
   FCyclicItems.Free;
   
@@ -282,7 +282,7 @@ end;
 procedure TExchange.MakeRestThread(aInfo: TDivInfo);
 begin
 //	Rest[aInfo.Index]	:= TRestThread.Create( aInfo, ParseRequestData );
-  FRestThread	:= TRestThread.Create( aInfo );
+//  FRestThread	:= TRestThread.Create( aInfo );
 end;
 
 procedure TExchange.OnHTTPProtocolError(Sender: TCustomRESTRequest);

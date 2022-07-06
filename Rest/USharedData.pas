@@ -30,7 +30,7 @@ type
   end;
 
   TSharedDataNotify = procedure ( aData : TDataItem ) of Object;
-  TSharedPushData =   procedure ( c1, c2 : char; s1, s2 : string ) of Object;
+  TSharedPushData =   procedure ( c1, c2, c3 : char; s1, s2 : string ) of Object;
 
 implementation
 

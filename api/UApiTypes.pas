@@ -9,6 +9,7 @@ type
   TMarketType     = ( mtSpot, mtFutures );
   TAccountMarketType  = (amAll, amSpot, amMargin, amFuture );
   TMajorSymbolKind = (msBTC, msETH, msXRP );
+  TRequestType    = ( rtNewOrder , rtCnlOrder, rtOrderList, rtPosition, rtBalance );
 
   // account settle currency
   TSettleCurType = ( scNone, scKRW, scUSDT, scBTC );

@@ -4,7 +4,7 @@ interface
 
 const
   DATA_SIZE = 1024 * 100;
-  Q_SIZE = 5;
+  Q_SIZE = 200;
 
   // REST 입장에서..
   REST_PUSH = 1;

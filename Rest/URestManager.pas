@@ -117,7 +117,7 @@ end;
 procedure TRestManager.PushData( aExKind : TExchangeKind; aMarket : TMarketType;
    sData, sRef: string);
    var
-    c1, c2 : char;
+    c1, c2, c3 : char;
 begin
   if Assigned( FOnPushData ) then
   begin
@@ -132,7 +132,7 @@ begin
       mtFutures:c2 := 'F' ;
     end;
 
-    FOnPushData( c1, c2, sData, sRef );
+    FOnPushData( c1, c2, c3, sData, sRef );
 
   end;
 end;
