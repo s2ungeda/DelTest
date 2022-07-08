@@ -35,22 +35,37 @@ type
 
 implementation
 
+uses
+  GApp
+  ;
+
 { TSharedManasger }
 
 constructor TSharedManasger.create;
 begin
   FRefCnt := 0;
+
+  FSharedThread := TSharedThread.Create( OnSharedDataNotify, true);
 end;
 
 destructor TSharedManasger.destroy;
 begin
-
+  if FSharedThread <> nil then
+    FSharedThread.Terminate;
   inherited;
 end;
 
 procedure TSharedManasger.OnSharedDataNotify(aData: TDataItem);
 begin
-
+  case aData.exKind of
+    EX_BN :
+      case aData.market of
+        'S' : ;
+        'F' : ;
+      end;
+    EX_UP : ;
+    EX_BI : ;
+  end;
 end;
 
 procedure TSharedManasger.RequestData(aExKind: TExchangeKind;
