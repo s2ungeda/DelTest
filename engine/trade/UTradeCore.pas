@@ -30,7 +30,10 @@ type
     function NewPosition( aAcnt : TAccount;  aSymbol : TSymbol ) : TPosition;
 
     function FindOrder( ekType : TExchangeKind; aAcnt : TAccount;
-      aSymbol : TSymbol; sID : string ) : TOrder;
+      aSymbol : TSymbol; sID : string ) : TOrder; overload;
+    // only bithumb   // 0 : localNo  , 1 : OrderNo;
+    function FindOrder( ekType : TExchangeKind;  sNo : string; iDiv : integer = 0 ) : TOrder;  overload;
+    //
 
     property Accounts: TAccountArray read FAccounts;
     property Orders: TOrderArray read FOrders;
@@ -97,6 +100,15 @@ begin
   	Result := FAccounts[ekType].Find(ektype, aMarket);
 end;
 
+function TTradeCore.FindOrder(ekType: TExchangeKind; sNo: string;
+  iDiv: integer): TOrder;
+begin
+	if iDiv = 0 then
+  	Result := Orders[ekType].FindLocalNo( sNo)
+  else
+  	Result := Orders[ekType].Find( sNo);
+end;
+
 function TTradeCore.FindOrder(ekType: TExchangeKind; aAcnt: TAccount;
   aSymbol: TSymbol; sID: string): TOrder;
 begin
@@ -120,5 +132,7 @@ begin
 	if FAccounts[ekType] <> nil then
   	Result := FAccounts[ekType].Find(ektype);
 end;
+
+
 end.
 

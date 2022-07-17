@@ -571,7 +571,7 @@ begin
   App.DebugLog('Binance Fut : %s, %s, %s, %s, %s, %s, %s ', [  sTmp, sID, sCode
     , ifThenStr( iSide = 1, '매수','매도')
     , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)
-    , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Post' )
+    , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Limit' )
     ]  );
 
   case aStatus of
@@ -643,7 +643,7 @@ var
   aObj, aFil  : TJsonObject;
   aArr, aArr2  : TJsonArray;
   aSymbol : TSymbol;
-  I, j, iPre: Integer;
+  I, j, iPre, iQtyPre: Integer;
   sTmp, sCode, aFiType : string;
   bNew : boolean;
   dSize, dSize2 : double;
@@ -693,8 +693,9 @@ begin
     sTmp := aObj.GetValue('status').Value;
     if sTmp = 'TRADING' then aSymbol.TradeAble := true  else aSymbol.TradeAble := false;
 
-    iPRe  :=  aObj.GetValue<integer>('pricePrecision');
-    //iPre  := aObj.getvalue('pricePrecision');
+    iPRe  	:=  aObj.GetValue<integer>('pricePrecision');
+    iQtyPre :=  aObj.GetValue<integer>('quantityPrecision');
+
     aArr2 := aObj.Get('filters').JsonValue as TJsonArray;
 
     for j := 0 to aArr2.Size-1 do
@@ -714,7 +715,7 @@ begin
       end;
     end;
 
-    aSymbol.Spec.SetSpec( iPre, dSize, dSize2 );
+    aSymbol.Spec.SetSpec( iPre, dSize, dSize2, iQtyPre );
 
     if bNew then
       App.Engine.SymbolCore.RegisterSymbol( ekBinance, aSymbol );

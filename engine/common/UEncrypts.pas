@@ -13,6 +13,7 @@ function CalculateHMACSHA256(const value, salt: String): String;
 function CalculateHMACSHA512(const value, salt: String): String;
 function GetUUID : string;
 
+
 implementation
 
 function CalculateHMACSHA256(const value, salt: String): String;
@@ -61,5 +62,8 @@ begin
   sData  := GUIDToString(guid);
   Result := Copy( sData, 2, Length( sData) - 2);
 end;
+
+
+
 
 end.

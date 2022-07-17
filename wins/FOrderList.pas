@@ -22,6 +22,7 @@ type
     CheckBox2: TCheckBox;
     CheckBox3: TCheckBox;
     CheckBox4: TCheckBox;
+    N2: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -32,11 +33,14 @@ type
     procedure CheckBox1Click(Sender: TObject);
     procedure sgOrderMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure N1Click(Sender: TObject);
+    procedure N2Click(Sender: TObject);
   private
     { Private declarations }
     FExIndex : integer;
     FState   : array [0..4] of boolean;
     FRow     : integer;
+    FOrder	 : TOrder;
 
     //FStIndex : integer;
     procedure initControls;
@@ -100,12 +104,36 @@ begin
 
   FRow := -1;
 end;
+
+
+
 procedure TFrmOrderList.LoadEnv(aStorage: TStorage);
 begin
 end;
+
+
 procedure TFrmOrderList.SaveEnv(aStorage: TStorage);
 begin
 end;
+
+procedure TFrmOrderList.N1Click(Sender: TObject);
+begin
+	//  
+  if FOrder = nil then Exit;
+
+  App.Engine.TradeCore.Orders[ FOrder.Account.ExchangeKind].NewCancelOrder( FOrder, FOrder.ActiveQty);
+  App.Engine.TradeBroker.Send( FOrder );
+
+end;
+
+procedure TFrmOrderList.N2Click(Sender: TObject);
+begin
+  if FOrder = nil then Exit;
+
+  App.Engine.ApiManager.ExManagers[ FOrder.Account.ExchangeKind].RequestOrdeDetail( FOrder );
+
+end;
+
 procedure TFrmOrderList.sgOrderDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
   var
@@ -154,8 +182,12 @@ begin
   if Button = mbRight then
   begin
     aOrder  := TOrder( sgOrder.Objects[ORD_COL, FRow] );
-    if ( aOrder <> nil ) and ( aOrder.State = osActive ) and ( not aORder.Modify ) then
+    FOrder  := nil;
+    if ( aOrder <> nil ) and ( aOrder.State = osActive ) and ( not aORder.Modify ) then    
+    begin
       sgOrder.PopupMenu := PopupMenu1;
+      FOrder	:= aOrder;
+    end;
   end;
 
   sgOrder.Invalidate;

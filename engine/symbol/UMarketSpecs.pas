@@ -46,7 +46,7 @@ type
     constructor Create(aColl: TCollection); override;
     Destructor  Destroy; override;
 
-    procedure SetSpec( iPre : integer; dTickSize, dQtySize : double );
+    procedure SetSpec( iPre : integer; dTickSize, dQtySize : double; iQtyPre : integer );
 
     property FQN: String read FFQN write FFQN;
 
@@ -115,7 +115,7 @@ begin
   FTickSize:= 1.0;
   FTickValue:= 1.0;
   FPrecision:= 2;
-  FQtyPrecision := 3;
+  FQtyPrecision := 4;
 
   FSubMarket  := '*';
 
@@ -128,11 +128,12 @@ begin
 end;
 
 
-procedure TMarketSpec.SetSpec(iPre: integer; dTickSize, dQtySize: double);
+procedure TMarketSpec.SetSpec(iPre: integer; dTickSize, dQtySize: double; iQtyPre : integer);
 begin
   FPrecision  := iPre;
   FTickSize   := dTickSize;
   FQtySize    := dQtySize;
+  FQtyPrecision	:= iQtyPre;
 end;
 
 { TMarketSpecs }

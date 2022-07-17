@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils,
 
-  UExchangeManager, UBithParse , USymbols,  UQuoteTimers,
+  UExchangeManager, UBithParse , USymbols, UOrders,  UQuoteTimers,
 
   UApiTypes
 
@@ -35,7 +35,14 @@ type
     function MakeCloseData : boolean ; override;
 
     function Subscrib( aSymbol : TSymbol ) : boolean; override;
-    function UnSubscrib( aSymbol : TSymbol ) : boolean; override;    
+    function UnSubscrib( aSymbol : TSymbol ) : boolean; override;   
+    
+    function SendOrder( aOrder : TOrder ): boolean;  override;  
+    procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure RequestOrdeDetail( aOrder : TOrder ) ; override;
+    procedure RequestBalance( aSymbol : TSymbol ) ; override;
+    
+    procedure ReceivedData( aMarket : TMarketType; aReqType : TRequestType;  aData, aRef : string ); override; 
 
     procedure OnDepthTimer(Sender: TObject);
     procedure OnSendDoneEvent(  Sender : TObject );
@@ -52,6 +59,7 @@ uses
   , UBithSpot
   , UBithWebSockets
   , URestRequests
+  , USharedConsts
   ;
 { TBinanceManager }
 
@@ -158,6 +166,15 @@ begin
 end;
 
 
+function TBithManager.SendOrder(aOrder: TOrder): boolean;
+begin
+
+  if aOrder = nil then Exit ( false );
+
+  result := Exchanges[aOrder.Symbol.Spec.Market].SenderOrder( aOrder );     
+
+end;
+
 function TBithManager.Subscrib(aSymbol: TSymbol): boolean;
 begin
 //  self.Exchanges[ aSymbol.Spec.Market ].
@@ -198,10 +215,34 @@ begin
 
 end;
 
+// from shared memroy
+procedure TBithManager.ReceivedData( aMarket : TMarketType; aReqType : TRequestType;  aData, aRef: string);   
+begin
+	Exchanges[aMarket].ReceivedData(aReqType, aData, aRef );
+end;
+
+
 
 function TBithManager.RequestBalance: boolean;
 begin
 	Result := Exchanges[mtSpot].RequestBalance;
+end;
+
+
+
+procedure TBithManager.RequestOrderList(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestOrderList( aSymbol );
+end;
+
+procedure TBithManager.RequestBalance(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestBalance( aSymbol );
+end;
+
+procedure TBithManager.RequestOrdeDetail(aOrder: TOrder);
+begin
+  Exchanges[aOrder.Symbol.Spec.Market].RequestOrderDetail( aOrder );
 end;
 
 function TBithManager.RequestOrders: boolean;

@@ -3,8 +3,8 @@ object FrmDalinMain: TFrmDalinMain
   Top = 0
   HelpType = htKeyword
   Caption = 'Dalin'
-  ClientHeight = 98
-  ClientWidth = 321
+  ClientHeight = 102
+  ClientWidth = 315
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,6 +13,7 @@ object FrmDalinMain: TFrmDalinMain
   Font.Style = []
   Menu = DataModule1.MainMenu1
   OldCreateOrder = False
+  Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -20,8 +21,8 @@ object FrmDalinMain: TFrmDalinMain
   TextHeight = 13
   object stsBar: TStatusBar
     Left = 0
-    Top = 79
-    Width = 321
+    Top = 83
+    Width = 315
     Height = 19
     Panels = <
       item
@@ -35,8 +36,8 @@ object FrmDalinMain: TFrmDalinMain
         Width = 50
       end>
     OnDrawPanel = stsBarDrawPanel
-    ExplicitTop = 69
-    ExplicitWidth = 322
+    ExplicitTop = 39
+    ExplicitWidth = 321
   end
   object Panel1: TPanel
     Left = 8

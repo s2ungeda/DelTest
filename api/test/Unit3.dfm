@@ -1,7 +1,7 @@
-object Form3: TForm3
+﻿object Form3: TForm3
   Left = 0
   Top = 0
-  Caption = 'Form3'
+  Caption = 'l'
   ClientHeight = 631
   ClientWidth = 892
   Color = clBtnFace
@@ -107,7 +107,7 @@ object Form3: TForm3
     Top = 35
     Width = 75
     Height = 25
-    Caption = 'bithumb'
+    Caption = 'bit balance'
     TabOrder = 10
     OnClick = Button8Click
   end
@@ -193,8 +193,8 @@ object Form3: TForm3
     OnClick = Button17Click
   end
   object edtUid: TEdit
-    Left = 48
-    Top = 157
+    Left = 25
+    Top = 133
     Width = 201
     Height = 21
     TabOrder = 20
@@ -277,6 +277,24 @@ object Form3: TForm3
     Caption = 'Button24'
     TabOrder = 29
     OnClick = Button24Click
+  end
+  object Button25: TButton
+    Left = 24
+    Top = 160
+    Width = 75
+    Height = 25
+    Caption = 'Button25'
+    TabOrder = 30
+    OnClick = Button25Click
+  end
+  object 상세: TButton
+    Left = 361
+    Top = 97
+    Width = 40
+    Height = 25
+    Caption = #49345#49464
+    TabOrder = 31
+    OnClick = 상세Click
   end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'

@@ -416,7 +416,7 @@ procedure TFrmPriceTable.sgKimpDrawCell(Sender: TObject; ACol, ARow: Integer;
 begin
 
   aFont   := clBlack;
-//  dFormat := DT_CENTER ;
+  dFormat := DT_CENTER ;
   aRect   := Rect;
   aBack   := clWhite;
 
@@ -434,7 +434,8 @@ begin
       iMode := (ARow-1) div 3;
       if iMode mod 2 <> 0 then
         aBack := GRID_MOD_COLOR;
-
+        
+			//  CurCol = 8;
       if ( ACol in [ CurCol-6..CurCol] ) then
       begin
         dFormat := DT_RIGHT  ;
@@ -464,8 +465,14 @@ begin
           iRow2 := ARow-2;
           if Objects[ExCol, ARow] <> nil then
             dFormat := DT_LEFT
-          else  if ( iRow2 > 0 ) and (( Objects[ExCol, iRow2]) <> nil ) then
-            dFormat := DT_RIGHT;
+          else begin
+            if ( ARow mod 3 ) = 0  then 
+            	dFormat := DT_RIGHT;
+//            else if (ARow mod 3 ) = 1 then dFomat := DT_RIGHT;
+
+//          	if ( iRow2 > 0 ) and (( Objects[ExCol, iRow2]) <> nil ) then
+//            dFormat := DT_RIGHT;
+          end;
         end
         else if ACol = DayAmtCol then
           dFormat := DT_RIGHT  ;

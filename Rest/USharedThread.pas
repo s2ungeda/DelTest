@@ -51,7 +51,7 @@ implementation
 uses
 
    GLibs
- // , GApp
+//	, GApp
   , USharedConsts
   ;
 
@@ -196,7 +196,7 @@ var
   vData : PSharedData;
   aItem : TDataItem;
   data  : ansiString;
-begin
+begin     
 
   LockMap(PUSH);
   try
@@ -211,6 +211,7 @@ begin
     data  :=  s1;
     aItem.exKind  := c1;
     aItem.market  := c2;
+    aItem.trDiv		:= c3;
     aItem.ref     := s2;
     aItem.size    := Length( data );
 

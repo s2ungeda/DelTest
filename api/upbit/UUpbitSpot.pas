@@ -240,7 +240,7 @@ end;
 
 procedure TUpbitSpot.ParseRequestData(iCode: integer; sName, sData: string);
 begin
-  inherited;
+ 	if gUpReceiver = nil then Exit;
 
   if sData = '' then
   begin
@@ -251,7 +251,7 @@ begin
   if iCode <> 200 then begin
   	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
     Exit;
-  end else
+  end else begin    
 		if sName = 'orderbook' then
 			gUpReceiver.ParseSpotOrderBook( sData )
     else if sName = 'ticker' then
@@ -260,6 +260,7 @@ begin
 //      App.Log(llInfo, 'test', '%d, %s : %s', [ iCode, sName, Copy(sData, 1, 100 ) ]  );
      	gUpReceiver.ParseDNWSate( sData );
     end;
+  end;
 
 end;
 

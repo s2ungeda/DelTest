@@ -9,7 +9,7 @@ uses
 
   URestRequests, {URestThread, }UCyclicThreads , UCyclicItems,
 
-  UOrders,
+  UOrders,  USymbols,
 
   UApiTypes
   ;
@@ -66,17 +66,24 @@ type
     function  GetCodeIndex( S : string ) : integer;
 
 //----------------------------------------------------------- common request
+		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;    
+		procedure RequestOrderDetail( aOrder : TOrder ); virtual; abstract;  
+		procedure RequestOrderList( aSymbol : TSymbol ); virtual; abstract;  
+		function SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;  
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );virtual; abstract;  
+    
     function ParsePrepareMaster : integer ; virtual; abstract;
     function RequestMaster : boolean ; virtual; abstract;
     function RequestDNWState : boolean; virtual; abstract;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
 
-    function RequestBalance : boolean; virtual; abstract;    
+    function RequestBalance : boolean; overload; virtual; abstract;    
     function RequestPositons : boolean; virtual; abstract;
     function RequestOrders: boolean; virtual; abstract;
     function RequestOrder( aOrder : TOrder ) : boolean; virtual; abstract;
 
-    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); virtual; abstract;
+    procedure ParseRequestData( iCode : integer; sName : string; sData : string ); overload; virtual; abstract; 
+    procedure ParseRequestData( aReqType : TRequestType; sData : string ); overload; virtual; abstract; 
     // cyclicthread notify
  		procedure CyclicNotify( Sender : TObject ); virtual; abstract;     
 
@@ -182,7 +189,11 @@ var
 begin
 
 	if FCyclicThreads <> nil then
-  	FCyclicThreads.Terminate;
+  	FCyclicThreads.Terminate;   
+
+//  for I := FreqItems.Count-1 downto 0 do
+//  	TRequest(FReqItems.Items[i]).Free;
+  FReqItems.Free;
 //  if FRestThread <> nil then
 //    FRestThread.Terminate;
 //                           
@@ -197,9 +208,7 @@ begin
 
   FRestRes.Free;
 	FRestReq.Free;
-	FRESTClient.Free;
-
-  FReqItems.Free;
+	FRESTClient.Free;  
 
   inherited;
 end;  
@@ -450,7 +459,8 @@ var
    avg  : integer;
    gap  : integer;
 begin
-  if Sender = nil then Exit;
+  if Sender = nil then Exit;  
+  
   try
   	aReq := Sender as TRequest;
 	  ParseRequestData( aReq.StatusCode, aReq.Name, aReq.Content );

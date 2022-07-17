@@ -515,6 +515,8 @@ begin
     App.Engine.SymbolCore.CalcMainKimp( FSymbol );
     App.Engine.SymbolCore.CalcMainWDC(FSymbol);
 
+    App.Engine.TradeCore.Positions[ FSymbol.Spec.ExchangeType].UpdatePosition( FSymbol );
+
     FSymbol.LastTradeTime := dtTime;
 
   end else
@@ -523,9 +525,7 @@ begin
 
   end;
 
-  checkHoga;
-
-
+  checkHoga;    
   FSymbol.LastEventTime := dtTime;
   FSymbol.LastTime      := now;
 

@@ -429,6 +429,8 @@ end;
 procedure TBinanceFutures.ParseRequestData(iCode: integer; sName,
   sData: string);
 begin
+	if gBinReceiver = nil then Exit;
+  
   if sData = '' then
   begin
   	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );
@@ -438,7 +440,7 @@ begin
   if iCode <> 200 then begin
   	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
     Exit;  	
-  end else
+  end else     
 		if sName = 'orderbook' then
 		  gBinReceiver.ParseFutAllOrderBook( sData );
 

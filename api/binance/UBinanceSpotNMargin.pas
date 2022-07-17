@@ -177,7 +177,7 @@ begin
 
         var aFiType : string;
         var dSize, dSize2 : double;
-        var iPre : integer;
+        var iPre, iQtyPre : integer;
 
         for j := 0 to aArr2.Size-1 do
         begin
@@ -195,10 +195,11 @@ begin
             //sTmp := aFil.GetValue('minQty').Value;
             sTmp := aFil.GetValue('stepSize').Value;
             dSize2  := StrToFloatDef( sTmp, 1.0);
+            iQtyPre := GetPrecision( sTmp );
           end;
         end;
 
-        aSymbol.Spec.SetSpec( iPre, dSize, dSize2 );
+        aSymbol.Spec.SetSpec( iPre, dSize, dSize2, iQtyPre );
 
         if bNew then
           App.Engine.SymbolCore.RegisterSymbol( GetExKind, aSymbol );   
@@ -481,6 +482,8 @@ end;
 procedure TBinanceSpotNMargin.ParseRequestData(iCode: integer; sName,
   sData: string);
 begin
+	if gBinReceiver = nil then Exit;
+  
   if sData = '' then
   begin
   	App.Log(llError, '%s %s Data is Empty', [ TExchangeKindShortDesc[ GetExKind ], sName ]  );

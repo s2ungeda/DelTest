@@ -55,7 +55,7 @@ object FrmNormalOrder: TFrmNormalOrder
     Align = alLeft
     TabOrder = 1
     object edtQty: TLabeledEdit
-      Left = 75
+      Left = 46
       Top = 31
       Width = 65
       Height = 21
@@ -63,19 +63,17 @@ object FrmNormalOrder: TFrmNormalOrder
       EditLabel.Height = 13
       EditLabel.Caption = #49688#47049
       LabelPosition = lpLeft
-      NumbersOnly = True
       TabOrder = 0
     end
     object edtPrice: TLabeledEdit
-      Left = 75
-      Top = 56
-      Width = 65
+      Left = 46
+      Top = 58
+      Width = 94
       Height = 21
       EditLabel.Width = 22
       EditLabel.Height = 13
       EditLabel.Caption = #45800#44032
       LabelPosition = lpLeft
-      NumbersOnly = True
       TabOrder = 1
     end
     object cbExKind: TComboBox
@@ -84,9 +82,9 @@ object FrmNormalOrder: TFrmNormalOrder
       Width = 65
       Height = 21
       Style = csDropDownList
-      ItemIndex = 0
+      ItemIndex = 2
       TabOrder = 2
-      Text = #48148#51060#45240#49828
+      Text = #48727#50040
       OnChange = cbExKindChange
       Items.Strings = (
         #48148#51060#45240#49828
@@ -122,7 +120,7 @@ object FrmNormalOrder: TFrmNormalOrder
       OnClick = rbSellClick
     end
     object cbReduce: TCheckBox
-      Left = 156
+      Left = 157
       Top = 56
       Width = 97
       Height = 17
@@ -138,5 +136,45 @@ object FrmNormalOrder: TFrmNormalOrder
       TabOrder = 7
       OnClick = btnOrderClick
     end
+    object sgBal: TStringGrid
+      Left = 4
+      Top = 135
+      Width = 320
+      Height = 63
+      ColCount = 4
+      DefaultRowHeight = 19
+      FixedCols = 0
+      RowCount = 3
+      FixedRows = 0
+      TabOrder = 8
+      ColWidths = (
+        59
+        96
+        57
+        98)
+    end
+    object Button1: TButton
+      Left = 4
+      Top = 106
+      Width = 75
+      Height = 25
+      Caption = #51092#44256#51312#54924
+      TabOrder = 9
+      OnClick = Button1Click
+    end
+    object Button2: TButton
+      Left = 85
+      Top = 106
+      Width = 75
+      Height = 25
+      Caption = #51452#47928#51312#54924
+      TabOrder = 10
+      OnClick = Button2Click
+    end
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 280
+    Top = 96
   end
 end

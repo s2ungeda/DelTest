@@ -24,10 +24,14 @@ type
     procedure Accept( aOrder : TOrder;  iRjtCode : integer ); overload;
     procedure Accept( aOrder : TOrder;  dtTime : TDateTime;
       bAccepted: boolean; sRjtCode : string = '' ); overload;
-    procedure Cancel( aOrder : TOrder; dQty : double );
+    procedure Cancel( aOrder : TOrder; dQty : double ); overload;
+    procedure Cancel( aOrder : TOrder; bAccepted: boolean; sRjtCode : string = '' ); overload;
     procedure Fill( aOrder : TOrder; aFill : TFill );
 
+    procedure Reject( aORder : TOrder; sCode : string );
     procedure Send( aOrder : TOrder );
+
+    procedure PositionEvent( aPos : TPosition ;  iDataID : integer );
 
   end;
 
@@ -78,6 +82,24 @@ procedure TTradeBroker.Cancel(aOrder: TOrder; dQty : double);
 begin
   aOrder.Cancel( aOrder.ActiveQty );
   FDistributor.Distribute(Self, TRD_DATA, aOrder, ORDER_CANCELED);
+end;   
+
+procedure TTradeBroker.Cancel(aOrder: TOrder; bAccepted: boolean;
+  sRjtCode: string);
+begin               
+	if bAccepted then
+  begin
+    aOrder.Cancel( aOrder.ActiveQty);
+    FDistributor.Distribute(Self, TRD_DATA, aOrder, ORDER_CANCELED);
+  end else
+  begin
+  	aOrder.Reject( sRjtCode, now);
+  end;
+end;
+
+procedure TTradeBroker.Reject(aORder: TOrder; sCode: string);
+begin
+
 end;
 
 constructor TTradeBroker.Create;
@@ -90,6 +112,8 @@ begin
   FDistributor.Free;
   inherited;
 end;
+
+
 
 procedure TTradeBroker.Fill(aOrder: TOrder; aFill: TFill);
 var
@@ -116,6 +140,14 @@ begin
   FDistributor.Distribute(Self, TRD_DATA, aFill, FILL_NEW);
 
 end;
+
+procedure TTradeBroker.PositionEvent(aPos: TPosition;  iDataID: integer);
+begin
+	if aPos = nil then Exit;
+ 	FDistributor.Distribute(Self, TRD_DATA, aPos, POSITION_NEW);
+end;
+
+
 
 procedure TTradeBroker.Send(aOrder: TOrder);
 begin

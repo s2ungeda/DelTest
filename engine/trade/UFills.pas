@@ -5,7 +5,7 @@ interface
 uses
 	System.Classes, System.SysUtils,
 
-	UAccounts, USymbols,
+	UAccounts, USymbols, UDecimalHelper, 
 
   UApiTypes
 
@@ -24,6 +24,11 @@ type
     FAccount: TAccount;
     FFillNo: string;
     FSide: integer;
+    //
+    FPriceBI: TBigint;
+    FVolumeBI: TBigint;
+    FFee: double;
+    FFeeBI: TBigint;
 
      //
   public
@@ -31,6 +36,10 @@ type
 
     function Represent : string;
     procedure Assign( aFill : TFill );
+
+    procedure SetPrice(const Value: string);
+    procedure SetVolume(const Value: string);    
+    procedure SetFee(const Value: string);    
 
     property FillNo: string read FFillNo;
     property FillTime	: TDateTime read FFillTime;
@@ -40,7 +49,13 @@ type
     property Symbol: TSymbol read FSymbol;
     property Volume: Double read FVolume;
     property Price: Double read FPrice;
-    property Side : integer read FSide;
+    property Side : integer read FSide;    
+
+    property VolumeBI : TBigint read FVolumeBI;
+    property PriceBI	: TBigint read FPriceBI;   
+    property FeeBI	: TBigint read FFeeBI;   
+
+    property Fee	: double read FFee;
 
   end;
 
@@ -52,7 +67,9 @@ type
     constructor Create;
 
     function New(sFillNo: string; dtFillTime, dtEventTime: TDateTime; sOrderNo: string;
-      aAccount: TAccount; aSymbol: TSymbol; dVolume: double; iSide : integer; dPrice: Double ): TFill;
+      aAccount: TAccount; aSymbol: TSymbol; dVolume: double; iSide : integer; dPrice: Double ): TFill; overload;
+    function New(sFillNo: string; dtFillTime, dtEventTime: TDateTime; sOrderNo: string;
+      aAccount: TAccount; aSymbol: TSymbol; sVolume: string; iSide : integer; sPrice: string ): TFill; overload;
 
     function Find( aAccount : TAccount; aSymbol : TSymbol; sFillNo : string ): TFill;
 
@@ -64,7 +81,8 @@ type
     function GetFill(i: Integer): TFill;
   public
     procedure AddFill(aFill: TFill);
-
+    // order 에 있는 fills 에 찾을때
+    function Find( sFillNo : string ): TFill;    
     property Fills[i:Integer]: TFill read GetFill; default;
   end;  
 
@@ -123,6 +141,25 @@ begin
 
 end;
 
+procedure TFill.SetFee(const Value: string);
+begin
+	FFeeBI.convert( Value);
+  FFee	:= FFeeBI.ToDouble;
+end;
+
+procedure TFill.SetPrice(const Value: string);
+begin
+	FPriceBI.convert( Value);
+  FPrice	:= FPriceBI.ToDouble;
+end;
+
+
+procedure TFill.SetVolume(const Value: string);
+begin
+	FVolumeBI.convert( Value);
+  FVolume	:= FVolumeBI.ToDouble;
+end;      
+
 { TFills }
 
 constructor TFills.Create;
@@ -172,6 +209,23 @@ begin
   Result.FSide       := iSide;
 end;
 
+function TFills.New(sFillNo: string; dtFillTime, dtEventTime: TDateTime;
+  sOrderNo: string; aAccount: TAccount; aSymbol: TSymbol; sVolume : string; iSide : integer;
+  sPrice: string): TFill;
+begin
+  Result := Add as TFill;
+
+  Result.FFillNo  	:= sFillNo;
+  Result.FFillTime 	:= dtFillTime;
+  Result.FOrderNo   := sOrderNo;
+  Result.FAccount   := aAccount;
+  Result.FSymbol  	:= aSymbol;
+  Result.SetVolume( sVolume );
+  Result.SetPrice( sPrice );
+  Result.FEventTime := dtEventTime;
+  Result.FSide       := iSide;
+end;
+
 function TFills.Represent: String;
 begin
 
@@ -182,6 +236,19 @@ end;
 procedure TFillList.AddFill(aFill: TFill);
 begin
   if IndexOf(aFill) < 0 then Add(aFill);
+end;
+
+function TFillList.Find(sFillNo: string): TFill;
+var
+  i : integer;
+begin
+  result := nil;
+  for i := Count-1 downto 0 do
+    if ( Fills[i].FFillNo = sFillNo ) then
+    begin
+      Result := Fills[i];
+      break;
+    end; 
 end;
 
 function TFillList.GetFill(i: Integer): TFill;

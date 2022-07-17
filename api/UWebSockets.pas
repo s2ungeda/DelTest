@@ -303,14 +303,14 @@ begin
     cmtPong: sTmp := 'pong';
   end;
 
-//  App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
+  if FExchangeKind = ekBithumb then  
+		App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
 end;
 procedure TWebsocket.OnMessage(Sender: TObject; const Data: TArray<System.Byte>;
   MessageType: TScWebSocketMessageType; EndOfMessage: Boolean);
 var
   sData: string;
-begin
-
+begin     
 
   if FSockDiv = TRADE_SOCK then
     FSockDiv := TRADE_SOCK;

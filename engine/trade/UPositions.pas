@@ -24,7 +24,7 @@ type
     function GetLastPL: Double;
     function GetSide: integer;
     procedure DoCalcFut;
-    procedure DoCalcSpot;
+    procedure DoCalcPosition;
   public
     constructor Create(aColl: TCollection); override;
     destructor Destroy; override;
@@ -64,7 +64,7 @@ type
       dVolume: double = 0.0; dAvgPrice: Double = 0.0;
       dtEntry: Double = 0.0): TPosition;
 
-    procedure UpdatePosition;
+    procedure UpdatePosition( aSymbol : TSymbol );
     function GetSymbolPL( aAccount: TAccount; aSymbol : TSymbol ) : Double;
     function GetPL( aAccount : TAccount ) : double;
     function GetOpenPL( aAccount : TAccount ) : double;
@@ -86,17 +86,47 @@ begin
   FFills.AddFill( aFill );
   FLastFill := aFill;
 
-  case FSymbol.Spec.Market of
-    mtSpot:     DoCalcSpot;
-    mtFutures:  DoCalcFut;
-  end;
-
-  DoCalcFut;
-
+//  case FSymbol.Spec.Market of
+//    mtSpot:     DoCalcSpot;
+//    mtFutures:  DoCalcFut;
+//  end;
+  
+	DoCalcPosition;
 end;
 
-procedure TPosition.DoCalcSpot;
+procedure TPosition.DoCalcPosition;
+var
+  dFilledQty , dNewQty : double;
 begin
+
+  dFilledQty  := FLastFill.Volume * FLastFill.Side;
+  dNewQty     := FVolume + dFilledQty;
+
+  if CheckZero( FVolume ) then
+    FAvgPrice := FLastFill.Price
+  else if ( FVolume * dNewQty ) < 0 then // 반대포지션
+  begin
+    FEntryPL  := FEntryPL + (FLastFill.Price - FAvgPrice) * FVolume * FSymbol.Spec.PointValue;
+    FAvgPrice := FLastFill.Price;
+  end else
+  if CheckZero( dNewQty ) then  // 청산
+  begin
+    FEntryPL  := FEntryPL + (FLastFill.Price - FAvgPrice) * FVolume * FSymbol.Spec.PointValue;
+    FAvgPrice := 0;
+  end else
+  if abs(dNewQty) > abs(FVolume) then
+  begin
+    FAvgPrice := ( FAvgPrice * FVolume + FLastFill.Price * dFilledQty ) / dNewQty;
+  end else
+  begin
+    FEntryPL := FEntryPL
+                  + (FLastFill.Price - FAvgPrice) * -dFilledQty * FSymbol.Spec.PointValue;
+  end;
+
+  FTradeAmt   := FTradeAmt + FLastFill.Volume * FLastFill.Price * FSymbol.Spec.PointValue;
+  FVolume     := dNewQty;
+
+  CalcOpenPL;
 
 end;
 
@@ -138,12 +168,12 @@ end;
 procedure TPosition.CalcOpenPL;
 begin
   FEntryOTE := FVolume * (FSymbol.Last - FAvgPrice) * FSymbol.Spec.PointValue;
-  Exit;
 	case FSymbol.Spec.Market of
     mtSpot		: FEntryOTE := FVolume  * FSymbol.Last;
     mtFutures	: FEntryOTE := FVolume * (FSymbol.Last - FAvgPrice) * FSymbol.Spec.PointValue;
   end;
 end;
+
 constructor TPosition.Create(aColl: TCollection);
 begin
   inherited Create( aColl );
@@ -158,11 +188,13 @@ begin
   FFills:= TFillList.Create;
   FLastFill := nil;
 end;
+
 destructor TPosition.Destroy;
 begin
   FFills.Free;
   inherited;
 end;
+
 procedure TPosition.DoOrder(iSide: integer; dQty: double);
 begin
 
@@ -172,10 +204,12 @@ function TPosition.GetFee: double;
 begin
   Result := FFee;
 end;
+
 function TPosition.GetLastPL: Double;
 begin
   Result := FEntryPL + FEntryOTE;
 end;
+
 function TPosition.GetSide: integer;
 begin
   if Volume > 0 then
@@ -185,6 +219,9 @@ begin
   else
     Result := 0;
 end;
+
+
+
 { TPositions }
 function TPositions.CheckOrderLimit(aAcnt: TAccount; aSymbol: TSymbol;
   iSide: integer; dPrice: double; bNewOrder: boolean): boolean;
@@ -258,9 +295,11 @@ begin
   if Result = nil then
     Result := New(aAccount, aSymbol);
 end;
+
 function TPositions.GetLastPosition: string;
 begin
 end;
+
 function TPositions.GetOpenPL(aAccount: TAccount): double;
 var
   i: Integer;
@@ -345,7 +384,19 @@ begin
     end;
   end;
 end;
-procedure TPositions.UpdatePosition;
+
+procedure TPositions.UpdatePosition( aSymbol : TSymbol );
+var
+  i: Integer;
+  aPosition: TPosition;
 begin
+
+  for i := 0 to Count - 1 do
+  begin
+    aPosition := GetPosition(i);
+    if (aPosition.Symbol = aSymbol ) then
+      aPosition.CalcOpenPL;
+  end;
+
 end;
 end.

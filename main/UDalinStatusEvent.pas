@@ -42,12 +42,12 @@ begin
           Exit;
         end;
 
-        if not App.Engine.ApiManager.ConnectAll then
-        begin
-          App.Log(llError, '', 'Failed ConnectAll') ;
-          ShowMessage('Failed ConnectAll');
-          Exit;
-        end;
+//        if not App.Engine.ApiManager.ConnectAll then
+//        begin
+//          App.Log(llError, '', 'Failed ConnectAll') ;
+//          ShowMessage('Failed ConnectAll');
+//          Exit;
+//        end;
 
         FrmDalinMain.SetValue;
 
@@ -82,6 +82,13 @@ begin
 //          ShowMessage('Failed RequestOrders');
 //          Exit;
 //        end;
+
+        if not App.Engine.ApiManager.ConnectAll then
+        begin
+          App.Log(llError, '', 'Failed ConnectAll') ;
+          ShowMessage('Failed ConnectAll');
+          Exit;
+        end;
 
         App.Engine.SymbolCore.PreSubscribe;
         App.AppStatus := asLoad;

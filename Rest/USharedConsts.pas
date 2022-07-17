@@ -41,24 +41,41 @@ const
   UC_UID   = 0;
 
   // 빗썸
-  TO_CNT = 5;
+  // new order
+  TO_CNT= 5;
   TO_CODE  = 0;
   TO_LS    = 1;
   TO_PRC   = 2;
   TO_QTY   = 3;
   TO_STT   = 4;
 
+  // cancel order
   TC_CNT = 4;
   TC_OID   = 0;
   TC_CODE  = 1;
   TC_LS    = 2;
   TC_STT   = 3;
 
+  // order list
+  TL_CNT = 1;
+  TL_CODE = 0;
+
+  // balance
+  TB_CNT = 1;
+  TB_CODE = 0; 
+
+  // order detail
+  TD_CNT = 2;
+  TD_CODE = 0;
+  TD_OID	= 1;
+
   TR_NEW_ORD = 'N';     // 신규 주문
   TR_CNL_ORD = 'C';     // 취소 주문
   TR_REQ_ORD = 'O';     // 주문 조회..
   TR_REQ_POS = 'P';     // 포지션 조회..
   TR_REQ_BAL = 'B';     // 잔고 조회...
+  TR_ABLE_ORD= 'A';			// 주문가능금액..
+  TR_ORD_DETAIL = 'D';	// 주문상세조회.
 
   EX_BN = 'B';
   EX_UP = 'U';

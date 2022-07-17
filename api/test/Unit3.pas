@@ -1,7 +1,7 @@
 unit Unit3;
 interface
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.DateUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, REST.Types, Data.Bind.Components,
   Data.Bind.ObjectScope, REST.Client, Vcl.StdCtrls, System.Rtti,
   System.Bindings.Outputs, Vcl.Bind.Editors, Data.Bind.EngExt, Vcl.Bind.DBEngExt;
@@ -56,6 +56,8 @@ type
     Button22: TButton;
     Button23: TButton;
     Button24: TButton;
+    Button25: TButton;
+    상세: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -84,6 +86,8 @@ type
     procedure Button22Click(Sender: TObject);
     procedure Button23Click(Sender: TObject);
     procedure Button24Click(Sender: TObject);
+    procedure Button25Click(Sender: TObject);
+    procedure 상세Click(Sender: TObject);
   private
     procedure DoLog(sData: string);
     procedure LogFileWrite( stData: string);
@@ -103,7 +107,6 @@ implementation
 
 uses
   system.JSON  ,
-  system.DateUtils  ,
   JOSE.Core.JWT,
   JOSE.Core.JWK,
   JOSE.Core.JWS,
@@ -605,7 +608,7 @@ begin
   sTmp    := '/info/account';
   restReq.Resource := sTmp;
   sTime    := Gettamptime2(13 );
-  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=TRX&payment_currency=KRW'));
+  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=APM&payment_currency=KRW'));
   sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
@@ -622,7 +625,7 @@ begin
   restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
   restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
   restReq.AddParameter('endPoint', '/info/account', TRESTRequestParameterKind.pkREQUESTBODY);
-  restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('order_currency', 'APM', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.Method   := rmPOST;
   restReq.Execute;
@@ -715,6 +718,37 @@ begin
     memo1.Lines.Add( Format('%d : %s', [i, sts[i] ] ));
 end;
 
+procedure TForm3.Button25Click(Sender: TObject);
+var
+	sTime : string;
+  iTime : Int64;
+  dtTime : TDateTime;
+
+  Result, ls10, lms : string;
+begin
+	sTime := edtUID.Text;
+  iTime := StrToINt64(sTime); 
+  dtTime:= UnixToDateTime( iTime );
+  memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );
+
+  dtTime := (iTime / 86400) + 25569;
+  memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );
+
+
+  ls10 := Copy(sTime,1,10);
+  lms := Copy(sTime,11,3);
+  Result := FormatDateTime('yyyy-MM-dd hh:mm:ss',UnixToDateTime(StrToInt64(ls10),false));
+  Result := Result +'.' + lms;  
+
+  memo1.Lines.Add(Result );
+
+  dtTime := ( StrToINt64( Copy(sTime,1,10) ) / 86400) + 25569;
+  memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );  
+
+  dtTime:= UnixToDateTime(iTime div 1000000 , false);
+  memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );      
+end;
+
 procedure TForm3.Button18Click(Sender: TObject);
 var
   sCode, sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
@@ -723,7 +757,7 @@ begin
   try
    //	TParallel.For( 0, aCodes.Count-1, procedure(i:integer)      
 
-    	sCode := 'APM'; //aCodes[i];
+    	sCode := 'TRX'; //aCodes[i];
       restClient.BaseURL := 'https://api.bithumb.com';
       sTmp    := '/info/orders';
       restReq.Resource := sTmp;
@@ -750,6 +784,8 @@ begin
       restReq.Method   := rmPOST;
       restReq.Execute;  
       memo1.Lines.Add( restRes.JSONValue.ToString );
+
+
       //
     	sCode := 'APM'; //aCodes[i];
       restClient.BaseURL := 'https://api.bithumb.com';
@@ -785,6 +821,44 @@ begin
   end;
 end;
 
+
+procedure TForm3.상세Click(Sender: TObject);
+var
+  sCode, sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
+begin
+      //
+    	sCode := 'TRX'; //aCodes[i];
+      restClient.BaseURL := 'https://api.bithumb.com';
+      sTmp    := '/info/order_detail';
+      restReq.Resource := sTmp;
+      sTime    := Gettamptime2(13 );
+      sValue := HTTPEncode(UTF8Encode('endPoint=/info/order_detail&order_id=C0117000000197655899&order_currency='+sCode));
+      sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);  
+      sValue := '/info/order_detail' +  chr(0) + sValue +  chr(0 ) + sTime;
+      sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+      sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+      restReq.Params.Clear;
+      restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+      restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+      restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+      restReq.AddParameter('endPoint', '/info/order_detail', TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('order_id', 'C0117000000197655899', TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('order_currency', sCode, TRESTRequestParameterKind.pkREQUESTBODY);
+
+
+      restReq.Method   := rmPOST;
+      restReq.Execute;  
+      memo1.Lines.Add( restRes.JSONValue.ToString );             
+  
+end;
+
 procedure TForm3.Button8Click(Sender: TObject);
 var
   sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
@@ -795,7 +869,7 @@ begin
   //sEncode := Format('endpoint=%s&currency=BTC', [ EncodeURIComponent(sTmp) ]);
 //  sEncode  := TBase64.URLDecode( format('endpoint=%s&currency=ALL', [ sEncode ] )  ).AsString;
   sTime    := Gettamptime2(13 );
-  sValue := HTTPEncode(UTF8Encode('endPoint=/info/balance&currency=ALL'));
+  sValue := HTTPEncode(UTF8Encode('endPoint=/info/balance&currency=BTC'));
   sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
@@ -827,7 +901,7 @@ begin
 //  restReq.AcceptEncoding := 'gzip, deflate, br';
 //
   restReq.AddParameter('endPoint', '/info/balance', TRESTRequestParameterKind.pkREQUESTBODY);
-  restReq.AddParameter('currency', 'ALL', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('currency', 'BTC', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.Method   := rmPOST;
   restReq.Execute;
 //  vFormData.Free;
@@ -894,11 +968,11 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;    
-//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
     
-  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';       
+//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );
     sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS256, LToken);
@@ -925,10 +999,10 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
-//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
-  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
         
     sJson  := 'market=KRW-TRX';
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -963,10 +1037,10 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
-//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
-  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
          
     sJson  := 'state=wait&page=1';
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -1002,10 +1076,10 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
-//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
-  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
     
     sJson  := 'uuids[]=40ed4d6a-2986-44d9-a6c5-6a6f598944eb&uuids[]=c50ddf49-736e-4e1d-bffa-f28b83084363';    
     sOut  := vHash.gethashstring( sJson, SHA512 );      
@@ -1041,11 +1115,11 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
-  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
+//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
         
-  	//apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  //sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';    
+  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
     sJson  := 'uuid='+edtUid.Text;//-2986-44d9-a6c5-6a6f598944eb';
     sOut  := vHash.gethashstring( sJson, SHA512 );    
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
@@ -1219,6 +1293,8 @@ begin
     memo1.Lines.Add( Format('%d.th %s ', [ i, sts[i]])  );
   end;
 end;
+
+
 { TDecimalHelper }
 
 

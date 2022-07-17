@@ -283,10 +283,10 @@ procedure TApiManager.StartRequest;
 var
   i :  TExchangeKind;
 begin
-  //FExManagers[ekUpbit].StartRequest;
-  //FExManagers[ekBithumb].StartRequest;
-  //FExManagers[ekBinance].StartRequest;
-  //exit;
+//  FExManagers[ekUpbit].StartRequest;
+  FExManagers[ekBithumb].StartRequest;
+//  FExManagers[ekBinance].StartRequest;
+  exit;
   for I := ekBinance to High(TExchangeKind) do
   	FExManagers[i].StartRequest;
 end;
@@ -378,8 +378,7 @@ begin
 
 	Result := FExManagers[ekBinance].RequestBalance and
             FExManagers[ekBithumb].RequestBalance;
-  Exit;
-  
+  Exit;          
 
   for I := ekBinance to High(TExchangeKind) do
   begin

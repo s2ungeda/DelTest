@@ -103,6 +103,11 @@ object FrmOrderList: TFrmOrderList
     Top = 208
     object N1: TMenuItem
       Caption = #52712#49548#51452#47928
+      OnClick = N1Click
+    end
+    object N2: TMenuItem
+      Caption = #49345#49464#51221#48372
+      OnClick = N2Click
     end
   end
 end

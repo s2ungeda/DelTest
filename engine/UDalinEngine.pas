@@ -7,7 +7,8 @@ uses
   System.Classes,
 
   UFormBroker , UTradeCore, USymbolCore, UApiConfigManager ,
-  UApiManager,  UQuoteBroker, USymbolBroker, UTradeBroker
+  UApiManager,  UQuoteBroker, USymbolBroker, UTradeBroker  ,
+  USharedManager
   ;
 
 type
@@ -21,6 +22,8 @@ type
     FSymbolBroker: TSymbolBroker;
     FTradeCore: TTradeCore;
     FTradeBroker: TTradeBroker;
+    FSharedManager: TSharedManager;
+
   public
     constructor Create;
     destructor  Destroy; override;
@@ -33,6 +36,8 @@ type
     property QuoteBroker : TQuoteBrokerManager read FQuoteBroker;
     property TradeBroker: TTradeBroker read FTradeBroker;
     property SymbolBroker: TSymbolBroker read FSymbolBroker;
+
+    property SharedManager : TSharedManager read FSharedManager;
 
     property ApiConfig : TApiConfigManager read FApiConfig;
   end;
@@ -51,10 +56,14 @@ begin
   FTradeCore	  := TTradeCore.Create;
   FSymbolCore   := TSymbolCore.Create;
   FSymbolBroker := TSymbolBroker.Create;
+
+
+  FSharedManager:= TSharedManager.create;
 end;
 
 destructor TDalinEngine.Destroy;
 begin
+	FSharedManager.Free;
   FApiManager.Free;
   FFormBroker.Free;
   FTradeCore.Free;

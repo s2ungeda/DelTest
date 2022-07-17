@@ -49,8 +49,13 @@ type
     function SubscribeAll : boolean; virtual; abstract;
     function MakeCloseData : boolean; virtual; abstract;
     function SendOrder( aOrder : TOrder ): boolean; virtual; abstract;
+    // 종목별 주문리스트 조회
+    procedure RequestOrderList( aSymbol : TSymbol ) ; virtual; abstract;
+    procedure RequestOrdeDetail( aOrder : TOrder ) ; virtual; abstract;
+		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;    
+    
 
-    function RequestBalance : boolean; virtual; abstract;    
+    function RequestBalance : boolean; overload; virtual; abstract;    
     function RequestPositons : boolean; virtual; abstract;
     function RequestOrders: boolean; virtual; abstract;
         
@@ -59,7 +64,8 @@ type
     function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     procedure RequestDNWState; virtual; abstract;
-
+    // from shared memory    
+    procedure ReceivedData( aMarket : TMarketType; aReqType : TRequestType; aData, aRef  : string );virtual; abstract;
 
     function GetSndRcvCount : string;
     //  TExchangeMarketType

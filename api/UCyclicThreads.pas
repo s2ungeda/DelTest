@@ -1,18 +1,13 @@
 unit UCyclicThreads;
-
 interface
-
 uses
   System.Classes, System.SyncObjs
   , Windows
   , URestRequests//UCyclicItems
   ;
-
 const
   INTERVAL = 100;
-
 type      
-
 
   TCyclicThread = class(TThread)
   private
@@ -21,7 +16,6 @@ type
    FEvent  : TEvent;
    FITems  : TList;
    FOnNotify  : TNotifyEvent;
-
    FData : TRequest;
    procedure SyncProc;
   protected
@@ -29,44 +23,35 @@ type
   public
     constructor Create( aList : TList; ANotify : TNotifyEvent ; AName : string);
     destructor Destroy; override;
-
     procedure doJob;
+    procedure TurnOffNotify;
   end;
-
 implementation
-
 uses
   GApp
 	, Forms
   ;
-
 { IntervalThread }
-
 constructor TCyclicThread.Create( aList : TList; ANotify : TNotifyEvent; AName : string );
 begin
-
   FITems    := aList;
   FOnNotify := ANotify;
-
   inherited Create(true);
   FreeOnTerminate := true;
   Priority  := tpNormal;
   FMutex  := CreateMuTex( nil, false, PChar(AName) );
   FEvent  := TEvent.Create( nil, False, False, '');
 end;
-
 destructor TCyclicThread.Destroy;
 begin
   CloseHandle( FMutex );
   FEvent.Free;
   inherited;
 end;
-
 procedure TCyclicThread.doJob;
 begin
   FEvent.SetEvent;
 end;
-
 procedure TCyclicThread.Execute;
 var
   I, iSnd, gap : Integer;
@@ -76,26 +61,22 @@ var
 begin
   { Place thread code here }
   iSnd := 0;
-
   while not Terminated do
   begin
     WaitForSingleObject( Handle,  INTERVAL );
 //    if not(FEvent.WaitFor( INFINITE ) in [wrSignaled]) then Continue;
 //      if not(FEvent.WaitFor( INTERVAL ) in [wrTimeout]) then Continue;
-    if Terminated then break;
-
+ 
+ 			if FITems.Count <= 0 then continue;
+      
       if iSnd >= FItems.Count then
         iSnd := 0;
-
 //    for I := 0 to FItems.Count-1 do
 //    begin
-
       aItem := TRequest( FItems.Items[iSnd] );
       if aItem = nil then continue;
-
       bSend := false;
       nTick := GetTickCount;
-
       if aITem.LastTime <= 0 then
       begin
         gap := aItem.Count * INTERVAL;
@@ -109,10 +90,8 @@ begin
         if gap >= aItem.Interval then
           bSend := true;
       end;
-
 //      if (i = 2) and ( bSend ) then
 //        aItem.EnTime := 2;
-
       if (bSend) and (aItem.State <> 1)  then begin
         aItem.PrevTime  := aItem.LastTime;
         aItem.LastTime  := nTick;
@@ -128,20 +107,21 @@ begin
           App.Log(llInfo, 'Req TimeOut %s %s ', [ aItem.Name, aItem.Req.Client.BaseURL ]  );
         end;
       end;
-
       inc( iSnd );
 			// 루프 한번에 한건만 조회 하기 위해..
 //      if iSnd > 0 then break;
-      Application.ProcessMessages;
+//      Application.ProcessMessages;
 //    end;
   end;
-
 end;
-
 procedure TCyclicThread.SyncProc;
 begin
   if Assigned( FOnNotify ) then
     FOnNotify( FData );
+end;
+procedure TCyclicThread.TurnOffNotify;
+begin
+	FOnNotify	:= nil;
 end;
 
 end.

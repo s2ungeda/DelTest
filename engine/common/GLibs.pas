@@ -23,7 +23,7 @@ function Get30TermIdx : integer;
 
 function IfThenStr(AValue: Boolean; const ATrue: string; const AFalse: string): string;
 function IfThenFloat(AValue: Boolean; const ATrue: double): string;
-function FmtString( iPre : integer; dVal : double ): string;
+function FmtString( iPre : integer; dVal : double; iDiv : integer = 0 ): string;
 
 //---------------------------------------- file
 
@@ -52,7 +52,16 @@ function EnumFamToLines(lplf: PLOGFONT; lpntm: PNEWTEXTMETRIC; FontType: DWORD; 
 function CheckZero( dVal : double ) : boolean;
 
 
+
+//--------------------------------------------- http
+function EncodePath(sRrsc, sPoint, sTime : string): string;
+
+
 implementation
+
+uses
+	Web.HTTPApp
+  ;
 
 
 function AppDir : String;
@@ -137,12 +146,17 @@ begin
     Result := ''
 end;
 
-function FmtString( iPre : integer; dVal : double ): string;
+function FmtString( iPre : integer; dVal : double; iDiv : integer  ): string;
 begin
   if IsZero( dVal ) then
     Result := '0'
-  else
-    Result := Format('%.*n', [ iPre, dVal ]);
+  else begin
+  	if iDiv = 0 then    
+	    Result := Format('%.*n', [ iPre, dVal ])
+    else
+	    Result := Format('%.*f', [ iPre, dVal ]);
+  end
+    
 end;
 
 function GetPrecision( aText : string ) : integer;
@@ -193,13 +207,16 @@ var
   iDiv, iMod : Integer;
 begin
 // 1645961186247
-  if len = 13 then iDiv := 1000
-  else iDiv := 1;
+	if len = 16 then
+		iDiv := 1000000  
+  else if len = 13 then 
+  	iDiv := 1000
+  else if len = 10 then
+		iDiv := 1;
 
   dtTime:= UnixToDateTime(UnixTime div iDiv , false);
-   sTmp := Format( '%s.%03d', [ FormatDateTime('yyyy-mm-dd hh:nn:ss', dtTime ),
-    UnixTime mod iDiv ]);
-  Result := EncodeDate(  StrToInt(copy(sTmp, 1, 4 ) ) , StrToInt( copy(sTmp, 6, 2 )) , StrToInt( copy(sTmp, 9,2)) )
+  sTmp 	:= Format( '%s.%03d', [ FormatDateTime('yyyy-mm-dd hh:nn:ss', dtTime ),  UnixTime mod iDiv ]);
+  Result:= EncodeDate(  StrToInt(copy(sTmp, 1, 4 ) ) , StrToInt( copy(sTmp, 6, 2 )) , StrToInt( copy(sTmp, 9,2)) )
           + EnCodeTime(StrToInt(copy(sTmp, 12,2))
                     ,StrToInt(copy(sTmp, 15,2))
                     ,StrToInt(copy(sTmp, 18,2))
@@ -381,5 +398,25 @@ function CheckZero( dVal : double ) : boolean;
 begin
 	Result := IsZero( dVal );
 end;
+
+
+
+function EncodePath(sRrsc, sPoint, sTime : string): string;
+var
+	sValue : string;
+begin
+	sValue := HTTPEncode(UTF8Encode(sPoint));
+  sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+  sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
+
+  Result := sRrsc + chr(0) + sValue +  chr(0 ) + sTime;
+end;
+
 
 end.

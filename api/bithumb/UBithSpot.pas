@@ -7,7 +7,7 @@ uses
 
   System.JSON,  Rest.Json , Rest.Types ,  REST.Client,
 
-  UExchange, USymbols ,  UMarketSpecs,
+  UExchange, USymbols , UOrders, UMarketSpecs,
 
   UApiTypes
 
@@ -43,6 +43,7 @@ type
     procedure RequestOrderBook( c : char ) ; overload;
     function RequestDNWState : boolean; override;
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
+    procedure ParseRequestData( aReqType : TRequestType; sData : string ); override;
 
     function ParsePrepareMaster : integer  ; override;
     function RequestMaster : boolean ; override;
@@ -50,7 +51,14 @@ type
 
 	  function RequestBalance : boolean; override;
     function RequestPositons : boolean; override;
-    function RequestOrders: boolean; override;
+    function RequestOrders: boolean;overload; override;
+
+		// to shared memory
+    procedure RequestBalance( aSymbol : TSymbol ) ; overload; override;
+    procedure RequestOrderDetail( aOrder : TOrder ); override;
+  	procedure RequestOrderList( aSymbol : TSymbol ); override;
+    function SenderOrder( aOrder : TOrder ): boolean ; override;
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );override;
 
   end;
 
@@ -133,6 +141,8 @@ end;
 
 
 
+
+
 function TBithSpot.RequestMaster: boolean;
 begin
 
@@ -188,6 +198,7 @@ begin
         Spec.BaseCode    := sCode;
         Spec.QuoteCode   := 'KRW';
         Spec.SettleCode  := 'KRW';
+        //Spec.SetSpec(1,1,4);
       end;
 
       aVal  := aPair.JsonValue;
@@ -290,6 +301,10 @@ end;
 
 
 
+
+
+
+
 function TBithSpot.RequestCandleData(sUnit, sCode: string): boolean;
 var
   sOut, sJson, sRrs, sTmp : string;
@@ -328,7 +343,8 @@ end;
 
 procedure TBithSpot.ParseRequestData(iCode: integer; sName, sData: string);
 begin
-  inherited;
+
+	if gBithReceiver = nil then exit;  
 
   if sData = '' then
   begin
@@ -339,14 +355,28 @@ begin
   if iCode <> 200 then begin
   	App.Log(llError, '%s %s Request is Failed : %d,  %s', [ TExchangeKindShortDesc[ GetExKind ], sName, iCode, sData ]  );
     Exit;
-  end else
+  end else begin
+
 		if sName = 'orderbook' then
 			gBithReceiver.ParseSpotOrderBook( sData )
     else if sName = 'ticker' then
     	gBithReceiver.ParseTicker( sData )
     else if sName = 'status' then
     	gBithReceiver.ParseDnwState( sData );
-  
+  end;         
+end;
+
+procedure TBithSpot.ParseRequestData(aReqType: TRequestType; sData: string);
+begin
+	if gBithReceiver = nil then exit;  
+	case aReqType of
+    rtNewOrder: ;
+    rtCnlOrder: ;
+    rtOrderList: ;
+    rtPosition: ;
+    rtBalance: gBithReceiver.ParseBalance( sData ) ;
+    rtAbleOrder: ;
+  end;
 end;
 
 procedure TBithSpot.RequestData;
@@ -484,6 +514,19 @@ begin
 end;
 
 
+	// received data from shared memroy
+procedure TBithSpot.ReceivedData(aReqType: TRequestType; aData, aRef: string);
+begin
+	case aReqType of
+    rtNewOrder: gBithReceiver.ParseSpotNewOrder( aData, aRef ) ;    // aRef is LocalHo
+    rtCnlOrder: gBithReceiver.ParseSpotCnlOrder( aData, aRef ) ;	  // aRef is OrderNo
+    rtOrderList: gBithReceiver.ParseSpotOrderList( aData, aRef );		// aRef is symbol code
+    rtBalance: gBithReceiver.ParseSpotBalance( aData, aRef ) ;  // aref is symbol code
+	  rtPosition: ;  
+    rtAbleOrder: ;
+    rtOrdDetail: gBithReceiver.ParseSpotOrderDetail( aData, aRef ) ; // aref is OrderNo
+  end;
+end;
 
 function TBithSpot.RequestBalance: boolean;
 var
@@ -654,6 +697,75 @@ begin
   if Sender = nil then Exit;
   inherited  RestNotify( Sender );
 
+end;
+        
+
+procedure TBithSpot.RequestBalance(aSymbol: TSymbol);
+begin
+
+	App.Engine.SharedManager.RequestData( ekBithumb, aSymbol.Spec.Market,
+      rtBalance,  aSymbol.Code , aSymbol.Code
+      )  ;   
+end;
+
+
+procedure TBithSpot.RequestOrderDetail(aOrder: TOrder);
+var
+	sData : string;
+begin
+	sData := Format('%s|%s', [ aOrder.Symbol.Code, aOrder.OrderNo ] );
+
+	App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+      rtOrdDetail,  sData , aOrder.OrderNo
+      )  ;       
+end;
+
+procedure TBithSpot.RequestOrderList(aSymbol: TSymbol);
+var
+	sData : string;
+begin     
+	sData := Format('%s', [ aSymbol.Code ] );
+
+	App.Engine.SharedManager.RequestData( ekBithumb, aSymbol.Spec.Market,
+      rtOrderList,  sData , aSymbol.Code
+      )  ;
+end;
+
+function TBithSpot.SenderOrder(aOrder: TOrder): boolean;
+var
+	sData : string;
+begin
+	// '|' 를 구분자 사용	  
+
+  if aOrder.OrderType = otNormal then
+  begin
+
+    sData := Format('%s|%s|%s|%s|%s', [
+      aOrder.Symbol.Code,
+      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      aOrder.PriceBI.OrgVal,
+      aOrder.OrderQtyBI.OrgVal,
+      aOrder.Symbol.Spec.SettleCode
+    ]);
+
+    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+      rtNewOrder,  sData , aOrder.LocalNo
+      )
+  end else
+  if aOrder.OrderType = otCancel then
+  begin
+    sData := Format('%s|%s|%s|%s', [
+      aOrder.OrderNo,
+      aOrder.Symbol.Code,
+      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      aOrder.Symbol.Spec.SettleCode
+    ]);
+
+    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+      rtCnlOrder,  sData , aOrder.OrderNo
+      )    
+  end;
+  
 end;
 
 end.

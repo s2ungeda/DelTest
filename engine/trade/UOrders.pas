@@ -132,6 +132,7 @@ type
     FOnNew: TOrderEvent;
     function GetOrder(i: Integer): TOrder;
     procedure OrderStateChanged(aOrder: TOrder);
+    procedure SetLocalNo( aOrder : TOrder );
     function GetGroupID: integer;
     function New: TOrder;
   public
@@ -149,6 +150,7 @@ type
       // search
     function Find(aAccount: TAccount; aSymbol: TSymbol; OrderNo: string): TOrder; overload;
     function Find(OrderNo: string): TOrder; overload;
+    function FindLocalNo(LocalNo : string) : TOrder;
       //
     property Orders[i: Integer]: TOrder read GetOrder; default;
     property NewOrders: TOrderList read FNewOrders;
@@ -308,14 +310,16 @@ begin
     begin
       FState      := osRejected;
       FRejectCode := sRjtCode;
-    end;
-    FModify     := false;
 
-    if FOrderType = otNormal then
       if Assigned(FOnStateChanged) then
-        FOnStateChanged(Self);
+        FOnStateChanged(Self);    
+          
+    end else
+    if FOrderType = otCancel then begin
+    	FOrderType := otNormal;
+      FModify     := false;
+    end;
   end;
-
 
 end;
 function TOrder.Represent: string;
@@ -404,6 +408,23 @@ begin
   end;
 end;
 
+function TOrders.FindLocalNo(LocalNo: string): TOrder;
+var
+	i : integer;
+  aOrder : TOrder;
+begin
+	Result := nil;
+	for I := FNewOrders.Count-1 downto 0 do
+  begin
+		aOrder	:= FNewOrders.Orders[i];
+    if  (aOrder.LocalNo = LocalNo) then
+    begin
+      Result := aOrder;
+      Break;
+    end;      
+  end;
+end;
+
 function TOrders.GetGroupID: integer;
 begin
 end;
@@ -419,7 +440,10 @@ end;
 function TOrders.NewCancelOrder(aTarget: TOrder; dCancelQty: double): TOrder;
 begin
   if aTarget = nil then Exit;
+  aTarget.OrderType := otCancel;
   aTarget.Modify := true;
+
+  Result := aTarget;
 end;
 
 
@@ -452,6 +476,8 @@ begin
   Result.FCanceledQty := 0;
   Result.FRejectCode := '';
   Result.FAcptTime := 0;
+
+  SetLocalNo(Result );
     // add to the queue
   FNewOrders.Add(Result);
     // notify 화면에서 필요..
@@ -493,12 +519,15 @@ begin
   Result.FCanceledQty := 0;
   Result.FRejectCode := '';
   Result.FAcptTime := 0;
+
+  SetLocalNo(Result );
     // add to the queue
   FNewOrders.Add(Result);
     // notify 화면에서 필요..
   if Assigned(FOnNew) then
     FOnNew(Result);
 end;
+
 procedure TOrders.OrderStateChanged(aOrder: TOrder);
 var index : integer;
 begin
@@ -535,7 +564,16 @@ begin
     , FNewOrders.Count,   FActiveOrders.Count ]
    );
 end;
+
 function TOrders.Represent: String;
 begin
 end;
+
+procedure TOrders.SetLocalNo(aOrder: TOrder);
+begin
+	aOrder.LocalNo := Format('%s_%s', [ 
+  	TExShortDesc[ aOrder.Account.ExchangeKind], GetTimestamp
+      ]);
+end;
+
 end.

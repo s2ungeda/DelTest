@@ -17,6 +17,7 @@ type
     ConVal    : int64;
     constructor Create(sval : string );
     function print : string;
+    procedure init;
     procedure convert(sval:string);
     function ToDouble : double;
     function ToInt64  : int64;
@@ -36,7 +37,8 @@ begin
   if sval = '' then Exit;
 
   OrgVal := sval;
-
+  init;
+  
   sts  := OrgVal.Split(['.']);
   iLen := High(sts);
 
@@ -68,6 +70,11 @@ constructor TDecimalHelper.Create(sval: string);
 begin
   //
   OrgVal  := sval;
+  init;
+end;
+
+procedure TDecimalHelper.init;
+begin
   Sosu    := '';
   Multiple  := 1;
   Precision := 0;
@@ -80,7 +87,10 @@ end;
 
 function TDecimalHelper.ToDouble: double;
 begin
-  Result  := ConVal / Multiple;
+	if Multiple = 0 then
+  	Result := ConVal
+  else  
+	  Result  := ConVal / Multiple;
 end;
 
 function TDecimalHelper.ToInt64: int64;
