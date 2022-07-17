@@ -233,9 +233,9 @@ begin
         if iLast > aSymbol.LastID then
         begin
           aSymbol.Last := aObj.GetValue<double>('lastPrice');
-          App.Engine.SymbolCore.CalcKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+
+          App.Engine.SymbolCore.CalcIndex( aSymbol );
+          App.Engine.TradeCore.Positions[ aSymbol.Spec.ExchangeType].UpdatePosition( aSymbol);
 //
 //          App.DebugLog('%s : %d > %d %s, %.0f', [ aSymbol.Code, iLast, aSymbol.LastID, 
 //          	aSymbol.PriceToStr( aSymbol.Last ), aSymbol.DayAmount

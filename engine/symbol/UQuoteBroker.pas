@@ -511,10 +511,7 @@ begin
 //
 //    FSymbol.Terms.NewTick(aTick)   ;
 
-    App.Engine.SymbolCore.CalcKimp( FSymbol );
-    App.Engine.SymbolCore.CalcMainKimp( FSymbol );
-    App.Engine.SymbolCore.CalcMainWDC(FSymbol);
-
+    App.Engine.SymbolCore.CalcIndex( FSymbol );
     App.Engine.TradeCore.Positions[ FSymbol.Spec.ExchangeType].UpdatePosition( FSymbol );
 
     FSymbol.LastTradeTime := dtTime;

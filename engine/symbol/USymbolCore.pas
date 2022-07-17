@@ -92,6 +92,7 @@ type
     procedure GetSymbolList( aExKind : TExchangeKind; var aList : TList );
 
     // 모든 종목을 구독할수 없어서.. QuoteBroker 에서 여기로 이전..
+    procedure CalcIndex( aSymbol : TSymbol );
     procedure CalcKimp( aPrice : double; aSymbol : TSymbol ); overload;
     procedure CalcKimp( aSymbol : TSymbol ); overload;
     procedure CalcMainKimp( aSymbol : TSymbol );  overload;
@@ -192,6 +193,13 @@ begin
   end
   else
     aSymbol.SPrice := 0;
+end;
+
+procedure TSymbolCore.CalcIndex(aSymbol: TSymbol);
+begin
+  CalcKimp( aSymbol );
+  CalcMainKimp( aSymbol );
+  CalcMainWDC(aSymbol);
 end;
 
 procedure TSymbolCore.CalcKimp( aSymbol : TSymbol );

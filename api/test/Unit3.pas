@@ -608,7 +608,7 @@ begin
   sTmp    := '/info/account';
   restReq.Resource := sTmp;
   sTime    := Gettamptime2(13 );
-  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=APM&payment_currency=KRW'));
+  sValue := HTTPEncode(UTF8Encode('endPoint=/info/account&order_currency=TRX&payment_currency=KRW'));
   sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
   sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
@@ -625,7 +625,7 @@ begin
   restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
   restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
   restReq.AddParameter('endPoint', '/info/account', TRESTRequestParameterKind.pkREQUESTBODY);
-  restReq.AddParameter('order_currency', 'APM', TRESTRequestParameterKind.pkREQUESTBODY);
+  restReq.AddParameter('order_currency', 'TRX', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.AddParameter('payment_currency', 'KRW', TRESTRequestParameterKind.pkREQUESTBODY);
   restReq.Method   := rmPOST;
   restReq.Execute;
@@ -787,7 +787,7 @@ begin
 
 
       //
-    	sCode := 'APM'; //aCodes[i];
+    	sCode := 'TRX'; //aCodes[i];
       restClient.BaseURL := 'https://api.bithumb.com';
       sTmp    := '/info/user_transactions';
       restReq.Resource := sTmp;

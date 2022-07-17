@@ -369,10 +369,8 @@ begin
   //      if aQuote = nil then
   //      begin
         if bCalc then begin
-
-          App.Engine.SymbolCore.CalcKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainKimp( aSymbol );
-          App.Engine.SymbolCore.CalcMainWDC(aSymbol);
+          App.Engine.SymbolCore.CalcIndex( aSymbol );
+          App.Engine.TradeCore.Positions[ aSymbol.Spec.ExchangeType].UpdatePosition( aSymbol);
         end;
   //      end;
       end;

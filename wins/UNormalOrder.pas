@@ -78,6 +78,7 @@ uses
   , UConsts
   , UQuoteBroker
   , USymbolCore
+  , Math
   ;
 
 {$R *.dfm}
@@ -135,6 +136,10 @@ begin
 
   FExKind   := aKind;
   FAccount  := App.Engine.TradeCore.FindAccount( FExKind );
+  FPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
+
+  if FPosition <> nil then
+    UpdatePosition;
 end;
 
 procedure TFrmNormalOrder.edtCodeKeyDown(Sender: TObject; var Key: Word;
@@ -158,7 +163,11 @@ begin
         App.Engine.QuoteBroker.Brokers[FExKind].Subscribe( Self, aSymbol, QuoteProc);
 
       initGrid( sgHoga, false );
-      FSymbol := aSymbol;
+      FSymbol   := aSymbol;
+      FPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
+
+      if FPosition <> nil then
+        UpdatePosition;
     end;
   end;
 end;
@@ -330,19 +339,19 @@ var
 	dTotCoin : double;
 begin
 
-	if FPosition = nil then Exit;  
+	if FPosition = nil then Exit;
 
   with sgBal do
   begin
   	Cells[1,0]	:= FPosition.Symbol.QtyToStr( FPosition.Volume );
     Cells[1,1]	:= Format('%.0n', [ FPosition.EntryOTE  ])  ;
-    Cells[1,2]	:= Format('%.0n', [ FPosition.Account.AvailableAmt[scKRW]  ]  );
+    Cells[1,2]	:= Format('%.0n', [ Floor( FPosition.Account.AvailableAmt[scKRW] ) + 0.001  ]  );
 
     dTotCoin		:= App.Engine.TradeCore.Positions[ekBithumb].GetOpenPL( FPosition.Account );
 
-    Cells[3,0]	:= FPosition.Symbol.QtyToStr( dTotCoin + FPosition.Account.TradeAmt[scKRW] );              			
-		Cells[3,1]	:= Format('%.0n', [ FPosition.Account.TradeAmt[scKRW]  ]  );   
-    Cells[3,2]	:= FPosition.Symbol.QtyToStr( dTotCoin );              			
+    Cells[3,0]	:= Format('%.0n', [ Floor( dTotCoin + FPosition.Account.TradeAmt[scKRW] ) + 0.001 ] );
+		Cells[3,1]	:= Format('%.0n', [ Floor( FPosition.Account.TradeAmt[scKRW] ) + 0.001  ]  );
+    Cells[3,2]	:= Format('%.0n', [ Floor( dTotcoin ) + 0.001 ] );// FPosition.Symbol.QtyToStr( dTotCoin );
   end;
 end;
 
