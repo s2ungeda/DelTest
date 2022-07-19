@@ -967,10 +967,10 @@ var
 begin
   LToken:= TJWT.Create(TJWTClaims);
   try
-    sID := GetUUID;    
+    sID := GetUUID;
   	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
 	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
-    
+
 //  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
@@ -980,10 +980,10 @@ begin
     restReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/accounts';
-      
+
     restReq.Method   := rmGET;    
     restReq.Execute;
-        
+
     memo1.Lines.Add( restRes.JSONValue.ToString );
   finally
     LToken.Free;
@@ -1005,12 +1005,12 @@ begin
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
         
     sJson  := 'market=KRW-TRX';
-    sOut  := vHash.gethashstring( sJson, SHA512 );      
+    sOut  := vHash.gethashstring( sJson, SHA512 );
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );    
-    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );    
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );    
+    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
     restReq.Params.Clear;         
     
     sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS512, LToken);
@@ -1018,7 +1018,7 @@ begin
     restReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/orders/chance?'+sJson;
-      
+
     restReq.Method   := rmGET;    
     restReq.Execute;
         
@@ -1042,8 +1042,9 @@ begin
 //  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
          
-    sJson  := 'state=wait&page=1';
-    sOut  := vHash.gethashstring( sJson, SHA512 );      
+//    sJson  := 'state=wait&page=1';
+    sJson  := 'state=wait';
+    sOut  := vHash.gethashstring( sJson, SHA512 );
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );    
@@ -1081,14 +1082,14 @@ begin
 //  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
     
-    sJson  := 'uuids[]=40ed4d6a-2986-44d9-a6c5-6a6f598944eb&uuids[]=c50ddf49-736e-4e1d-bffa-f28b83084363';    
+    sJson  := 'uuids[]=40ed4d6a-2986-44d9-a6c5-6a6f598944eb&uuids[]=c50ddf49-736e-4e1d-bffa-f28b83084363';
     sOut  := vHash.gethashstring( sJson, SHA512 );      
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
     LToken.Claims.SetClaimOfType<string>('nonce', sID );    
-    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );    
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );    
-    restReq.Params.Clear;         
+    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+    restReq.Params.Clear;
     
     sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS512, LToken);
     sToken := Format('Bearer %s', [sSig ]);
@@ -1096,7 +1097,7 @@ begin
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/orders?'+sJson;
       
-    restReq.Method   := rmGET;    
+    restReq.Method   := rmGET;
     restReq.Execute;
         
     memo1.Lines.Add( restRes.JSONValue.ToString );
@@ -1115,11 +1116,11 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
-//  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-//	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';   
-        
-  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
-	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
+
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
     sJson  := 'uuid='+edtUid.Text;//-2986-44d9-a6c5-6a6f598944eb';
     sOut  := vHash.gethashstring( sJson, SHA512 );    
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
@@ -1134,7 +1135,7 @@ begin
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/order?'+sJson;
       
-    restReq.Method   := rmDELETE;    
+    restReq.Method   := rmDELETE;
     restReq.Execute;
         
     memo1.Lines.Add( restRes.JSONValue.ToString );
@@ -1155,21 +1156,21 @@ begin
   aObj 	:= TJsonObject.Create;
   aObj.AddPair('market','KRW-TRX');
   aObj.AddPair('side','bid');
-  aObj.AddPair('volume','60');
-  aObj.AddPair('price','90');
+  aObj.AddPair('volume','69.39388235');
+  aObj.AddPair('price','85');
   aObj.AddPair('order_type','limit');
   
   try
-    sID := GetUUID;        
+    sID := GetUUID;
   	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
-	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';    
-    sJson  := 'market=KRW-TRX&side=bid&volume=60&price=90&order_type=limit';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
+    sJson  := 'market=KRW-TRX&side=bid&volume=69.39388235&price=85&order_type=limit';
     sOut  := vHash.gethashstring( sJson, SHA512 );
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
-    LToken.Claims.SetClaimOfType<string>('nonce', sID );    
-    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );    
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );    
-    restReq.Params.Clear;         
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+    restReq.Params.Clear;
     
     sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS512, LToken);
     sToken := Format('Bearer %s', [sSig ]);
@@ -1177,15 +1178,15 @@ begin
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/orders';
 		//restClient.Accept	:= 'application/json';
-    memo1.Lines.Add( aObj.ToString );
+//    memo1.Lines.Add( aObj.ToString );
     
 //    aParam := restReq.Params.AddItem;
 //    aParam.Value := aObj.ToString;
 //    aParam.ContentType := ctAPPLICATION_JSON;  
-        
+
     restReq.Body.Add(aObj);
       
-    restReq.Method   := rmPOST;    
+    restReq.Method   := rmPOST;
     restReq.Execute;
         
     memo1.Lines.Add( restRes.JSONValue.ToString );

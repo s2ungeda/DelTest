@@ -44,28 +44,32 @@ type
     procedure init ;
     procedure StartRequest;
 
+{$REGION 'to shared memory define' }
+    function SendOrder( aOrder : TOrder ): boolean;
+    procedure RequestOrderList( aSymbol : TSymbol ) ;
+    procedure RequestOrdeDetail( aOrder : TOrder ) ;
+		procedure RequestBalance( aSymbol : TSymbol ) ; overload;
+{$ENDREGION}
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
     function SubscribeAll : boolean; virtual; abstract;
     function MakeCloseData : boolean; virtual; abstract;
-    function SendOrder( aOrder : TOrder ): boolean; virtual; abstract;
-    // 종목별 주문리스트 조회
-    procedure RequestOrderList( aSymbol : TSymbol ) ; virtual; abstract;
-    procedure RequestOrdeDetail( aOrder : TOrder ) ; virtual; abstract;
-		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;    
-    
 
-    function RequestBalance : boolean; overload; virtual; abstract;    
+    // 종목별 주문리스트 조회
+
+
+    function RequestBalance : boolean; overload; virtual; abstract;
     function RequestPositons : boolean; virtual; abstract;
     function RequestOrders: boolean; virtual; abstract;
-        
+
     procedure UnSubscribeAll ; virtual; abstract;
 
     function Subscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     function UnSubscrib( aSymbol : TSymbol ) : boolean; virtual; abstract;
     procedure RequestDNWState; virtual; abstract;
-    // from shared memory    
-    procedure ReceivedData( aMarket : TMarketType; aReqType : TRequestType; aData, aRef  : string );virtual; abstract;
+
+    // from shared memory
+    procedure ReceivedData( aMarket : TMarketType; aReqType : TRequestType; aData, aRef  : string );
 
     function GetSndRcvCount : string;
     //  TExchangeMarketType
@@ -277,6 +281,14 @@ begin
 
 end;
 
+procedure TExchangeManager.ReceivedData(aMarket: TMarketType;
+  aReqType: TRequestType; aData, aRef: string);
+begin
+	Exchanges[aMarket].ReceivedData(aReqType, aData, aRef );
+end;
+
+
+
 function TExchangeManager.RequestMaster: boolean;
 var
   I: TMarketType;
@@ -291,6 +303,29 @@ begin
   Result := true;
 
 end;
+
+{$REGION 'to shared memory imple' }
+procedure TExchangeManager.RequestOrdeDetail(aOrder: TOrder);
+begin
+  Exchanges[aOrder.Symbol.Spec.Market].RequestOrderDetail( aOrder );
+end;
+
+procedure TExchangeManager.RequestOrderList(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestOrderList( aSymbol );
+end;
+
+procedure TExchangeManager.RequestBalance(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestBalance( aSymbol );
+end;
+
+function TExchangeManager.SendOrder(aOrder: TOrder): boolean;
+begin
+  if aOrder = nil then Exit ( false );
+  result := Exchanges[aOrder.Symbol.Spec.Market].SenderOrder( aOrder );
+end;
+{$ENDREGION}
 
 procedure TExchangeManager.StartRequest;
 var

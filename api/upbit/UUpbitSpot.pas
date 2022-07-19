@@ -7,7 +7,7 @@ uses
 
   System.JSON,  Rest.Json , Rest.Types , Rest.Client,
 
-  UExchange, USymbols,
+  UExchange, USymbols, UOrders,
 
   UApiTypes
 
@@ -51,7 +51,7 @@ type
     // private api
     function RequestAccounts : boolean;
     function RequestWaitOrders : boolean;
-    procedure RequestAvailableAmt( aSymbol : TSymbol );
+//    procedure RequestAvailableAmt( aSymbol : TSymbol );
     
     
     procedure CyclicNotify( Sender : TObject ); override;
@@ -60,6 +60,15 @@ type
     function RequestDNWState : boolean; override;
     function GetSig( idx : Integer ): string; overload;
     function GetSig( sQuery : string ): string; overload;
+
+    // shared procedure
+    function SenderOrder( aOrder : TOrder ): boolean ; override;
+		procedure RequestBalance( aSymbol : TSymbol ) ; overload; override;
+		procedure RequestOrderDetail( aOrder : TOrder ); override;
+    procedure RequestAvailableOrder( aSymbol : TSymbol ); override;
+		procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );override;
+    //
 
     property  LimitSec : integer read FLimitSec;
     property  LimitMin : integer read FLimitMin;
@@ -73,7 +82,7 @@ type
 implementation
 
 uses
-  GApp  , UApiConsts
+  GApp  , UApiConsts, GLibs
   , UEncrypts
   , UUpbitParse, URestItems 
   , UCyclicItems, URestRequests
@@ -149,12 +158,11 @@ begin
 		MakeRest;
 end;
 
-	// pub query       분당 600회, 초당 10회 (종목, 캔들, 체결, 티커, 호가별)
+
+
+// pub query       분당 600회, 초당 10회 (종목, 캔들, 체결, 티커, 호가별)
 	// pri query       초당 30회, 분당 900회   -- 분당 30인거 같음..
   // order           초당 8회, 분당 200회
-
-
-
 
 
 function TUpbitSpot.RequestSpotTicker: boolean;
@@ -206,7 +214,6 @@ begin
   end;
 
 end;
-
 
 
 
@@ -509,10 +516,9 @@ begin
   Result := bRes;
 end;
 
-procedure TUpbitSpot.RequestAvailableAmt(aSymbol: TSymbol);
-begin
 
-end;
+
+
 
 function TUpbitSpot.RequestCandleData(sUnit, sCode: string): boolean;
 var
@@ -694,6 +700,96 @@ var
 begin
   if Sender = nil then Exit;
   inherited  RestNotify( Sender );
+end;
+
+
+
+procedure TUpbitSpot.RequestOrderDetail(aOrder: TOrder);
+var
+  i : integer;
+  pOrder : TOrder;
+  sData : string;
+begin
+  with App.Engine.TradeCore.Orders[GetExKind] do
+    for I := 0 to ActiveOrders.Count-1 do
+    begin
+      pOrder := ActiveOrders.Orders[i];
+      if pOrder = nil then continue;
+
+      if sData <> '' then
+        sData := sData + ',';
+      sData := sData + pOrder.OrderNo;
+    end;
+
+  if sData <> '' then
+  	App.Engine.SharedManager.RequestData( GetExKind, mtSpot,
+        rtOrdDetail,  sData , ''
+      )  ;
+end;
+
+procedure TUpbitSpot.RequestOrderList(aSymbol: TSymbol);
+begin
+ 	App.Engine.SharedManager.RequestData( GetExKind, mtSpot,
+        rtOrderList,  'wait|desc' , ''
+      )  ;
+end;
+
+procedure TUpbitSpot.RequestAvailableOrder(aSymbol: TSymbol);
+begin
+	App.Engine.SharedManager.RequestData( GetExKind, aSymbol.Spec.Market,
+      rtAbleOrder,  aSymbol.Code , aSymbol.Code
+      )  ;
+end;
+
+procedure TUpbitSpot.RequestBalance(aSymbol: TSymbol);
+begin
+  // upbit 는 필수 인자가 없으므로 공백으로 보내도 됨..
+	App.Engine.SharedManager.RequestData( GetExKind, aSymbol.Spec.Market,
+      rtBalance,  aSymbol.Code , aSymbol.Code
+      )  ;
+end;
+
+function TUpbitSpot.SenderOrder(aOrder: TOrder): boolean;
+var
+  sData : string;
+  aType : TRequestType;
+begin
+
+  if aOrder.OrderType = otNormal then
+  begin
+
+    sData := Format('%s|%s|%s|%s|%s', [
+      aOrder.Symbol.Code,
+      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      aOrder.PriceBI.OrgVal,
+      aOrder.OrderQtyBI.OrgVal,
+      'limit'
+    ]);
+
+    App.Engine.SharedManager.RequestData( GetExKind, aOrder.Symbol.Spec.Market,
+      rtNewOrder,  sData , aOrder.LocalNo
+      )
+  end else
+  if aOrder.OrderType = otCancel then
+  begin
+    App.Engine.SharedManager.RequestData( GetExKind, aOrder.Symbol.Spec.Market,
+      rtCnlOrder,  aOrder.OrderNo , aOrder.OrderNo
+      )
+  end;
+
+end;
+
+procedure TUpbitSpot.ReceivedData(aReqType: TRequestType; aData, aRef: string);
+begin
+	case aReqType of
+    rtNewOrder  : gUpReceiver.ParseSpotNewOrder( aData, aRef ) ;        // aRef is LocalHo
+    rtCnlOrder  : gUpReceiver.ParseSpotCnlOrder( aData, aRef ) ;	      // aRef is OrderNo
+    rtOrderList : gUpReceiver.ParseSpotOrderList( aData, aRef );		    // aRef is symbol code
+    rtBalance   : gUpReceiver.ParseSpotBalance( aData, aRef ) ;          // aref is symbol code
+    rtAbleOrder : gUpReceiver.ParseSpotAvailableOrder( aData, aRef) ;  // aref is symbol code
+    rtOrdDetail : gUpReceiver.ParseSpotOrderDetail( aData, aRef ) ;    // aref is OrderNo
+  end;
+
 end;
 
 end.

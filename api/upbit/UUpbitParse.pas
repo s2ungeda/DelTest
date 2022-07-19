@@ -37,6 +37,14 @@ type
     procedure ParseAccounts( aData : string );
     procedure ParseWaitORder( aData : string );
 
+    // ¡÷πÆ from shared
+    procedure ParseSpotNewOrder( aData, aRef : string );
+    procedure ParseSpotCnlOrder( aData, aRef : string );
+    procedure ParseSpotOrderList( aData, aRef : string );
+    procedure ParseSpotOrderDetail( aData, aRef : string );
+    procedure ParseSpotAvailableOrder( aData, aRef : string );
+    procedure ParseSpotBalance( aData, aRef : string );
+
     property Parent : TExchangeManager read FParent;
   end;
 
@@ -112,6 +120,38 @@ begin
 
 end;
 
+{$REGION 'shared memory imple.........'}
+procedure TUpbitParse.ParseSpotAvailableOrder(aData, aRef: string);
+begin
+
+end;
+
+procedure TUpbitParse.ParseSpotBalance(aData, aRef: string);
+begin
+
+end;
+
+procedure TUpbitParse.ParseSpotCnlOrder(aData, aRef: string);
+begin
+
+end;
+
+procedure TUpbitParse.ParseSpotNewOrder(aData, aRef: string);
+begin
+
+end;
+
+procedure TUpbitParse.ParseSpotOrderDetail(aData, aRef: string);
+begin
+
+end;
+
+procedure TUpbitParse.ParseSpotOrderList(aData, aRef: string);
+begin
+
+end;
+{$ENDREGION }
+
 procedure TUpbitParse.ParseSpotOrderBook(aData: string);
 var
   i , j : integer;
@@ -164,6 +204,8 @@ begin
     if aArr <> nil then aArr.Free;
   end;
 end;
+
+
 
 procedure TUpbitParse.ParseSpotRealTicker(aJson: TJsonObject);
 var

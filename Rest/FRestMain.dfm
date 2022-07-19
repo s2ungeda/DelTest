@@ -2,8 +2,8 @@ object FrmRestMain: TFrmRestMain
   Left = 0
   Top = 0
   Caption = 'REST'
-  ClientHeight = 150
-  ClientWidth = 173
+  ClientHeight = 237
+  ClientWidth = 808
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

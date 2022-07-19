@@ -29,16 +29,28 @@ const
   BC_CODE = 1;
 
   // 업비트
-  UO_CNT = 6;
+  UO_CNT = 5;
   UO_CODE  = 0;
   UO_LS    = 1;
   UO_PRC   = 2;
   UO_QTY   = 3;
   UO_TYPE  = 4;
-  UO_UID   = 5;
 
+  // 취소
   UC_CNT = 1;
   UC_UID   = 0;
+
+  // 주문가능
+  UA_CNT = 1;
+  UA_CODE = 0;
+  // 주문 리스트
+  UL_CNT = 2;
+  UL_STATE = 0;
+  UL_ASC = 1;
+  // order detail
+  UD_CNT = 1;
+  UD_UIDS	= 0;
+
 
   // 빗썸
   // new order

@@ -27,12 +27,19 @@ type
     procedure RequestBinFutNewOrder( sData, sRef : string );
     procedure RequestBinFutCnlOrder( sData, sRef : string );
 
-    //             
+    //  bithumb
     procedure RequestBitOrderList( sData, sRef : string );
     procedure RequestBitBalance( sData, sRef : string );
     procedure RequestBitNewOrder( sData, sRef : string );
     procedure RequestBitCnlOrder( sData, sRef : string );
     procedure RequestBitOrderDetail( sData, sRef : string );
+
+    procedure RequestUptOrderList( sData, sRef : string );
+    procedure RequestUptBalance( sData, sRef : string );
+    procedure RequestUptAvailableOrder( sData, sRef : string );
+    procedure RequestUptNewOrder( sData, sRef : string );
+    procedure RequestUptCnlOrder( sData, sRef : string );
+    procedure RequestUptOrderDetail( sData, sRef : string );
 
     
 
@@ -56,6 +63,9 @@ uses
   , UApiConsts
   , UEncrypts
   , IdCoderMIME, IdGlobal
+  , system.Hash
+
+  , JOSE.Core.JWT   ,JOSE.Core.Builder, JOSE.Core.JWA
   ;
 
 { TRestManager }
@@ -111,16 +121,20 @@ begin
       end;
     EX_UP:  // upbit
       case aData.trDiv of
-        TR_NEW_ORD : ;
-        TR_CNL_ORD : ;
+        TR_NEW_ORD : RequestUptNewOrder( AnsiString( aData.data ), aData.ref)  ;
+        TR_CNL_ORD : RequestUptCnlOrder( AnsiString( aData.data ), aData.ref) ;
+        TR_REQ_ORD : RequestUptOrderList( AnsiString( aData.data ), aData.ref) ;
+        TR_REQ_BAL : RequestUptBalance( AnsiString( aData.data ), aData.ref)  ;
+        TR_ORD_DETAIL : RequestUptOrderDetail( AnsiString( aData.data ), aData.ref) ;
+        TR_ABLE_ORD : RequestUptAvailableOrder( AnsiString( aData.data ), aData.ref)  ;
       end;
     EX_BI:  // bithumb
       case aData.trDiv of
         TR_NEW_ORD : RequestBitNewOrder( AnsiString( aData.data ), aData.ref );
         TR_CNL_ORD : RequestBitCnlOrder( AnsiString( aData.data ), aData.ref ) ;
         TR_REQ_ORD : RequestBitOrderList( AnsiString( aData.data ), aData.ref ); 		 // 주문 조회..        
-        TR_REQ_BAL : RequestBitBalance( AnsiString( aData.data ), aData.ref );       // 잔고 조회...  
-        TR_ORD_DETAIL : RequestBitOrderDetail( AnsiString( aData.data ), aData.ref );    // 주문 상세조회..  )      
+        TR_REQ_BAL : RequestBitBalance( AnsiString( aData.data ), aData.ref );       // 잔고 조회...
+        TR_ORD_DETAIL : RequestBitOrderDetail( AnsiString( aData.data ), aData.ref );    // 주문 상세조회..  )
       end;
   end;
 
@@ -188,9 +202,12 @@ begin
     end;
   finally
     FRestReq[aExKind].Params.Clear;
+    FRestReq[aExKind].Body.ClearBody;
   end;
 
 end;
+
+// bithumb api --------------------------------------------------------------------------------------
 
 procedure TRestManager.RequestBinFutCnlOrder(sData, sRef: string);
 var
@@ -242,8 +259,6 @@ begin
   end;
 
 end;
-
-// bithumb api --------------------------------------------------------------------------------------
 
 procedure TRestManager.RequestBitBalance(sData, sRef: string);
 var
@@ -434,13 +449,13 @@ var
   sParam1 : string;
   I: Integer;
   aExKind : TExchangeKind;
-    
+
 begin
   if not CheckShareddData( sArr, sData, TL_CNT, 'BitOrderList') then Exit;
 
   try      
   	aExKind	:= ekBithumb;
-    
+
     sParam1	:= sArr[TL_CODE];
 //    sParam2 := trim( sArr[TL_OID] );       
     sRsrc 	:= '/info/orders';     
@@ -465,14 +480,309 @@ begin
 
     if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
       App.Log( llError, '', 'Failed %s RequestBitOrderList (%s, %s)',
-      [ TExchangeKindDesc[aExKind], outRes, outJson] );       
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
-   	PushData( aExKind, mtSpot, TR_REQ_ORD, outJson, sRef );              
+   	PushData( aExKind, mtSpot, TR_REQ_ORD, outJson, sRef );
 	except
   end;   
 
 end;
 
 // bithumb api --------------------------------------------------------------------------------------
+
+// upbit api --------------------------------------------------------------------------------------
+
+procedure TRestManager.RequestUptAvailableOrder(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;     vHash : THashSHA2;
+  sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
+begin
+
+  if not CheckShareddData( sArr, sData, UA_CNT, 'UptAvailableOrder') then Exit;
+
+  aExKind := ekUpbit;
+
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+
+    sQuery := 'market='+sArr[UA_CODE];
+    sRsrc  := '/v1/orders/chance?'+sQuery;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+    end;
+
+    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestBitOrderList (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_ABLE_ORD, outJson, sRef );
+
+  finally
+    LToken.Free;
+  end;
+end;
+
+procedure TRestManager.RequestUptBalance(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;
+  sSig, sID, sToken, outRes, sRsrc, outJson : string;
+begin
+
+  //if not CheckShareddData( sArr, sData, TL_CNT, 'UptBalance') then Exit;
+
+  aExKind := ekUpbit;
+
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+    sID := GetUUID;
+    sRsrc := '/v1/accounts';
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+    end;
+
+    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestBitOrderList (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_REQ_BAL, outJson, sRef );
+
+  finally
+    LToken.Free;
+  end;
+
+end;
+
+procedure TRestManager.RequestUptCnlOrder(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;     vHash : THashSHA2;
+  sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
+begin
+
+  if not CheckShareddData( sArr, sData, UC_CNT, 'UptCnlOrder') then Exit;
+  aExKind := ekUpbit;
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+
+    sQuery := 'uuid='+sArr[UC_UID];
+    sRsrc  := '/v1/orders?'+sQuery;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+    end;
+
+    if not Request( aExKind ,rmDELETE, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestUptCnlOrder (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_CNL_ORD, outJson, sRef );
+
+  finally
+    LToken.Free;
+  end;
+end;
+
+procedure TRestManager.RequestUptNewOrder(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;     vHash : THashSHA2;
+  sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
+  aObj : TJsonObject;
+begin
+
+  if not CheckShareddData( sArr, sData, UO_CNT, 'UptNewOrder') then Exit;
+  aExKind := ekUpbit;
+
+  aObj  := TJsonObject.Create;
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+
+    sQuery := format('market=%s&side=%s&price=%s&volume=%s&order_type=%s', [
+      sArr[UO_CODE], sArr[UO_LS], sArr[UO_PRC], sArr[UO_QTY], sArr[UO_TYPE]
+      ]);
+    sRsrc  := '/v1/orders?'+sQuery;
+
+    with aObj do
+    begin
+      AddPair('market', sArr[UO_CODE] );
+      AddPair('side',   sArr[UO_LS]);
+      AddPair('price',  sArr[UO_PRC]);
+      AddPair('volume', sArr[UO_QTY]);
+      AddPair('order_type',sArr[UO_TYPE]);
+    end;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      Body.Add(aObj);
+    end;
+
+    if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestUptNewOrder (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_CNL_ORD, outJson, sRef );
+
+  finally
+    LToken.Free;
+    aObj.Free;
+  end;
+end;
+
+procedure TRestManager.RequestUptOrderDetail(sData, sRef: string);
+var
+  sArr, sUids  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;     vHash : THashSHA2;
+  sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
+  I: Integer;
+begin
+
+  if not CheckShareddData( sArr, sData, UD_CNT, 'UptOrderDetail') then Exit;
+
+  aExKind := ekUpbit;
+  LToken:= TJWT.Create(TJWTClaims);
+
+  try
+
+    sUids  := sArr[UD_UIDS].Split([',']);
+    sQuery := '';
+    for I := 0 to High(sUids) do
+    begin
+      if i > 0 then
+        sQuery := sQuery + '&';
+      sQuery := sQuery + 'uuids[]=' + sUids[i]
+    end;
+    sRsrc  := '/v1/orders?'+sQuery;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+    end;
+
+    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestUptOrderDetail (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_ORD_DETAIL, outJson, sRef );
+
+  finally
+    LToken.Free;
+  end;
+
+
+end;
+
+procedure TRestManager.RequestUptOrderList(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+  aExKind : TExchangeKind;
+
+  LToken: TJWT;
+  guid : TGUID;     vHash : THashSHA2;
+  sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
+begin
+
+  if not CheckShareddData( sArr, sData, UL_CNT, 'UptOrderList') then Exit;
+
+  aExKind := ekUpbit;
+
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+
+    sQuery := format('state=%s&order_by=%s', [ sArr[UL_STATE], sArr[UL_ASC] ]);
+    sRsrc  := '/v1/orders?'+sQuery;
+
+    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+             TJOSEAlgorithmId.HS256, LToken);
+    sToken:= Format('Bearer %s', [sSig ]);
+
+    with FRestReq[aExKind] do
+    begin
+      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+    end;
+
+    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestUptOrderList (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    PushData( aExKind, mtSpot, TR_REQ_ORD, outJson, sRef );
+
+  finally
+    LToken.Free;
+  end;
+
+end;
+
+// upbit api --------------------------------------------------------------------------------------
+
 
 end.

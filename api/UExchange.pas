@@ -66,12 +66,15 @@ type
     function  GetCodeIndex( S : string ) : integer;
 
 //----------------------------------------------------------- common request
-		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;    
-		procedure RequestOrderDetail( aOrder : TOrder ); virtual; abstract;  
-		procedure RequestOrderList( aSymbol : TSymbol ); virtual; abstract;  
-		function SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;  
-    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );virtual; abstract;  
-    
+{$REGION 'to shared memory define' }
+		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;
+		procedure RequestOrderDetail( aOrder : TOrder ); virtual; abstract;
+    procedure RequestAvailableOrder( aSymbol : TSymbol ); virtual; abstract;
+		procedure RequestOrderList( aSymbol : TSymbol ); virtual; abstract;
+		function SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );virtual; abstract;
+{$ENDREGION}
+
     function ParsePrepareMaster : integer ; virtual; abstract;
     function RequestMaster : boolean ; virtual; abstract;
     function RequestDNWState : boolean; virtual; abstract;
