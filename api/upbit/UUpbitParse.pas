@@ -54,7 +54,8 @@ var
 implementation
 
 uses
-  GApp, GLibs  , Math , UTypes
+  GApp, GLibs  , Math , UTypes, UConsts
+  , UDecimalHelper
   , UApiConsts
   , UOtherData
   , USymbolUtils
@@ -127,8 +128,26 @@ begin
 end;
 
 procedure TUpbitParse.ParseSpotBalance(aData, aRef: string);
+var
+  aSymbol : TSymbol;  aAcnt : TAccount;
+  aPos    : TPosition;
 begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSpotBalance data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] ] ) ;
+    Exit;
+  end;
 
+  ParseAccounts(aData);
+
+  aSymbol	:= App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, aRef );
+  aAcnt		:= App.Engine.TradeCore.FindAccount( FParent.ExchangeKind );
+  if (aSymbol = nil) or ( aAcnt = nil) then Exit;
+
+  aPos    := App.Engine.TradeCore.FindPosition( aAcnt, aSymbol );
+  if aPos <> nil then
+    App.Engine.TradeBroker.PositionEvent( aPos, POSITION_UPDATE);
 end;
 
 procedure TUpbitParse.ParseSpotCnlOrder(aData, aRef: string);
@@ -453,9 +472,11 @@ var
   I: Integer;
   aAcnt : TAccount;
   aSymbol : TSymbol;
-  sTmp,sCode, sCur : string;
+  aPos    : TPosition;
+  sTmp, sBal, sCode, sCur : string;
   aSCType : TSettleCurType;
   dTmp : double;
+  iBal : int64;
 begin
   if aData = '' then
   begin
@@ -479,21 +500,34 @@ begin
       sCode := aObj.GetValue('unit_currency').Value;
       aSCType := GetSettleType( sCur );
 
-      dTmp    := aObj.GetValue<double>('balance', 0 );
+      var biBal, biLock : TBigInt;
+      biBal.convert( aObj.GetValue('balance').Value );
+      biLock.convert( aObj.GetValue('locked').Value );
+
       if aSCType <> scNone then
       begin
-        aAcnt.TradeAmt[ aSCType ] := dTmp; //aObj.GetValue<double>('balance', 0 );
-      end else
+        aAcnt.TradeAmt[ aSCType ] := biBal.ToDouble;
+        aAcnt.AvailableAmt[ aSCType ] := biBal.ToDouble - biLock.ToDouble;
+      end ;
+
+      if aSCTYpe <> scKRW then
       begin
         aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sCur);
         if aSymbol = nil then continue;
-
         // ÀÜ°í°¡ ÀÕÀ¸¸é..
-        if (IsZero(dTmp )) and ( dTmp > 0 )then
+        iBal  := biBal.ConVal;
+        if iBal > 0 then
         begin
+          aPos  := App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].Find( aAcnt, aSymbol );
+          if aPos = nil then
+          begin
+            var biAvg : TBigint;
+            biAvg.convert( aObj.GetValue('avg_buy_price').Value );
+            App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].New( aAcnt, aSymbol,
+              biBal.ToDouble, biAvg.ToDouble  );
+          end;
 
         end;
-
       end;
 
       aObj.GetValue('unit_currency').Value;

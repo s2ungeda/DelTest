@@ -1004,7 +1004,7 @@ begin
 //  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
         
-    sJson  := 'market=KRW-TRX';
+    sJson  := 'market=KRW-XRP';
     sOut  := vHash.gethashstring( sJson, SHA512 );
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);

@@ -289,7 +289,7 @@ begin
     Cells[0,1]	:= '평가금액';
     Cells[0,2]	:= '주문가능';
 
-    Cells[2,0] 	:= '총옆가액';
+    Cells[2,0] 	:= '총평가액';
     Cells[2,1]	:= '보유현금';
     Cells[2,2]	:= '코인합산';        
   end;
@@ -344,10 +344,10 @@ begin
   with sgBal do
   begin
   	Cells[1,0]	:= FPosition.Symbol.QtyToStr( FPosition.Volume );
-    Cells[1,1]	:= Format('%.0n', [ FPosition.EntryOTE  ])  ;
+    Cells[1,1]	:= Format('%.0n', [ Floor( FPosition.EntryOTE ) + 0.001 ])  ;
     Cells[1,2]	:= Format('%.0n', [ Floor( FPosition.Account.AvailableAmt[scKRW] ) + 0.001  ]  );
 
-    dTotCoin		:= App.Engine.TradeCore.Positions[ekBithumb].GetOpenPL( FPosition.Account );
+    dTotCoin		:= App.Engine.TradeCore.Positions[FExKind].GetOpenPL( FPosition.Account );
 
     Cells[3,0]	:= Format('%.0n', [ Floor( dTotCoin + FPosition.Account.TradeAmt[scKRW] ) + 0.001 ] );
 		Cells[3,1]	:= Format('%.0n', [ Floor( FPosition.Account.TradeAmt[scKRW] ) + 0.001  ]  );
