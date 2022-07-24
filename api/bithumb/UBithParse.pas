@@ -573,7 +573,7 @@ begin
 
 	aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
   try  
-		sStatus := aObj.GetValue('status').Value;    
+		sStatus := aObj.GetValue('status').Value;
  		aOrder	:= App.Engine.TradeCore.FindOrder(ekBithumb, aRef, 1 );
 
     if aOrder = nil then
@@ -582,7 +582,7 @@ begin
       Exit;
     end;
 
-    App.Engine.TradeBroker.Cancel( aOrder, 0 )
+    App.Engine.TradeBroker.Cancel( aOrder, sStatus='0000', sStatus )
     
   finally
  		if aObj <> nil then aObj.free;                                               
@@ -599,8 +599,8 @@ begin
 
   if aData = '' then
   begin
-    App.Log(llError, '%s %s ParseSoptNewOrder data is empty',
-       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] ] ) ;
+    App.Log(llError, '%s %s ParseSoptNewOrder data is empty (%s)',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot], aRef ] ) ;
     Exit;
   end;
 

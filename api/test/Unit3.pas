@@ -58,6 +58,7 @@ type
     Button24: TButton;
     Button25: TButton;
     상세: TButton;
+    Button26: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -88,6 +89,7 @@ type
     procedure Button24Click(Sender: TObject);
     procedure Button25Click(Sender: TObject);
     procedure 상세Click(Sender: TObject);
+    procedure Button26Click(Sender: TObject);
   private
     procedure DoLog(sData: string);
     procedure LogFileWrite( stData: string);
@@ -356,7 +358,7 @@ begin
   data := Format('symbol=BTCUSDT&timestamp=%s', [t]);
   sig  := CalculateHMACSHA256(data,sSeckey );
   restReq.Params.Clear;
-  restReq.AddParameter('symbol', 'ETHUSDT' );
+  restReq.AddParameter('symbol', 'BTCUSDT' );
   restReq.AddParameter('timestamp', t );
   restReq.AddParameter('signature', sig );
   restReq.AddParameter('X-MBX-APIKEY', sApiKey, pkHTTPHEADER );
@@ -749,6 +751,8 @@ begin
   memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );      
 end;
 
+
+
 procedure TForm3.Button18Click(Sender: TObject);
 var
   sCode, sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
@@ -1073,7 +1077,7 @@ var
   guid : TGUID;
   sSig, sID, sToken, sOut, apikey, sKey ,sJson : string;
   vHash : THashSHA2;
-begin        
+begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
@@ -1112,7 +1116,7 @@ var
   guid : TGUID;
   sSig, sID, sToken, sOut, apikey, sKey ,sJson : string;
   vHash : THashSHA2;
-begin        
+begin
   LToken:= TJWT.Create(TJWTClaims);
   try
     sID := GetUUID;
@@ -1122,26 +1126,65 @@ begin
 //  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
 //	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
     sJson  := 'uuid='+edtUid.Text;//-2986-44d9-a6c5-6a6f598944eb';
-    sOut  := vHash.gethashstring( sJson, SHA512 );    
+    sOut  := vHash.gethashstring( sJson, SHA512 );
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);
-    LToken.Claims.SetClaimOfType<string>('nonce', sID );    
-    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );    
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );    
-    restReq.Params.Clear;         
-    
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+    restReq.Params.Clear;
+
     sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS512, LToken);
     sToken := Format('Bearer %s', [sSig ]);
     restReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
 	  restClient.BaseURL := 'https://api.upbit.com';
   	restReq.Resource := '/v1/order?'+sJson;
-      
+
     restReq.Method   := rmDELETE;
     restReq.Execute;
-        
+
     memo1.Lines.Add( restRes.JSONValue.ToString );
   finally
     LToken.Free;
   end;
+end;
+
+procedure TForm3.Button26Click(Sender: TObject);
+var
+  LToken: TJWT;
+  guid : TGUID;
+  sSig, sID, sToken, sOut, apikey, sKey ,sJson : string;
+  vHash : THashSHA2;
+begin
+  LToken:= TJWT.Create(TJWTClaims);
+  try
+    sID := GetUUID;
+  	apikey := 'Bru2m8dUJLhk9t6OvR0LJMeRLad4BiGGZuVe0wKD';
+	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
+
+//  	apikey := 'pPutaXMQMoY3wzyhe2B4ZxNBKd0Fbb4DyaVDQrNN';
+//	  sKey   := 'vKE178MrOBDu5CsjoNtEW7N6Kg4qYK8BiqNsxoux';
+    sJson  := 'uuid='+edtUid.Text;//-2986-44d9-a6c5-6a6f598944eb';
+    sOut  := vHash.gethashstring( sJson, SHA512 );
+    LToken.Claims.SetClaimOfType<string>('access_key', apikey);
+    LToken.Claims.SetClaimOfType<string>('nonce', sID );
+    LToken.Claims.SetClaimOfType<string>('query_hash', sOut );
+    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+    restReq.Params.Clear;
+
+    sSig := TJOSE.SerializeCompact(sKey,  TJOSEAlgorithmId.HS512, LToken);
+    sToken := Format('Bearer %s', [sSig ]);
+    restReq.AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+	  restClient.BaseURL := 'https://api.upbit.com';
+  	restReq.Resource := '/v1/order?'+sJson;
+
+    restReq.Method   := rmGET;
+    restReq.Execute;
+
+    memo1.Lines.Add( restRes.JSONValue.ToString );
+  finally
+    LToken.Free;
+  end;
+
 end;
 procedure TForm3.Button17Click(Sender: TObject);
 var

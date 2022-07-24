@@ -62,11 +62,8 @@ const
   POSITION_ABLEQTY    = 212;
 
 
-//  QTE_DATA = 200;
-//  CHART_DATA = 210;
-//  FPOS_DATA = 300;   // fund _ pos
-//  ACNT_DATA = 400;
-//  FUND_DATA = 500;
+  DIV_ORD_NO = 1;
+  DIV_LOC_NO = 0;
 
   // asNone, asInit, asSetValue, asRecovery, asLoad
   TAppStatusDesc : array [ TAppStatus ] of string = ('None', 'Init', 'SetValue', 'Recovery', 'Load', 'Show');

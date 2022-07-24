@@ -295,6 +295,7 @@ end;
 procedure TFrmOrderList.ComboBox1Change(Sender: TObject);
 begin
   FExIndex := ComboBox1.ItemIndex;
+  UpdateData;
 end;
 
 procedure TFrmOrderList.ComboBox2Change(Sender: TObject);
@@ -307,7 +308,7 @@ function TFrmOrderList.Fillter( aOrder : TOrder ) : boolean;
 begin
   case FExIndex of
     0 : Result := true;
-    else  Result := aOrder.Account.ExchangeKind = TExchangeKind( FExIndex + 1 );
+    else  Result := aOrder.Account.ExchangeKind = TExchangeKind( FExIndex - 1 );
   end;
   if not Result then Exit;
 

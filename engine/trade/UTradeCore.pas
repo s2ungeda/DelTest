@@ -45,6 +45,7 @@ type
 implementation
 uses
 	GApp
+  , UConsts
   ;
 { TTradeCore }
 procedure TTradeCore.AccountLoad;
@@ -103,7 +104,7 @@ end;
 function TTradeCore.FindOrder(ekType: TExchangeKind; sNo: string;
   iDiv: integer): TOrder;
 begin
-	if iDiv = 0 then
+	if iDiv = DIV_LOC_NO then
   	Result := Orders[ekType].FindLocalNo( sNo)
   else
   	Result := Orders[ekType].Find( sNo);

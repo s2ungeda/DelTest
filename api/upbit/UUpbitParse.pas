@@ -5,7 +5,7 @@ interface
 uses
   System.Classes, System.SysUtils, System.DateUtils
   , System.JSON , USymbols , UExchangeManager , UQuoteBroker
-  , UAccounts, UPositions
+  , UAccounts, UPositions, UOrders
   , UApiTypes
   ;
 
@@ -59,6 +59,7 @@ uses
   , UApiConsts
   , UOtherData
   , USymbolUtils
+  , UFills
   ;
 
 { TUpbitParse }
@@ -151,22 +152,279 @@ begin
 end;
 
 procedure TUpbitParse.ParseSpotCnlOrder(aData, aRef: string);
+var
+	aObj   : TJsonObject;
+  aErr   : TJsonValue;
+  sMsg, sStatus	: string;
+  aOrder  : TOrder;
+  aAcnt		: TAccount;
+  bConfirmed : boolean;
 begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSoptCnlOrder data is empty  (%s)',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] , aRef] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind );//, amSpot);
+  if aACnt = nil then Exit;
+
+	aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+
+    try
+      aErr := aObj.GetValue('error');
+      if aErr <> nil then begin
+        bConfirmed := false;
+        sStatus    := '8888';
+        sMsg       := aErr.GetValue<string>('message','');
+        App.Log( llError, '취소거부 : %s, %s', [aRef, sMsg] );
+      end
+      else begin
+        bConfirmed := true;
+      end;
+
+      aOrder	:= App.Engine.TradeCore.FindOrder(FParent.ExchangeKind, aRef, DIV_ORD_NO );
+      if aOrder = nil then
+      begin
+        App.Log(llError, '%s cancel order not found %s, %s', [TExchangeKindDesc[FParent.ExchangeKind], aData, aRef]  );
+        Exit;
+      end;
+
+      App.Engine.TradeBroker.Cancel( aOrder, bConfirmed, sStatus );
+    except
+    end;
+
+  finally
+ 		if aObj <> nil then aObj.free;
+  end;
 
 end;
 
 procedure TUpbitParse.ParseSpotNewOrder(aData, aRef: string);
+var
+	aOrder : TOrder;
+  aObj   : TJsonObject;
+  aErr   : TJsonValue;
+  sOID, sTmp, sStatus, sMsg  : string;
+  bAcpt : boolean;
+  dtTime: TDateTime;
 begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSoptNewOrder data is empty ( %s )',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot], aRef ] ) ;
+    Exit;
+  end;
 
+	aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+  try
+    aErr := aObj.GetValue('error');
+    bAcpt := true;
+    dtTime  := now;
+    if aErr <> nil then begin
+      bAcpt := false;
+      sMsg  := aErr.GetValue<string>('message','');
+      sStatus := '9999';
+      App.Log( llError, '주문거부 : %s, %s', [aRef, sMsg] );
+    end
+    else begin
+      sOID    := aObj.GetValue('uuid').Value;
+      dtTime  := GetStrToTime( aObj.GetValue('created_at').Value );
+    end;
+
+    aOrder:= App.Engine.TradeCore.FindOrder(FParent.ExchangeKind, aRef );
+
+    if aOrder = nil then
+    begin
+      App.Log(llError, '%s not found order : %s , %s ', [ TExShortDesc[FParent.ExchangeKind], aData, aRef  ] );
+      Exit;
+    end;
+
+    aOrder.OrderNo  := sOID;
+
+    App.DebugLog('%s Spot : %s, %s, %s, %s, %s, %s, %s ', [  TExShortDesc[FParent.ExchangeKind],
+        sMsg, sOID, aOrder.Symbol.Code
+      , ifThenStr( aOrder.Side > 0, '매수','매도')
+      , aOrder.PriceBI.OrgVal, aOrder.OrderQtyBI.OrgVal
+      , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Limit' )
+      ]  );
+
+		App.Engine.TradeBroker.Accept( aOrder, dtTime, bAcpt, sStatus ) ;
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
 end;
 
 procedure TUpbitParse.ParseSpotOrderDetail(aData, aRef: string);
+var
+  aSymbol : TSymbol;  aAcnt : TAccount;
+	aOrder  : TOrder;
+  aArr    : TJsonArray;
+  aObj    : TJsonObject;
+  aErr    : TJsonValue;
+  I: Integer;
+  sOID , sTmp  : string;
+
+  aState : TOrderState;
+
 begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSpotOrderDetail data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] ] ) ;
+    Exit;
+  end;
+
+  aAcnt		:= App.Engine.TradeCore.FindAccount( FParent.ExchangeKind );
+  if aAcnt = nil then Exit;
+
+  aObj  := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
+  try
+    try
+
+      aErr := aObj.GetValue('error');
+      if aErr <> nil then Exit;
+
+      sOID    := aObj.GetValue('uuid').Value;
+      aOrder  := App.Engine.TradeCore.FindOrder( FParent.ExchangeKind, sOID, DIV_ORD_NO  );
+
+      if aOrder <> nil then
+      begin
+
+        sTmp  := aObj.GetValue('state').Value;
+
+        if sTmp = 'wait' then
+          aState := osActive
+        else if sTmp = 'done' then
+          aState := osFilled
+        else if sTmp = 'cancel' then
+          aState := osCanceled
+        else
+          Exit;
+
+        if aOrder.State = aState then Exit;
+
+        case aState of
+          osCanceled: App.Engine.TradeBroker.Cancel( aOrder, true);
+          osFilled:
+            begin
+              aArr  := aObj.GetValue('trades') as TJsonArray;
+
+              for I := 0 to aArr.Size-1 do
+              begin
+                var aFill : TFill;
+                var sTrdID: string;
+                var aVal  : TJsonValue;
+
+                aVal := aArr.Get(i);
+                sTrdID  := aVal.GetValue<string>('uuid');
+                aFill		:= aOrder.Fills.Find( sTrdID );
+
+                if aFill = nil then
+                begin
+                  var dtTime : TDateTime;
+                  var sPrice, sVolume : string;
+
+                  dtTime  := GetStrToTime( aObj.GetValue('created_at').Value );
+                  sVolume := aVal.GetValue<string>('volume');
+                  sPrice  := aVal.GetValue<string>('price');
+
+                  aFill	:=  App.Engine.TradeCore.Fills[ekBithumb].New( sTrdID, dtTime, now,
+                    sOID, aOrder.Account, aOrder.Symbol, sVolume , aOrder.Side, sPrice);
+
+                  App.DebugLog('Upbit Spot Fill : %s, %s, %s, %s, %s, %s ', [
+                    sTmp, sOID,  sPrice, sVolume, aFill.FeeBI.OrgVal, sTrdID
+                  ]);
+
+                  App.Engine.TradeBroker.Fill( aOrder, aFill );
+
+                end;
+              end;
+            end;
+        end;
+
+
+
+      end;
+
+    except
+    end;
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
 
 end;
 
 procedure TUpbitParse.ParseSpotOrderList(aData, aRef: string);
+var
+  aSymbol : TSymbol;  aAcnt : TAccount;
+	aOrder  : TOrder;
+  aArr    : TJsonArray;
+  aObj    : TJsonObject;
+  I: Integer;
+  sOID , sTmp  : string;
+  sts : TArray<string>;
 begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSpotOrderList data is empty',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] ] ) ;
+    Exit;
+  end;
+
+  aAcnt		:= App.Engine.TradeCore.FindAccount( FParent.ExchangeKind );
+  if aAcnt = nil then Exit;
+
+  aArr  := TJsonObject.ParseJSONValue( aData ) as TJsonArray;
+  try
+    try
+      if aArr <> nil then
+        for I := 0 to aArr.Size-1 do
+        begin
+          aObj    := aArr.Get(i) as TJsonObject;
+          sOID    := aObj.GetValue('uuid').Value;
+          aOrder  := App.Engine.TradeCore.FindOrder( FParent.ExchangeKind, sOID, DIV_ORD_NO  );
+
+          if aOrder = nil then
+          begin
+            var iSide : integer;
+            var sOrderQty, sPrice,  sMarket : string;
+            var dtTime	: TDateTime;
+
+            if aObj.GetValue('side').Value = 'bid' then
+              iSide := 1
+            else
+              iSide := -1;
+
+            sOrderQty := aObj.GetValue('remaining_volume').Value;
+            sPrice    := aObj.GetValue('price').Value;
+            sMarket   := aObj.GetValue('market').Value;
+
+            sts := sMarket.Split(['-']);
+
+            aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sts[1] );
+            if aSymbol = nil then continue;
+
+            aOrder	:= App.Engine.TradeCore.Orders[FParent.ExchangeKind].NewOrder( aAcnt, aSymbol,
+              iSide, sOrderQty, pcLimit, sPrice, tmGTC );
+
+            aOrder.OrderNo	:= sOID;
+            dtTime  := GetStrToTime( aObj.GetValue('created_at').Value );
+
+            App.Engine.TradeBroker.Accept( aOrder, dtTime, true);
+          end;
+        end;
+    except
+    end;
+
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
+
 
 end;
 {$ENDREGION }
@@ -520,13 +778,13 @@ begin
         begin
           aPos  := App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].Find( aAcnt, aSymbol );
           if aPos = nil then
-          begin
-            var biAvg : TBigint;
-            biAvg.convert( aObj.GetValue('avg_buy_price').Value );
-            App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].New( aAcnt, aSymbol,
-              biBal.ToDouble, biAvg.ToDouble  );
-          end;
+            aPos := App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].New( aAcnt, aSymbol  );
 
+          var biAvg : TBigint;
+          biAvg.convert( aObj.GetValue('avg_buy_price').Value );
+
+          aPos.Volume   := biBal.ToDouble;
+          aPos.AvgPrice := biAvg.ToDouble;
         end;
       end;
 

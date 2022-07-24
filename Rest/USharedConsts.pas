@@ -49,7 +49,7 @@ const
   UL_ASC = 1;
   // order detail
   UD_CNT = 1;
-  UD_UIDS	= 0;
+  UD_UID	= 0;
 
 
   // ºø½æ

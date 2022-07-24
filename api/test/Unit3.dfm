@@ -296,6 +296,15 @@
     TabOrder = 31
     OnClick = 상세Click
   end
+  object Button26: TButton
+    Left = 519
+    Top = 141
+    Width = 75
+    Height = 25
+    Caption = #44060#48324#51452#47928#51312#54924
+    TabOrder = 32
+    OnClick = Button26Click
+  end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'
     Params = <>

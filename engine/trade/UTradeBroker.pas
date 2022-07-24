@@ -25,7 +25,7 @@ type
     procedure Accept( aOrder : TOrder;  dtTime : TDateTime;
       bAccepted: boolean; sRjtCode : string = '' ); overload;
     procedure Cancel( aOrder : TOrder; dQty : double ); overload;
-    procedure Cancel( aOrder : TOrder; bAccepted: boolean; sRjtCode : string = '' ); overload;
+    procedure Cancel( aOrder : TOrder; bConfirmed: boolean; sRjtCode : string = '' ); overload;
     procedure Fill( aOrder : TOrder; aFill : TFill );
 
     procedure Reject( aORder : TOrder; sCode : string );
@@ -84,10 +84,10 @@ begin
   FDistributor.Distribute(Self, TRD_DATA, aOrder, ORDER_CANCELED);
 end;   
 
-procedure TTradeBroker.Cancel(aOrder: TOrder; bAccepted: boolean;
+procedure TTradeBroker.Cancel(aOrder: TOrder; bConfirmed: boolean;
   sRjtCode: string);
 begin               
-	if bAccepted then
+	if bConfirmed then
   begin
     aOrder.Cancel( aOrder.ActiveQty);
     FDistributor.Distribute(Self, TRD_DATA, aOrder, ORDER_CANCELED);

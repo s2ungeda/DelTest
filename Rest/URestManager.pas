@@ -40,7 +40,7 @@ type
     procedure RequestUptNewOrder( sData, sRef : string );
     procedure RequestUptCnlOrder( sData, sRef : string );
     procedure RequestUptOrderDetail( sData, sRef : string );
-
+    function  RequestUptFailMessage( sReq : string ) : string;
     
 
     function Request( aExKind : TExchangeKind; AMethod : TRESTRequestMethod;  AResource : string;
@@ -595,7 +595,7 @@ begin
   try
 
     sQuery := 'uuid='+sArr[UC_UID];
-    sRsrc  := '/v1/orders?'+sQuery;
+    sRsrc  := '/v1/order?'+sQuery;
 
     LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
     LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
@@ -620,6 +620,11 @@ begin
   finally
     LToken.Free;
   end;
+end;
+
+function TRestManager.RequestUptFailMessage( sReq : string ): string;
+begin
+  Result := '{"error":{"name": "request_failed", "message": "'+sReq+' request failed."}}';
 end;
 
 procedure TRestManager.RequestUptNewOrder(sData, sRef: string);
@@ -673,7 +678,7 @@ begin
       App.Log( llError, '', 'Failed %s RequestUptNewOrder (%s, %s)',
       [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
-    PushData( aExKind, mtSpot, TR_CNL_ORD, outJson, sRef );
+    PushData( aExKind, mtSpot, TR_NEW_ORD, outJson, sRef );
 
   finally
     LToken.Free;
@@ -683,13 +688,13 @@ end;
 
 procedure TRestManager.RequestUptOrderDetail(sData, sRef: string);
 var
-  sArr, sUids  : TArray<string>;
+  sArr{, sUids}  : TArray<string>;
   aExKind : TExchangeKind;
 
   LToken: TJWT;
   guid : TGUID;     vHash : THashSHA2;
   sSig, sToken, sQuery, outRes, sRsrc, outJson : string;
-  I: Integer;
+  //I: Integer;
 begin
 
   if not CheckShareddData( sArr, sData, UD_CNT, 'UptOrderDetail') then Exit;
@@ -699,33 +704,38 @@ begin
 
   try
 
-    sUids  := sArr[UD_UIDS].Split([',']);
-    sQuery := '';
-    for I := 0 to High(sUids) do
-    begin
-      if i > 0 then
-        sQuery := sQuery + '&';
-      sQuery := sQuery + 'uuids[]=' + sUids[i]
+    try
+  //    sUids  := sArr[UD_UID].Split([',']);
+      sQuery := 'uuid='+ sArr[UD_UID];
+  //    for I := 0 to High(sUids) do
+  //    begin
+  //      if i > 0 then
+  //        sQuery := sQuery + '&';
+  //      sQuery := sQuery + 'uuids[]=' + sUids[i]
+  //    end;
+      sRsrc  := '/v1/order?'+sQuery;
+
+      LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+      LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+      LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+      LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+
+      sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+               TJOSEAlgorithmId.HS256, LToken);
+      sToken:= Format('Bearer %s', [sSig ]);
+
+      with FRestReq[aExKind] do
+      begin
+        AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      end;
+
+      if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+        App.Log( llError, '', 'Failed %s RequestUptOrderDetail (%s, %s)',
+        [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+    except
+      outJson := RequestUptFailMessage('OrderDetail');
     end;
-    sRsrc  := '/v1/orders?'+sQuery;
-
-    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
-    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
-    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
-
-    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
-             TJOSEAlgorithmId.HS256, LToken);
-    sToken:= Format('Bearer %s', [sSig ]);
-
-    with FRestReq[aExKind] do
-    begin
-      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
-    end;
-
-    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
-      App.Log( llError, '', 'Failed %s RequestUptOrderDetail (%s, %s)',
-      [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
     PushData( aExKind, mtSpot, TR_ORD_DETAIL, outJson, sRef );
 
@@ -752,6 +762,8 @@ begin
 
   LToken:= TJWT.Create(TJWTClaims);
   try
+
+
 
     sQuery := format('state=%s&order_by=%s', [ sArr[UL_STATE], sArr[UL_ASC] ]);
     sRsrc  := '/v1/orders?'+sQuery;

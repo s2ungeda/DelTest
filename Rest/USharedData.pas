@@ -16,7 +16,7 @@ type
     trDiv  : char;      // N(new order), C ( cancel order), L( 주문조회) P ( 포지션조회 ) B ( 잔고조회 )
     data   : array [0..DATA_SIZE-1] of ansichar;
     size   : integer;//string[5];//array [0..4] of ansichar;
-    ref    : string[20];
+    ref    : string[50];
   end;
 
   PSharedData = ^TSharedData;

@@ -706,24 +706,24 @@ end;
 
 procedure TUpbitSpot.RequestOrderDetail(aOrder: TOrder);
 var
-  i : integer;
-  pOrder : TOrder;
+//  i : integer;
+//  pOrder : TOrder;
   sData : string;
 begin
-  with App.Engine.TradeCore.Orders[GetExKind] do
-    for I := 0 to ActiveOrders.Count-1 do
-    begin
-      pOrder := ActiveOrders.Orders[i];
-      if pOrder = nil then continue;
+//  with App.Engine.TradeCore.Orders[GetExKind] do
+//    for I := 0 to ActiveOrders.Count-1 do
+//    begin
+//      pOrder := ActiveOrders.Orders[i];
+//      if pOrder = nil then continue;
+//
+//      if sData <> '' then
+//        sData := sData + ',';
+//      sData := sData + pOrder.OrderNo;
+//    end;
 
-      if sData <> '' then
-        sData := sData + ',';
-      sData := sData + pOrder.OrderNo;
-    end;
-
-  if sData <> '' then
+  if aOrder <> nil then
   	App.Engine.SharedManager.RequestData( GetExKind, mtSpot,
-        rtOrdDetail,  sData , ''
+        rtOrdDetail,  aOrder.OrderNo , aOrder.OrderNo
       )  ;
 end;
 
@@ -759,7 +759,7 @@ begin
   begin
 
     sData := Format('%s|%s|%s|%s|%s', [
-      aOrder.Symbol.Code,
+      aOrder.Symbol.OrgCode,
       ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
       aOrder.PriceBI.OrgVal,
       aOrder.OrderQtyBI.OrgVal,

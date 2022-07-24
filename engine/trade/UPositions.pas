@@ -35,9 +35,9 @@ type
     procedure DoOrder( iSide : integer; dQty : double );
     property Account: TAccount read FAccount write FAccount;
     property Symbol: TSymbol read FSymbol write FSymbol;    
-		property Volume: double read FVolume;
+		property Volume: double read FVolume write FVolume;
     property Side  : integer read GetSide;
-    property AvgPrice: Double read FAvgPrice;    
+    property AvgPrice: Double read FAvgPrice write FAvgPrice;
     property EntryDate: TDateTime read FEntryDate;    
 	  property EntryPL: Double read FEntryPL;			 // 실현손익
     property EntryOTE: Double read FEntryOTE;    // 평가금액
@@ -63,6 +63,7 @@ type
     function New(aAccount: TAccount; aSymbol: TSymbol;
       dVolume: double = 0.0; dAvgPrice: Double = 0.0;
       dtEntry: Double = 0.0): TPosition;
+
 
     procedure UpdatePosition( aSymbol : TSymbol );
     function GetSymbolPL( aAccount: TAccount; aSymbol : TSymbol ) : Double;
@@ -219,6 +220,7 @@ begin
   else
     Result := 0;
 end;
+
 
 
 
