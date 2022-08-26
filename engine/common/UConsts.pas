@@ -60,6 +60,7 @@ const
   POSITION_NEW        = 210;
   POSITION_UPDATE     = 211;
   POSITION_ABLEQTY    = 212;
+  POSITION_TRAD_AMT   = 213;
 
 
   DIV_ORD_NO = 1;

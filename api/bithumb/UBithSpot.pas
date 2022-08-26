@@ -522,9 +522,10 @@ begin
     rtCnlOrder: gBithReceiver.ParseSpotCnlOrder( aData, aRef ) ;	  // aRef is OrderNo
     rtOrderList: gBithReceiver.ParseSpotOrderList( aData, aRef );		// aRef is symbol code
     rtBalance: gBithReceiver.ParseSpotBalance( aData, aRef ) ;  // aref is symbol code
-	  rtPosition: ;  
+	  rtPosition: ;
     rtAbleOrder: ;
     rtOrdDetail: gBithReceiver.ParseSpotOrderDetail( aData, aRef ) ; // aref is OrderNo
+    rtTradeAmt : ;
   end;
 end;
 

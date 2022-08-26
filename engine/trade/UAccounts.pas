@@ -8,18 +8,18 @@ uses
   ;
 type
 
-  TBalance = class
-  public
-    Balance : double;
-    Locked  : double;
-//    Asset   : string;
-//    Currency: string;
-    Symbol  : TSymbol;
-    constructor Create;
-    procedure SetItem( dBal, dLock : double; aSymbol : TSymbol );
-    function  Represent : string;
-    function  Available : double;
-  end;
+//  TBalance = class
+//  public
+//    Balance : double;
+//    Locked  : double;
+////    Asset   : string;
+////    Currency: string;
+//    Symbol  : TSymbol;
+//    constructor Create;
+//    procedure SetItem( dBal, dLock : double; aSymbol : TSymbol );
+//    function  Represent : string;
+//    function  Available : double;
+//  end;
 
   TAcntAmtArray = array [TSettleCurType] of double;
 
@@ -29,17 +29,18 @@ type
     FExchangeKind: TExchangeKind;
     FApiKey: string;
     FPriKey: string;
-    FBalances: TStrings;
+  //  FBalances: TStrings;
+    FTradeAmt: double;
     function GetName: string;
   public
     AvailableAmt :  array [TSettleCurType] of double;            // 주문가능금액
-    TradeAmt     :  array [TSettleCurType] of double;            // 약정금액 ( 보유자산 )
+    Balance      :  array [TSettleCurType] of double;            // 보유자산
 
     constructor Create( aColl : TCollection ); override;
     destructor Destroy; override;
 
-    function New( sCode : string ): TBalance;
-    function Find( sCode : string): TBalance;
+//    function New( sCode : string ): TBalance;
+//    function Find( sCode : string): TBalance;
 
     property AccountType  : TAccountMarketType read FAccountType write FAccountType;
     property ExchangeKind : TExchangeKind read FExchangeKind write FExchangeKind;
@@ -48,7 +49,9 @@ type
     property PriKey : string read FPriKey;
     property Name	  : string read GetName;
 
-    property Balances : TStrings read FBalances;
+    property TradeAmt : double read FTradeAmt write FTradeAmt;
+
+   // property Balances : TStrings read FBalances;
   end;
 
   TAccounts = class(TCollection)
@@ -92,15 +95,15 @@ begin
   inherited create( aColl );
   for I := scKRW to High(TSettleCurType) do
   begin
-    TradeAmt[i]			:= 0.0;
+    Balance[i]		:= 0.0;
     AvailableAmt[i]	:= 0.0;
   end;
 
-  FBalances := TStringList.Create;
+  //FBalances := TStringList.Create;
 end;
 destructor TAccount.Destroy;
 begin
-  FBalances.Free;
+//  FBalances.Free;
   inherited;
 end;
 
@@ -110,26 +113,26 @@ begin
 	Result := TExchangeKindShortDesc[ FExchangeKind ]+'.'+ TAccountMarketTypeDesc[ FAccountType];
 end;
 
-function TAccount.New(sCode: string): TBalance;
-begin
-  Result := Find(sCode);
-  if Result = nil then
-  begin
-    Result := TBalance.Create;
-    FBalances.AddObject( sCode, Result );
-  end ;
-end;
-
-function TAccount.Find(sCode: string): TBalance;
-var
-  iRes : integer;
-begin
-  iRes := FBalances.IndexOf( sCode );
-  if iRes < 0 then
-    Result := nil
-  else
-    Result := FBalances.Objects[iRes] as TBalance;
-end;
+//function TAccount.New(sCode: string): TBalance;
+//begin
+//  Result := Find(sCode);
+//  if Result = nil then
+//  begin
+//    Result := TBalance.Create;
+//    FBalances.AddObject( sCode, Result );
+//  end ;
+//end;
+//
+//function TAccount.Find(sCode: string): TBalance;
+//var
+//  iRes : integer;
+//begin
+//  iRes := FBalances.IndexOf( sCode );
+//  if iRes < 0 then
+//    Result := nil
+//  else
+//    Result := FBalances.Objects[iRes] as TBalance;
+//end;
 
 {procedure TAccount.SetAvailableAmt(const Value: TAcntAmtArray);
 begin
@@ -292,40 +295,40 @@ begin
 end;
 { TBalance }
 
-function TBalance.Available: double;
-begin
-  Result := Balance - Locked;
-end;
-
-constructor TBalance.Create;
-begin
-  Balance := 0.0;
-  Locked  := 0.0;
-  Symbol  := nil;
-end;
-
-function TBalance.Represent: string;
-begin
-
-  Result := 'None';
-
-  if Symbol <> nil then
-  begin
-    Result :=   TExChangeKindDesc[ Symbol.Spec.ExchangeType ]
-      + ' , ' + TMarketTypeDesc[ Symbol.Spec.Market ]
-      + ' , ' + Symbol.Spec.BaseCode
-      + ' , ' + Symbol.Spec.SettleCode
-      + ' , ' + Format('%.*n', [ 8, Balance ] )
-      + ' , ' + Format('%.*n', [ 8, Locked ] );
-
-  end;
-end;
-
-procedure TBalance.SetItem(dBal, dLock: double; aSymbol: TSymbol);
-begin
-  Balance := dBal;
-  Locked  := dLock;
-  Symbol  := aSymbol;
-end;
+//function TBalance.Available: double;
+//begin
+//  Result := Balance - Locked;
+//end;
+//
+//constructor TBalance.Create;
+//begin
+//  Balance := 0.0;
+//  Locked  := 0.0;
+//  Symbol  := nil;
+//end;
+//
+//function TBalance.Represent: string;
+//begin
+//
+//  Result := 'None';
+//
+//  if Symbol <> nil then
+//  begin
+//    Result :=   TExChangeKindDesc[ Symbol.Spec.ExchangeType ]
+//      + ' , ' + TMarketTypeDesc[ Symbol.Spec.Market ]
+//      + ' , ' + Symbol.Spec.BaseCode
+//      + ' , ' + Symbol.Spec.SettleCode
+//      + ' , ' + Format('%.*n', [ 8, Balance ] )
+//      + ' , ' + Format('%.*n', [ 8, Locked ] );
+//
+//  end;
+//end;
+//
+//procedure TBalance.SetItem(dBal, dLock: double; aSymbol: TSymbol);
+//begin
+//  Balance := dBal;
+//  Locked  := dLock;
+//  Symbol  := aSymbol;
+//end;
 
 end.

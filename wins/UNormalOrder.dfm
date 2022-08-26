@@ -171,10 +171,19 @@ object FrmNormalOrder: TFrmNormalOrder
       TabOrder = 10
       OnClick = Button2Click
     end
+    object Button3: TButton
+      Left = 166
+      Top = 106
+      Width = 75
+      Height = 25
+      Caption = '1'#51068#44144#47000#50529
+      TabOrder = 11
+      OnClick = Button3Click
+    end
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 280
-    Top = 96
+    Left = 288
+    Top = 56
   end
 end

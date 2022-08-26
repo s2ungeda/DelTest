@@ -47,6 +47,7 @@ type
 {$REGION 'to shared memory define' }
     function SendOrder( aOrder : TOrder ): boolean;
     procedure RequestOrderList( aSymbol : TSymbol ) ;
+    procedure RequestTradeAmt( aSymbol : TSymbol ) ;
     procedure RequestOrdeDetail( aOrder : TOrder ) ;
 		procedure RequestBalance( aSymbol : TSymbol ) ; overload;
 {$ENDREGION}
@@ -313,6 +314,11 @@ end;
 procedure TExchangeManager.RequestOrderList(aSymbol: TSymbol);
 begin
   Exchanges[aSymbol.Spec.Market].RequestOrderList( aSymbol );
+end;
+
+procedure TExchangeManager.RequestTradeAmt(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestTradeAmt( aSymbol );
 end;
 
 procedure TExchangeManager.RequestBalance(aSymbol: TSymbol);

@@ -3,7 +3,7 @@ unit USharedConsts;
 interface
 
 const
-  DATA_SIZE = 1024 * 100;
+  DATA_SIZE = 1024 * 200;
   Q_SIZE = 200;
 
   // REST 입장에서..
@@ -68,7 +68,7 @@ const
   TC_LS    = 2;
   TC_STT   = 3;
 
-  // order list
+  // order list  & trade Amt
   TL_CNT = 1;
   TL_CODE = 0;
 
@@ -88,6 +88,7 @@ const
   TR_REQ_BAL = 'B';     // 잔고 조회...
   TR_ABLE_ORD= 'A';			// 주문가능금액..
   TR_ORD_DETAIL = 'D';	// 주문상세조회.
+  TR_TRD_AMT  = 'T';    // 거래액
 
   EX_BN = 'B';
   EX_UP = 'U';

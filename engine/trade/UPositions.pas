@@ -20,6 +20,7 @@ type
     FAccount: TAccount;
     FFills: TFillList;
     FLastFill: TFill;
+    FAccTradeAmt: double;
     function GetFee: double;
     function GetLastPL: Double;
     function GetSide: integer;
@@ -44,6 +45,8 @@ type
     property LastPL : Double read GetLastPL write FLastPL;
     property TradeAmt : Double read FTradeAmt write FTradeAmt;
     property Fee      : double read GetFee  write FFee;
+
+    property AccTradeAmt : double read FAccTradeAmt write FAccTradeAmt;
 
     property Fills: TFillList read FFills;
     property LastFill: TFill  read FLastFill;
@@ -185,6 +188,7 @@ begin
   FEntryDate := 0.0;
   FEntryPL := 0.0;
   FEntryOTE := 0.0;
+  FAccTradeAmt := 0.0;
 
   FFills:= TFillList.Create;
   FLastFill := nil;

@@ -33,9 +33,9 @@
   end
   object Memo1: TMemo
     Left = 8
-    Top = 184
+    Top = 232
     Width = 881
-    Height = 439
+    Height = 391
     TabOrder = 2
     WantReturns = False
     WordWrap = False
@@ -304,6 +304,15 @@
     Caption = #44060#48324#51452#47928#51312#54924
     TabOrder = 32
     OnClick = Button26Click
+  end
+  object 최근거래: TButton
+    Left = 280
+    Top = 190
+    Width = 75
+    Height = 25
+    Caption = #52572#44540#44144#47000
+    TabOrder = 33
+    OnClick = 최근거래Click
   end
   object restClient: TRESTClient
     BaseURL = 'https://api.bithumb.com'

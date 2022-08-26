@@ -90,8 +90,6 @@ type
     FOnRefresh : TNotifyEvent;
     // for fill records
     FLastData : TTickItem;
-    // 0 : 1분    1 : 5분
-    FtrQ  : array [0..1] of TCircularQueue;
 
     procedure AddTick(aTick : TTickItem); // tick chart data
     // get/set
@@ -99,7 +97,7 @@ type
   published
 
   public
-    ATR : array [0..1] of double;
+
     constructor Create;
     destructor Destroy; override;
 
@@ -109,9 +107,6 @@ type
     procedure GetMinMax(iStart, iEnd : Integer; var dMin, dMax : Double);
     procedure GetMinMax2(iStart, iEnd : Integer; var dMin, dMax : Double);
     function DateTimeDesc(iIndex : Integer) : String;
-
-    procedure CalcePrevATR;
-    procedure CalcRealATR( bRecover : boolean = false );
 
     property Period : Integer read FPeriod write FPeriod;       //
 
@@ -313,119 +308,7 @@ begin
 
 end;
 
-procedure TSTerms.CalcePrevATR;
-var
-  j,i,k, iCnt: integer;
-  aItem , aPrvItem : TSTermItem;
-  dtTime : TDateTime;
-  a,b, c, r : double;
 
-begin
-       {
-  if FCalcedATR then Exit;
-
-  // 과거 50개 봉의 이동평균 ATR 을 구한다.
-  iCnt := 0;
-
-  for I := 0 to Count - 1 do
-  begin
-
-    k := i-1;  if k < 0 then k := 0;
-
-    aItem   := XTerms[i];
-    aPrvItem:= XTerms[k];
-
-    a := aItem.H - aItem.L;
-    b := abs( aPrvItem.C - aItem.H );
-    c := abs( aPrvItem.C - aItem.L );
-
-    r:= max( max( a,b ), c );
-    inc( iCnt );
-
-    FtrQ.PushItem( now, r);
-    if FtrQ.Full then
-      aItem.ATR := FtrQ.SumPrice / FtrQ.MaxCount
-    else
-      aItem.ATR := FtrQ.SumPrice / iCnt ;
-
-    gEnv.EnvLog( WIN_TEST, Format('%s, %s : %.2f, %.2f, %.2f, %.2f', [
-      FormatDateTime('hh:nn:ss', aItem.StartTime),FormatDateTime('hh:nn:ss', aItem.LastTime),
-      aItem.ATR, aItem.H, aItem.L, aItem.C ])
-      );
-
-    if LastTerm <> nil then
-      LastTerm.ATR  :=aItem.ATR;
-  end;
-  FCalcedATR  := true;
-  }
-
-end;
-
-procedure TSTerms.CalcRealATR( bRecover : boolean );
-var
-  iCnt, iNow, iPrev : integer;
-  aItem , aPrvItem : TSTermItem;
-  dh, dL, a,b, c, r, trSum : double;
-  I: Integer;
-begin
-  // 인뎃스 계산이르모 -1 을 해줌..
-  iCnt := Count-1;
-  if iCnt < 2 then Exit;
-  // 텀데이타 ADD Count-2 가 현재부터 5분전 데이타임.
-  iNow := iCnt -1;
-  iPrev:= iNow -1;
-
-  aItem   := XTerms[iNow];
-  aPrvItem:= XTerms[iPrev];
-
-  a := aItem.H - aItem.L;
-  b := abs( aPrvItem.C - aItem.H );
-  c := abs( aPrvItem.C - aItem.L );
-
-  r:= max( max( a,b ), c );
-
-  FtrQ[0].PushItem( aItem.StartTime, r);
-  ATR[0]  := FtrQ[0].SumPrice / FtrQ[0].Count;
-
-  if ( LastTerm <> nil ) and (( LastTerm.MMIndex mod 5 ) = 0 ) then
-  begin
-
-    iPrev := iNow -4;
-    if ( iNow < 0 ) or ( iPrev < 0 ) then Exit;
-    aItem   := XTerms[iNow];
-    aPrvItem:= XTerms[iPrev];
-
-    dH := 0;   dL := 100000;
-    for I := iPrev to iNow do
-    begin
-      aItem := XTerms[i];
-      dH  := max( dH, aItem.H );
-      dL  := min( dL, aItem.L );
-    end;
-
-    a := dH - dL;
-    b := abs( PrevTerm.C - dH );
-    c := abs( PrevTerm.C - dL );
-
-    r:= max( max( a,b ), c );
-
-    FtrQ[1].PushItem( aItem.StartTime, r);
-    ATR[1]  := FtrQ[1].SumPrice / FtrQ[1].Count;
-
-  {
-    if FSymbol.ShortCode = '175M5000' then
-
-    gEnv.EnvLog( WIN_TEST,  format('%s check 5min : %s, %s ~ %s', [
-      FSymbol.ShortCode,
-      FormatDateTime( 'hh:nn:ss', LastTerm.StartTime ),
-      FormatDateTime( 'hh:nn:ss', aPrvItem.StartTime ),
-      FormatDateTime( 'hh:nn:ss', PrevTerm.LastTime ) ])
-         );
-    }
-
-  end;
-
-end;
 
 constructor TSTerms.Create;
 begin
@@ -438,14 +321,12 @@ begin
   FLastItem := nil;
   FPrevTerm := nil;
   FCalcedATR:= false;
-  FtrQ[0]   := TCircularQueue.Create(30);
-  FtrQ[1]   := TCircularQueue.Create(30);
+
 end;
 
 function TSTerms.DateTimeDesc(iIndex: Integer): String;
 begin
-  FtrQ[0].Free;
-  FtrQ[1].Free;
+
 end;
 
 destructor TSTerms.Destroy;
@@ -610,7 +491,6 @@ begin
         PrevTerm  := LastTerm;
         LastTerm  := aXTerm;
         //-- end of add
-        CalcRealATR;
 
         if Assigned(FOnAdd) then
           FOnAdd(Self);

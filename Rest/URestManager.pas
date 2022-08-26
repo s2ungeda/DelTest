@@ -9,7 +9,7 @@ uses
 
   UApiTypes ,
 
-  USharedData
+  USharedData   , USharedConsts
   ;
 
 type
@@ -33,8 +33,10 @@ type
     procedure RequestBitNewOrder( sData, sRef : string );
     procedure RequestBitCnlOrder( sData, sRef : string );
     procedure RequestBitOrderDetail( sData, sRef : string );
+    procedure RequestBitTradeAmt( sData, sRef : string );
 
-    procedure RequestUptOrderList( sData, sRef : string );
+    //  upbit
+    procedure RequestUptOrderList( sData, sRef : string; cDiv : char = TR_REQ_ORD );
     procedure RequestUptBalance( sData, sRef : string );
     procedure RequestUptAvailableOrder( sData, sRef : string );
     procedure RequestUptNewOrder( sData, sRef : string );
@@ -59,7 +61,6 @@ implementation
 
 uses
   GApp, GLibs
-  , USharedConsts
   , UApiConsts
   , UEncrypts
   , IdCoderMIME, IdGlobal
@@ -127,14 +128,16 @@ begin
         TR_REQ_BAL : RequestUptBalance( AnsiString( aData.data ), aData.ref)  ;
         TR_ORD_DETAIL : RequestUptOrderDetail( AnsiString( aData.data ), aData.ref) ;
         TR_ABLE_ORD : RequestUptAvailableOrder( AnsiString( aData.data ), aData.ref)  ;
+        TR_TRD_AMT  : RequestUptOrderList( AnsiString( aData.data ), aData.ref, TR_TRD_AMT) ;  // 계좌 거래 대금
       end;
     EX_BI:  // bithumb
       case aData.trDiv of
         TR_NEW_ORD : RequestBitNewOrder( AnsiString( aData.data ), aData.ref );
         TR_CNL_ORD : RequestBitCnlOrder( AnsiString( aData.data ), aData.ref ) ;
-        TR_REQ_ORD : RequestBitOrderList( AnsiString( aData.data ), aData.ref ); 		 // 주문 조회..        
+        TR_REQ_ORD : RequestBitOrderList( AnsiString( aData.data ), aData.ref ); 		 // 주문 조회..
         TR_REQ_BAL : RequestBitBalance( AnsiString( aData.data ), aData.ref );       // 잔고 조회...
         TR_ORD_DETAIL : RequestBitOrderDetail( AnsiString( aData.data ), aData.ref );    // 주문 상세조회..  )
+        TR_TRD_AMT    : RequestBitTradeAmt( AnsiString( aData.data ), aData.ref );    // 종목별 거래대금..  )
       end;
   end;
 
@@ -249,14 +252,21 @@ begin
   FRestReq[ekBinance].AddParameter('X-MBX-APIKEY',
       App.ApiConfig.GetApiKey( ekBinance, mtFutures) , pkHTTPHEADER );
 
-  if Request( ekBinance, rmPOST, '/fapi/v1/order?'+sBody, outJson , outRes ) then
-  begin
+//  if Request( ekBinance, rmPOST, '/fapi/v1/order?'+sBody, outJson , outRes ) then
+//  begin
+//
+//  end else
+//  begin
+//    App.Log( llError, '', 'Failed %s RequestBinFutNewOrder (%s, %s)',
+//      [ TExchangeKindDesc[ekBinance], outRes, outJson] );
+//  end;
 
-  end else
-  begin
+
+  if not Request( ekBinance ,rmPOST, '/fapi/v1/order?'+sBody, outJson, outRes ) then
     App.Log( llError, '', 'Failed %s RequestBinFutNewOrder (%s, %s)',
-      [ TExchangeKindDesc[ekBinance], outRes, outJson] );
-  end;
+    [ TExchangeKindDesc[ekBinance], outRes, outJson] );
+
+  PushData( ekBinance, mtFutures, TR_NEW_ORD, outJson, sRef );
 
 end;
 
@@ -292,9 +302,9 @@ begin
 
     if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
       App.Log( llError, '', 'Failed %s RequestBitBalance (%s, %s)',
-      [ TExchangeKindDesc[aExKind], outRes, outJson] );       
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
-   	PushData( aExKind, mtSpot, TR_REQ_BAL, outJson, sRef );              
+   	PushData( aExKind, mtSpot, TR_REQ_BAL, outJson, sRef );
 	except
   end;  
 end;
@@ -453,30 +463,30 @@ var
 begin
   if not CheckShareddData( sArr, sData, TL_CNT, 'BitOrderList') then Exit;
 
-  try      
+  try
   	aExKind	:= ekBithumb;
 
     sParam1	:= sArr[TL_CODE];
-//    sParam2 := trim( sArr[TL_OID] );       
-    sRsrc 	:= '/info/orders';     
+//    sParam2 := trim( sArr[TL_OID] );
+    sRsrc 	:= '/info/orders';
     sTime 	:= GetTimestamp;
 
-//    if sParam2 = '' then    
+//    if sParam2 = '' then
 	    sVal	:= EncodePath( sRsrc, Format('endPoint=%s&order_currency=%s', [ sRsrc, sParam1] ), sTime )  ;
 //    else begin
-//	    sVal	:= EncodePath( sRsrc, Format('endPoint=%s&order_id=%s&order_currency=%s', [ sRsrc, sParam2, sParam1 ] ), sTime );     
+//	    sVal	:= EncodePath( sRsrc, Format('endPoint=%s&order_id=%s&order_currency=%s', [ sRsrc, sParam2, sParam1 ] ), sTime );
 //      FRestReq[aExKind].AddParameter('order_id', sParam2, TRESTRequestParameterKind.pkREQUESTBODY);
 //    end;
 
     sSig	:= CalculateHMACSHA512( sVal, App.ApiConfig.GetSceretKey( aExKind, mtSpot) );
-    sBody	:= TIdEncoderMIME.EncodeString( sSig, IndyTextEncoding_UTF8 );  
-		
+    sBody	:= TIdEncoderMIME.EncodeString( sSig, IndyTextEncoding_UTF8 );
+
     FRestReq[aExKind].AddParameter('Api-Key', App.ApiConfig.GetApiKey( aExKind, mtSpot), TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
     FRestReq[aExKind].AddParameter('Api-Sign', sBody , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
     FRestReq[aExKind].AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
 
     FRestReq[aExKind].AddParameter('endPoint', sRsrc, TRESTRequestParameterKind.pkREQUESTBODY);
-    FRestReq[aExKind].AddParameter('order_currency', sParam1, TRESTRequestParameterKind.pkREQUESTBODY);     
+    FRestReq[aExKind].AddParameter('order_currency', sParam1, TRESTRequestParameterKind.pkREQUESTBODY);
 
     if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
       App.Log( llError, '', 'Failed %s RequestBitOrderList (%s, %s)',
@@ -484,8 +494,48 @@ begin
 
    	PushData( aExKind, mtSpot, TR_REQ_ORD, outJson, sRef );
 	except
-  end;   
+  end;
 
+end;
+
+procedure TRestManager.RequestBitTradeAmt(sData, sRef: string);
+var
+  sArr  : TArray<string>;
+
+	sRsrc, outJson, outRes, sTime, sBody, sVal, sSig : string;
+  sParam1 : string;
+  I: Integer;
+  aExKind : TExchangeKind;
+
+begin
+  if not CheckShareddData( sArr, sData, TL_CNT, 'BitTradeAmt') then Exit;
+
+  try
+  	aExKind	:= ekBithumb;
+
+    sParam1	:= sArr[TL_CODE];
+
+    sRsrc 	:= '/info/ticker';
+    sTime 	:= GetTimestamp;
+
+    sVal	:= EncodePath( sRsrc, Format('endPoint=%s&order_currency=%s', [ sRsrc, sParam1] ), sTime )  ;
+    sSig	:= CalculateHMACSHA512( sVal, App.ApiConfig.GetSceretKey( aExKind, mtSpot) );
+    sBody	:= TIdEncoderMIME.EncodeString( sSig, IndyTextEncoding_UTF8 );
+
+    FRestReq[aExKind].AddParameter('Api-Key', App.ApiConfig.GetApiKey( aExKind, mtSpot), TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+    FRestReq[aExKind].AddParameter('Api-Sign', sBody , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+    FRestReq[aExKind].AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+
+    FRestReq[aExKind].AddParameter('endPoint', sRsrc, TRESTRequestParameterKind.pkREQUESTBODY);
+    FRestReq[aExKind].AddParameter('order_currency', sParam1, TRESTRequestParameterKind.pkREQUESTBODY);
+
+    if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
+      App.Log( llError, '', 'Failed %s RequestBitTradeAmt (%s, %s)',
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
+
+   	PushData( aExKind, mtSpot, TR_TRD_AMT, outJson, sRef );
+	except
+  end;
 end;
 
 // bithumb api --------------------------------------------------------------------------------------
@@ -746,7 +796,7 @@ begin
 
 end;
 
-procedure TRestManager.RequestUptOrderList(sData, sRef: string);
+procedure TRestManager.RequestUptOrderList(sData, sRef: string; cDiv : char);
 var
   sArr  : TArray<string>;
   aExKind : TExchangeKind;
@@ -763,30 +813,31 @@ begin
   LToken:= TJWT.Create(TJWTClaims);
   try
 
+    try
+      sQuery := format('state=%s&order_by=%s', [ sArr[UL_STATE], sArr[UL_ASC] ]);
+      sRsrc  := '/v1/orders?'+sQuery;
 
+      LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
+      LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
+      LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
+      LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
 
-    sQuery := format('state=%s&order_by=%s', [ sArr[UL_STATE], sArr[UL_ASC] ]);
-    sRsrc  := '/v1/orders?'+sQuery;
+      sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
+               TJOSEAlgorithmId.HS256, LToken);
+      sToken:= Format('Bearer %s', [sSig ]);
 
-    LToken.Claims.SetClaimOfType<string>('access_key', App.ApiConfig.GetApiKey( aExKind, mtSpot));
-    LToken.Claims.SetClaimOfType<string>('nonce', GetUUID );
-    LToken.Claims.SetClaimOfType<string>('query_hash', vHash.gethashstring( sQuery, SHA512 ) );
-    LToken.Claims.SetClaimOfType<string>('query_hash_alg', 'SHA512' );
+      with FRestReq[aExKind] do
+      begin
+        AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      end;
 
-    sSig  := TJOSE.SerializeCompact(App.ApiConfig.GetSceretKey( aExKind, mtSpot),
-             TJOSEAlgorithmId.HS256, LToken);
-    sToken:= Format('Bearer %s', [sSig ]);
+      if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
+        App.Log( llError, '', 'Failed %s RequestUptOrderList (%s, %s)',
+        [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
-    with FRestReq[aExKind] do
-    begin
-      AddParameter('Authorization', sToken, TRESTRequestParameterKind.pkHTTPHEADER, [poDoNotEncode] );
+      PushData( aExKind, mtSpot, cDiv, outJson, sRef );
+    except
     end;
-
-    if not Request( aExKind ,rmGET, sRsrc, outJson, outRes ) then
-      App.Log( llError, '', 'Failed %s RequestUptOrderList (%s, %s)',
-      [ TExchangeKindDesc[aExKind], outRes, outJson] );
-
-    PushData( aExKind, mtSpot, TR_REQ_ORD, outJson, sRef );
 
   finally
     LToken.Free;

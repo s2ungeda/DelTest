@@ -31,6 +31,7 @@ type
     Button1: TButton;
     Button2: TButton;
     Timer1: TTimer;
+    Button3: TButton;
     procedure rbSellClick(Sender: TObject);
     procedure rbBuyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -47,6 +48,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
   private
     FExKind : TExchangeKind;
     FSymbol : TSymbol;
@@ -121,8 +123,14 @@ end;
 procedure TFrmNormalOrder.Button2Click(Sender: TObject);
 begin
 	//
-  if FSymbol <> nil then  
+  if FSymbol <> nil then
 		App.Engine.ApiManager.ExManagers[FExKind].RequestOrderList( FSymbol );
+end;
+
+procedure TFrmNormalOrder.Button3Click(Sender: TObject);
+begin
+  if FSymbol <> nil then
+		App.Engine.ApiManager.ExManagers[FExKind].RequestTradeAmt( FSymbol );
 end;
 
 procedure TFrmNormalOrder.cbExKindChange(Sender: TObject);
@@ -349,8 +357,8 @@ begin
 
     dTotCoin		:= App.Engine.TradeCore.Positions[FExKind].GetOpenPL( FPosition.Account );
 
-    Cells[3,0]	:= Format('%.0n', [ Floor( dTotCoin + FPosition.Account.TradeAmt[scKRW] ) + 0.001 ] );
-		Cells[3,1]	:= Format('%.0n', [ Floor( FPosition.Account.TradeAmt[scKRW] ) + 0.001  ]  );
+    Cells[3,0]	:= Format('%.0n', [ Floor( dTotCoin + FPosition.Account.Balance[scKRW] ) + 0.001 ] );
+		Cells[3,1]	:= Format('%.0n', [ Floor( FPosition.Account.Balance[scKRW] ) + 0.001  ]  );
     Cells[3,2]	:= Format('%.0n', [ Floor( dTotcoin ) + 0.001 ] );// FPosition.Symbol.QtyToStr( dTotCoin );
   end;
 end;

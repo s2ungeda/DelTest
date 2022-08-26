@@ -59,6 +59,7 @@ type
     Button25: TButton;
     상세: TButton;
     Button26: TButton;
+    최근거래: TButton;
     procedure Button1Click(Sender: TObject);
     procedure restReqAfterExecute(Sender: TCustomRESTRequest);
     procedure restReqHTTPProtocolError(Sender: TCustomRESTRequest);
@@ -90,6 +91,7 @@ type
     procedure Button25Click(Sender: TObject);
     procedure 상세Click(Sender: TObject);
     procedure Button26Click(Sender: TObject);
+    procedure 최근거래Click(Sender: TObject);
   private
     procedure DoLog(sData: string);
     procedure LogFileWrite( stData: string);
@@ -751,7 +753,41 @@ begin
   memo1.Lines.Add( FormatDateTime('yyyy-MM-dd hh:nn:ss.zzz', dtTime ) );      
 end;
 
+procedure TForm3.최근거래Click(Sender: TObject);
+var
+  sCode, sValue, sEncode, sig, sData, sTime,  sTmp, sContent : string;
+begin
+      //
+    	sCode := 'AMO'; //aCodes[i];
+      restClient.BaseURL := 'https://api.bithumb.com';
+      sTmp    := '/info/ticker';
+      restReq.Resource := sTmp;
+      sTime    := Gettamptime2(13 );
+      sValue := HTTPEncode(UTF8Encode('endPoint=/info/ticker&order_currency='+sCode));
+      sValue := StringReplace(sValue, '+', '%20', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%21', '!', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%27', '''', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%28', '(', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
+      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
+      sValue := '/info/ticker' +  chr(0) + sValue +  chr(0 ) + sTime;
+      sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
+      sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
+      restReq.Params.Clear;
+      restReq.AddParameter('Api-Key', '5a3d078609ef394c8ec5487bb66b282a', TRESTRequestParameterKind.pkHTTPHEADER );//, [poDoNotEncode]);
+      restReq.AddParameter('Api-Sign', sig , TRESTRequestParameterKind.pkHTTPHEADER , [poDoNotEncode]);
+      restReq.AddParameter('Api-Nonce', sTime , TRESTRequestParameterKind.pkHTTPHEADER );
+      restReq.AddParameter('endPoint', '/info/ticker', TRESTRequestParameterKind.pkREQUESTBODY);
+      restReq.AddParameter('order_currency', sCode, TRESTRequestParameterKind.pkREQUESTBODY);
 
+
+      restReq.Method   := rmPOST;
+      restReq.Execute;
+      memo1.Lines.Add( restRes.JSONValue.ToString );
+
+end;
 
 procedure TForm3.Button18Click(Sender: TObject);
 var
@@ -844,7 +880,7 @@ begin
       sValue := StringReplace(sValue, '%29', ')', [rfReplaceAll]);
       sValue := StringReplace(sValue, '%26', '&', [rfReplaceAll]);
       sValue := StringReplace(sValue, '%3D', '=', [rfReplaceAll]);
-      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);  
+      sValue := StringReplace(sValue, '%7E', '~', [rfReplaceAll]);
       sValue := '/info/order_detail' +  chr(0) + sValue +  chr(0 ) + sTime;
       sTmp:= CalculateHMACSHA512( sValue, 'ab16921bf03ce7f32a0f3a7fdf6acabc');
       sig := TIdEncoderMIME.EncodeString( sTmp, IndyTextEncoding_UTF8 );
@@ -858,10 +894,12 @@ begin
 
 
       restReq.Method   := rmPOST;
-      restReq.Execute;  
-      memo1.Lines.Add( restRes.JSONValue.ToString );             
+      restReq.Execute;
+      memo1.Lines.Add( restRes.JSONValue.ToString );
   
 end;
+
+
 
 procedure TForm3.Button8Click(Sender: TObject);
 var
@@ -1047,7 +1085,7 @@ begin
 //	  sKey   := 'EC70nhGg2PJE4XqgkMxMJXkXm0f1SxBYgyhYxOxx';
          
 //    sJson  := 'state=wait&page=1';
-    sJson  := 'state=wait';
+    sJson  := 'state=done';
     sOut  := vHash.gethashstring( sJson, SHA512 );
 
     LToken.Claims.SetClaimOfType<string>('access_key', apikey);

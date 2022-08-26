@@ -93,6 +93,7 @@ begin
     rtPosition: c3 := TR_REQ_POS;
     rtBalance: c3 := TR_REQ_BAL;
     rtOrdDetail : c3 := TR_ORD_DETAIL;
+    rtTradeAmt  : c3 := TR_TRD_AMT;
   end;
 
   SharedThread.PushData( c1, c2, c3, aData, aRef )  ;
@@ -124,6 +125,7 @@ begin
     rtPosition: c3 := TR_REQ_POS;
     rtBalance: c3 := TR_REQ_BAL;
     rtOrdDetail : c3 := TR_ORD_DETAIL;
+    rtTradeAmt  : c3 := TR_TRD_AMT;
   end;
 
   SharedThread.PushData( c1, c2, c3, aData, IntToStr( FRefCnt ) )  ;
@@ -156,8 +158,9 @@ begin
     TR_REQ_ORD : Result := rtOrderList;     // 주문 조회..
     TR_REQ_POS : Result := rtPosition;     // 포지션 조회..
     TR_REQ_BAL : Result := rtBalance;     // 잔고 조회...
-    TR_ABLE_ORD: Result := rtAbleOrder;			// 주문가능금액..    
+    TR_ABLE_ORD: Result := rtAbleOrder;			// 주문가능금액..
     TR_ORD_DETAIL : Result := rtOrdDetail;
+    TR_TRD_AMT  : Result := rtTradeAmt;
   end;
 end;
 

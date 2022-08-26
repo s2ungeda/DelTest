@@ -71,7 +71,9 @@ type
 		procedure RequestOrderDetail( aOrder : TOrder ); virtual; abstract;
     procedure RequestAvailableOrder( aSymbol : TSymbol ); virtual; abstract;
 		procedure RequestOrderList( aSymbol : TSymbol ); virtual; abstract;
-		function SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;
+    procedure RequestTradeAmt(aSymbol: TSymbol); virtual; abstract;
+		function  SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;
+
     procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );virtual; abstract;
 {$ENDREGION}
 

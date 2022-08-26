@@ -46,6 +46,7 @@ type
     procedure ParseSpotOrderList( aData, aRef : string );    
     procedure ParseSpotOrderDetail( aData, aRef : string );    
     procedure ParseSpotBalance( aData, aRef : string );
+    procedure ParseSpotTradeAmt( aData, aRef : string );
 
     property Parent : TExchangeManager read FParent;
     property OnSendDone : TSendDoneNotify read FOnSendDone write FOnSendDone;
@@ -209,7 +210,7 @@ begin
     aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind);
     if aAcnt = nil then Exit;
   //   TSettleCurType = ( scNone, scKRW, scUSDT, scBTC );
-  	aAcnt.TradeAmt[scKRW]			:= aBals.GetValue<double>('total_krw', 0.0);
+  	aAcnt.Balance[scKRW]			:= aBals.GetValue<double>('total_krw', 0.0);
     aAcnt.AvailableAmt[scKRW]	:= aBals.GetValue<double>('available_krw', 0.0);
 
 //  	aAcnt.TradeAmt[scBTC]			:= aObj.GetValue<double>('total_btc', 0.0);
@@ -532,7 +533,7 @@ begin
 
     aBal := aObj.GetValue('data') as TJsonObject;
     // 원화
-  	aAcnt.TradeAmt[scKRW]			:= aBal.GetValue<double>('total_krw', 0.0);
+  	aAcnt.Balance[scKRW]			:= aBal.GetValue<double>('total_krw', 0.0);
     aAcnt.AvailableAmt[scKRW]	:= aBal.GetValue<double>('available_krw', 0.0);
     // 선택 코인.
     sCode	:= LowerCase( aSymbol.Code );
@@ -546,12 +547,59 @@ begin
       App.Engine.TradeBroker.PositionEvent( aPos, POSITION_NEW);
     end;
     aPos.CalcOpenPL;    
-    App.Engine.TradeBroker.PositionEvent( aPos, POSITION_UPDATE);   
+    App.Engine.TradeBroker.PositionEvent( aPos, POSITION_UPDATE);
     
   finally
 		if aObj <> nil then aObj.free;         
   end;
 
+end;
+
+procedure TBithParse.ParseSpotTradeAmt(aData, aRef: string);
+var
+  aAcnt : TAccount;  aSymbol : TSymbol;  aPos : TPosition;
+  sStatus, sCode : string;
+
+  aObj  : TJsonObject;
+  aErr, aVal  : TJsonValue;
+
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, '%s %s ParseSpotTradeAmt data is empty (%s) ',
+       [ TExchangeKindDesc[FParent.ExchangeKind],  TMarketTypeDesc[mtSpot] , aRef] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind );//, amSpot);
+  if aACnt = nil then Exit;
+
+  aObj  := TJsonObject.ParseJSONValue( aData ) as TJsonObject;
+  try
+    try
+      aErr  := aObj.GetValue('status');
+      if aErr <> nil then
+      begin
+        App.Log(llError, '%s tradeAmp request error : %s, %s', [
+          TExchangeKindDesc[FParent.ExchangeKind],  aData, aRef ]   );
+        Exit;
+      end;
+
+      aVal  := aObj.GetValue('data');
+      aSymbol := App.Engine.SymbolCore.FindSymbol(  FParent.ExchangeKind, aRef );
+      if aSymbol = nil then Exit;
+
+      aPos  := App.Engine.TradeCore.Positions[ FParent.ExchangeKind ].FindOrNew( aAcnt, aSymbol);
+      aPos.TradeAmt :=  aVal.GetValue<double>('volume_1day', 0.0 );
+
+      App.Engine.TradeBroker.PositionEvent( aPos, POSITION_TRAD_AMT);
+
+    except
+    end;
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
 end;
 
 procedure TBithParse.ParseSpotCnlOrder(aData, aRef: string);
@@ -569,7 +617,7 @@ begin
   end;
 
   aAcnt := App.Engine.TradeCore.FindAccount(FParent.ExchangeKind );//, amSpot);
-  if aACnt = nil then Exit;  
+  if aACnt = nil then Exit;
 
 	aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
   try  
@@ -849,11 +897,9 @@ begin
             aSymbol.LastTime      := now;
             bCalc := true;
           end;
-
 //            App.DebugLog( 'ticker not up : %s -> (%s)%s, %s', [ aSymbol.Code, aSymbol.PriceToStr(aSymbol.Last),
 //              aSymbol.PriceToStr( dTmp )
 //              , FormatDateTime('hh:nn:ss', dtTime)] );
-
 
           if App.AppStatus > asLoad then
           begin
@@ -1009,6 +1055,8 @@ begin
   end;
   
 end;
+
+
 
 
 

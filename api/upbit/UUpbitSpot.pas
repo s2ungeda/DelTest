@@ -34,7 +34,7 @@ type
 
 //    procedure parseAssetsstatus;
 //    procedure parseOrderBook;
-//    procedure parseTicker;    
+//    procedure parseTicker;
 
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
@@ -45,15 +45,15 @@ type
     function ParsePrepareMaster : integer; override;
     function RequestMaster : boolean ; override;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; override;
-		// 타이머를 통한 조회    
+		// 타이머를 통한 조회
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
 
     // private api
     function RequestAccounts : boolean;
     function RequestWaitOrders : boolean;
 //    procedure RequestAvailableAmt( aSymbol : TSymbol );
-    
-    
+
+
     procedure CyclicNotify( Sender : TObject ); override;
     procedure RestNotify( Sender : TObject ); override;
 
@@ -67,7 +67,9 @@ type
 		procedure RequestOrderDetail( aOrder : TOrder ); override;
     procedure RequestAvailableOrder( aSymbol : TSymbol ); override;
 		procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure RequestTradeAmt( aSymbol : TSymbol ); override;
     procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );override;
+
     //
 
     property  LimitSec : integer read FLimitSec;
@@ -214,6 +216,8 @@ begin
   end;
 
 end;
+
+
 
 
 
@@ -734,6 +738,14 @@ begin
       )  ;
 end;
 
+procedure TUpbitSpot.RequestTradeAmt(aSymbol: TSymbol);
+begin
+ 	App.Engine.SharedManager.RequestData( GetExKind, mtSpot,
+        rtOrderList,  'done|desc' , ''
+      )  ;
+
+end;
+
 procedure TUpbitSpot.RequestAvailableOrder(aSymbol: TSymbol);
 begin
 	App.Engine.SharedManager.RequestData( GetExKind, aSymbol.Spec.Market,
@@ -788,6 +800,7 @@ begin
     rtBalance   : gUpReceiver.ParseSpotBalance( aData, aRef ) ;          // aref is symbol code
     rtAbleOrder : gUpReceiver.ParseSpotAvailableOrder( aData, aRef) ;  // aref is symbol code
     rtOrdDetail : gUpReceiver.ParseSpotOrderDetail( aData, aRef ) ;    // aref is OrderNo
+   // rtTradeAmt  : gUpRecevier.
   end;
 
 end;

@@ -764,7 +764,7 @@ begin
 
       if aSCType <> scNone then
       begin
-        aAcnt.TradeAmt[ aSCType ] := biBal.ToDouble;
+        aAcnt.Balance[ aSCType ] := biBal.ToDouble;
         aAcnt.AvailableAmt[ aSCType ] := biBal.ToDouble - biLock.ToDouble;
       end ;
 

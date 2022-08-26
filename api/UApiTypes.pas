@@ -10,7 +10,7 @@ type
   TAccountMarketType  = (amAll, amSpot, amMargin, amFuture );
   TMajorSymbolKind = (msBTC, msETH, msXRP );
   TRequestType    = ( rtNewOrder , rtCnlOrder, rtOrderList, rtPosition, 
-  	rtBalance, rtAbleOrder, rtOrdDetail );
+  	rtBalance, rtAbleOrder, rtOrdDetail, rtTradeAmt );
 
   // account settle currency
   TSettleCurType = ( scNone, scKRW, scUSDT, scBTC );

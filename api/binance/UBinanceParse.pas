@@ -899,7 +899,7 @@ var
   aAcnt : TAccount;
   aSymbol : TSymbol;
   aPos    : TPosition;
-  aBal    : TBalance;
+//  aBal    : TBalance;
 begin
   if aData = '' then
   begin
@@ -939,7 +939,7 @@ begin
         begin
           aAcnt.AvailableAmt[scUSDT] := aVal.GetValue<double>('free', 0 );
           dTmp  := aVal.GetValue<double>('locked', 0 );
-          aAcnt.TradeAmt[scUSDT]  :=  aAcnt.AvailableAmt[scUSDT] + dTmp;
+          aAcnt.Balance[scUSDT]  :=  aAcnt.AvailableAmt[scUSDT] + dTmp;
         end else
         begin
           dTmp  := aVal.GetValue<double>('free', 0 );
@@ -952,11 +952,13 @@ begin
           aSymbol := App.Engine.SymbolCore.FindSymbol( ekBinance, sTmp+'USDT');
           if aSymbol = nil then continue;
 
-          aBal  := aAcnt.New( sTmp );
-          if aBal <> nil then begin
-            aBal.SetItem(dTmp + dTmp2, dTmp2, aSymbol);
-            App.DebugLog('balance : %s', [ aBal.Represent ] );
-          end;
+          aPos  := App.Engine.TradeCore.Positions[ekBinance].FindOrNew( aAcnt, aSymbol);
+          aPos.Volume := dTmp + dTmp2;
+//          aBal  := aAcnt.New( sTmp );
+//          if aBal <> nil then begin
+//            aBal.SetItem(dTmp + dTmp2, dTmp2, aSymbol);
+//            App.DebugLog('balance : %s', [ aBal.Represent ] );
+//          end;
         end;
 
       end;
@@ -1007,7 +1009,7 @@ begin
 
       if sCode = 'USDT' then
       begin
-        aAcnt.TradeAmt[ scUSDT ] := aObj2.GetValue<double>('walletBalance', 0);
+        aAcnt.Balance[ scUSDT ] := aObj2.GetValue<double>('walletBalance', 0);
         aAcnt.AvailableAmt[ scUSDT ] := aObj2.GetValue<double>('availableBalance', 0);
         break;
       end;
@@ -1049,7 +1051,7 @@ var
   dTmp, dTmp2, dVol : double;
 
   aSymbol : TSymbol;
-  aBal    : TBalance;
+//  aBal    : TBalance;
 begin
   if aData = '' then
   begin
@@ -1075,7 +1077,7 @@ begin
       if sCode = 'USDT' then
       begin
 
-        aAcnt.TradeAmt[ scUSDT ] := aObj.GetValue<double>('balance', 0);
+        aAcnt.Balance[ scUSDT ] := aObj.GetValue<double>('balance', 0);
         aAcnt.AvailableAmt[ scUSDT ] := aObj.GetValue<double>('availableBalance', 0);
 
         break;

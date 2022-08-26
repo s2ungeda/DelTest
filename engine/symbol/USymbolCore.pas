@@ -200,6 +200,7 @@ begin
   CalcKimp( aSymbol );
   CalcMainKimp( aSymbol );
   CalcMainWDC(aSymbol);
+  // 5분데이터 담기..
 end;
 
 procedure TSymbolCore.CalcKimp( aSymbol : TSymbol );
