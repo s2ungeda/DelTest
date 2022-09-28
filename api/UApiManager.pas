@@ -157,23 +157,44 @@ begin
     // 빗썸 과 바이낸스에 있는 공통 종목을 다시 담는다.
     FExManagers[ekBithumb].Codes.Assign( aList );
     FExManagers[ekBinance].Codes.Assign( aList );
+
     //  alist 에는 빗썸과 바이낸스의 교집합..
     for s in FExManagers[ekUpbit].Codes do
     begin
       iRes := ExManagers[ekBinance].Codes.IndexOf(s);
       if iRes < 0 then
-        FExManagers[ekBinance].Codes.Add(s)
-      else
-        FCommCodes.Add(s);
+        FExManagers[ekBinance].Codes.Add(s) ;
+//      else
+//        FCommCodes.Add(s);
     end;
 
     s := '';
     for I := ekBinance to High(TExchangeKind) do
       s := Format('%s %s:%d', [ s, TExchangeKindDesc[i], FExManagers[i].Codes.Count ] );
+    App.Log(llDebug, '', 'merge result 1 : %s', [ s ] );
 
+    // 20220928 .. 추가 국내 거래소간 교집합..구한다.
+    for s in FExManagers[ekBithumb].Exchanges[mtSpot].Codes do
+    begin
+      iRes := FExManagers[ekUpbit].Exchanges[mtSpot].Codes.IndexOf(s);
+      if iRes >= 0 then begin
+        FCommCodes.Add(s);
+
+        for I := ekUpbit to High(TExchangeKind) do
+        begin
+          iRes := FExManagers[I].Codes.IndexOf(s);
+          if iRes < 0 then
+            FExManagers[I].Codes.Add(s);
+        end;
+      end;
+    end;
+
+
+    s := '';
+    for I := ekBinance to High(TExchangeKind) do
+      s := Format('%s %s:%d', [ s, TExchangeKindDesc[i], FExManagers[i].Codes.Count ] );
     s := Format('%s Common:%d', [ s, FCommCodes.Count ] );
-
-    App.Log(llDebug, '', 'merge result : %s', [ s ] );
+    App.Log(llDebug, '', 'merge result 2 : %s', [ s ] );
 
     Result := true;
 
