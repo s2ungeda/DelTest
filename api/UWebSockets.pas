@@ -105,6 +105,7 @@ sAborted : Indicates that the connection was closed abnormally, e.g., without se
 implementation
  uses
   ScCLRClasses , ScUtils
+  , UTypes
   , Vcl.Forms
   , GApp , GLibs
   , UApiConsts
@@ -303,8 +304,8 @@ begin
     cmtPong: sTmp := 'pong';
   end;
 
-  if FExchangeKind = ekBithumb then  
-		App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
+//  if FExchangeKind = ekBithumb then
+//		App.Log(llInfo, '%s %d %s', [ TExchangeKindDesc[FExchangeKind], FSeq, sTmp ] );
 end;
 procedure TWebsocket.OnMessage(Sender: TObject; const Data: TArray<System.Byte>;
   MessageType: TScWebSocketMessageType; EndOfMessage: Boolean);

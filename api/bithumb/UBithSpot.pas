@@ -69,6 +69,7 @@ implementation
 
 uses
   GApp , GLibs, UApiConsts ,  UEncrypts
+  , UTypes
   , UBithParse, URestItems ,UCyclicItems, URestRequests
   , USymbolUtils
   , Math

@@ -54,6 +54,7 @@ implementation
 
 uses
   GApp, GLibs, UApiConsts
+  , UTypes
   , UBinanceParse
   , UCyclicItems, URestRequests
   , UEncrypts

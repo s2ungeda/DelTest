@@ -93,6 +93,7 @@ type
 implementation
 uses
   GApp,  UApiConsts
+  , UTypes
   , UBinanceSpotNMargin, UBinanceFutures
   , UBithSpot, UUpbitSpot
   , URestRequests

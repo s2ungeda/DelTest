@@ -4,7 +4,7 @@
         <ProjectVersion>19.2</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -194,7 +194,6 @@
         <DCCReference Include="api\upbit\UUpbitParse.pas"/>
         <DCCReference Include="engine\symbol\UQuoteBroker.pas"/>
         <DCCReference Include="engine\utils\UDistributor.pas"/>
-        <DCCReference Include="api\exrate\UExchangeRate.pas"/>
         <DCCReference Include="api\UWebSockets.pas"/>
         <DCCReference Include="api\Binance\UBinanceWebSockets.pas"/>
         <DCCReference Include="api\bithumb\UBithWebSockets.pas"/>
@@ -281,6 +280,12 @@
         <DCCReference Include="Rest\USharedConsts.pas"/>
         <DCCReference Include="Rest\USharedData.pas"/>
         <DCCReference Include="Rest\USharedThread.pas"/>
+        <DCCReference Include="api\exrate\UQueryExRate.pas"/>
+        <DCCReference Include="api\exrate\UExchangeRate.pas"/>
+        <DCCReference Include="wins\Orders\FSPOrder.pas">
+            <Form>FrmSPOrder</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

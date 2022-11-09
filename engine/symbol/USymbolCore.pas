@@ -143,7 +143,9 @@ function GetPrecision(aSymbol: TSymbol; dPrice: Double): integer;
 implementation
 
 uses
-  GApp, UConsts, GLibs
+  GApp, UConsts
+  , GLibs
+  , UTypes
   , Math
   ;
 
@@ -240,13 +242,17 @@ begin
     end;
 
     if aSymbol.Spec.ExchangeType = FSubExKind1 then begin
+      // aymbol = upbit , psymbol = bithumb
       pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FSubExKind2  );
       if pSymbol <> nil then
+        // 빗썸의 현재가, 업비트 종목
         CalcSP( pSymbol.Last, aSymbol );
     end  else
     if aSymbol.Spec.ExchangeType = FSubExKind2 then begin
+      // aymbol = bithumb, psymbol = upbit
       pSymbol := FBaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, FSubExKind1  );
       if pSymbol <> nil then
+        // 빗썸의 현재가, 업비트의 종목
         CalcSP( aSymbol.Last, pSymbol );
     end;
 

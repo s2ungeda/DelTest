@@ -36,7 +36,8 @@ type
 
 implementation
 uses
-	GApp
+	GApp , UTypes
+
   ;
 { TRestThread }
 constructor TRestThread.Create( aInfo : TDivInfo  );

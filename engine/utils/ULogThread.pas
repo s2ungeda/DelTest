@@ -201,6 +201,7 @@ begin
   ReleaseMutex(LogMutex);
   Result := vResult;
 end;
+
 procedure TLogThread.Log(llType : integer; stPrefix: string; const fmt: string;
   const Args: array of const);
 begin

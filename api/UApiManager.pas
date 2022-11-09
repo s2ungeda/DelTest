@@ -4,7 +4,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.DateUtils,
-  UExchangeManager, UExchangeRate, UQuoteBroker,
+  UExchangeManager, UExchangeRate,  UQuoteBroker,
   UApiTypes
   ;
 type
@@ -60,7 +60,7 @@ type
 implementation
 
 uses
-  GApp,
+  GApp, UTypes,
   UApiConsts,
   UBinanceManager ,  UUpbitManager, UBithManager
   ;
@@ -101,6 +101,7 @@ destructor TApiManager.Destroy;
 var
   I: TExchangeKind;
 begin
+
   FCommCodes.Free;
   FExRate.Free;
   FSockState.Free;
@@ -282,7 +283,7 @@ TBinanceFutures.RequestMaster
 
 procedure TApiManager.RequestExRate;
 begin
-  FExRate.RequestData;
+//  FExRate.RequestData;
 end;
 
 function TApiManager.RequestMaster: boolean;
@@ -304,10 +305,10 @@ procedure TApiManager.StartRequest;
 var
   i :  TExchangeKind;
 begin
-  FExManagers[ekUpbit].StartRequest;
+//  FExManagers[ekUpbit].StartRequest;
 //  FExManagers[ekBithumb].StartRequest;
 //  FExManagers[ekBinance].StartRequest;
-  exit;
+//  exit;
   for I := ekBinance to High(TExchangeKind) do
   	FExManagers[i].StartRequest;
 end;

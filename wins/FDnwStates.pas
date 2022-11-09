@@ -67,6 +67,7 @@ var
 implementation
 uses
   GApp  , GLibs  , Math
+  , UTypes
   , UTableConsts  , USymbolUtils
   , UConsts , UApiConsts
   , UQuoteBroker

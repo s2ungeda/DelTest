@@ -7,7 +7,7 @@ uses
 
   System.JSON,  Rest.Json , Rest.Types ,
 
-  UExchange,
+  UExchange,  { UQueryExRate, }
 
   UApiTypes
 
@@ -17,16 +17,22 @@ type
   TExchangeRate = class( TExchange )
   private
     FExRate : double;
-    procedure ParseExchangeRate( sData : string );
+//    FQueryExRate: TPhtnToDlph;
+    FLastTime: TDateTime;
+//    procedure ParseExchangeRate( sData : string );
     function GetValue: double;
     procedure SetValue(const val: double);
   public
     Constructor Create( aObj : TObject; aMarketType : TMarketType );
     Destructor  Destroy; override;
 
-    procedure RequestData ;
+//    procedure RequestData ;
+    function GetExRate : double;
 
     property Value : double read GetValue write SetValue;
+    property LastTime : TDateTime read FLastTime write FLastTime;
+//    exReate ∑Œ ¥Î√º
+//    property QueryExRate : TPhtnToDlph read FQueryExRate write FQueryExRate;
   end;
 
 
@@ -43,17 +49,30 @@ uses
 constructor TExchangeRate.Create(aObj: TObject; aMarketType: TMarketType);
 begin
   inherited Create( aObj, aMarketType );
-
   FExRate := 0;
+  FLastTime := 0;
+//  FQueryExRate := nil;
 end;
 
 destructor TExchangeRate.Destroy;
 begin
+//  if FQueryExRate <> nil then
+//  begin
+//    FQueryExRate.Fin;
+//    FQueryExRate.Free;
+//  end;
 
   inherited;
 end;
 
 
+
+function TExchangeRate.GetExRate: double;
+begin
+//  if QueryExRate.LastValue <> '0' then
+//    FExRate := StrToFloatDef( QueryExRate.LastValue, 0.0 );
+  Result  := FExRate;
+end;
 
 function TExchangeRate.GetValue: double;
 begin
@@ -63,6 +82,12 @@ begin
     Result := FExRate;
 end;
 
+procedure TExchangeRate.SetValue(const val : double);
+begin
+  FExRate := val;
+end;
+
+{
 procedure TExchangeRate.ParseExchangeRate(sData: string);
 var
   aArr : TJsonArray;
@@ -76,7 +101,6 @@ begin
     App.Log(llError, 'ParseExchangeRate data is empty') ;
     Exit;
   end;
-
 
   try
 
@@ -128,10 +152,7 @@ begin
     Exit;
   end;
 end;
+}
 
-procedure TExchangeRate.SetValue(const val : double);
-begin
-  FExRate := val;
-end;
 
 end.

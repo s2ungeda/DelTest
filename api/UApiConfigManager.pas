@@ -40,7 +40,9 @@ type
 implementation
 
 uses
-  GApp, GLibs  , UApiConsts
+  GApp, GLibs
+  , UTypes
+  , UApiConsts
   ;
 
 { TApiConfigManasger }

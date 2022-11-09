@@ -343,6 +343,7 @@ implementation
 
 uses
   USymbolCore    , USymbolUtils
+  , UTypes
   , UConsts , UApiConsts
   , GApp
   ;

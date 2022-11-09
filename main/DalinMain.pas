@@ -9,7 +9,7 @@ uses
 
   NMainMenu,
 
-  UTypes, Vcl.ExtCtrls, Vcl.ComCtrls
+  UTypes, Vcl.ExtCtrls, Vcl.ComCtrls, PythonEngine
 
 
   ;
@@ -64,6 +64,7 @@ uses
   GApp , GLibs ,
   UDalinStatusEvent
   , UApiTypes
+  , UQueryExRate
 ;
 
 
@@ -140,14 +141,16 @@ end;
 
 procedure TFrmDalinMain.GetExRate( bInit : boolean );
 begin
-
+  // 삭제될 함수..이젠 파일에서 안 읽음
   ReadExRate( bInit );
-  stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.Value ] );
+  stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.GetExRate ] );
 end;
 
 procedure TFrmDalinMain.init;
 begin
   App := TApp.Create;
+  // 파이썬 엔진은 하나만..생성해야 해서.
+  //App.Engine.ApiManager.ExRate.QueryExRate := TPhtnToDlph.Create( TObject(PyThonEngine), self );
 
   FExRate := 0;
   FDnw    := 0;
@@ -182,8 +185,6 @@ end;
 
 procedure TFrmDalinMain.SetValue;
 begin
-
-
   GetExRate( true );
   QryTimer.Enabled := true;
   // 구독/취소 이벤트 연결..
@@ -330,9 +331,16 @@ begin
       bOK := IsErrorOccur(IOResult, 'ReadLn');    // 런타임시 IO 에러 체크..
       {$I+}
       If not bOK then ConTinue;
+      // stData : 07:36:23,1417.00
+      var tmp  : TArray<string>;
+      var iLen : integer;
+      tmp := stData.Split([',']);
 
-      App.Engine.ApiManager.ExRate.Value := StrToFloat( stData);
-      //gEnv.ConConfig.LastOrderNo := StrToIntDef( stData, gEnv.ConConfig.LastOrderNo );
+      iLen:= Length(tmp);
+      if iLen = 2 then begin
+        App.Engine.ApiManager.ExRate.LastTime := GetStrToTime( tmp[0], 1 );
+        App.Engine.ApiManager.ExRate.Value := StrToFloat( tmp[1]);
+      end;
 
     End;
 

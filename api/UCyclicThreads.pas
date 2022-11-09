@@ -29,6 +29,7 @@ type
 implementation
 uses
   GApp
+  , UTypes
 	, Forms
   ;
 { IntervalThread }

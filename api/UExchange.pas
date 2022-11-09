@@ -142,7 +142,7 @@ type
 implementation
 
 uses
-  GApp,
+  GApp, UTypes,
   System.JSON,
   UExchangeManager, UApiConsts
   , windows

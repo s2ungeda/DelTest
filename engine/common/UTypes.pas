@@ -15,9 +15,9 @@ type
   TSideType = ( stNone, stLong, stShort );
 
 
-  
 
-  
+  TLogLevel = ( llFatal, llError, llWarning, llInfo, llDebug, llTrace );
+  TLogDataType  = ( ldExRate );
 
   TWinParam = record
     FontName : string;

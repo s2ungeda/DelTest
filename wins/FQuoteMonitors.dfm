@@ -3,7 +3,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   Top = 0
   Caption = #49884#49464#47784#45768#53552#47553
   ClientHeight = 481
-  ClientWidth = 637
+  ClientWidth = 775
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,30 +20,33 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
   object StatusBar1: TStatusBar
     Left = 0
     Top = 462
-    Width = 637
+    Width = 775
     Height = 19
     Panels = <>
+    ExplicitWidth = 637
   end
   object plLeft: TPanel
     Left = 0
     Top = 0
-    Width = 637
+    Width = 775
     Height = 462
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
+    ExplicitWidth = 637
     object plLeftTop: TPanel
       Left = 0
       Top = 0
-      Width = 637
+      Width = 775
       Height = 51
       Align = alTop
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
+      ExplicitWidth = 637
       DesignSize = (
-        637
+        775
         51)
       object cbOSEx: TComboBox
         Left = 80
@@ -153,13 +156,14 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         TabOrder = 6
       end
       object Panel4: TPanel
-        Left = 448
+        Left = 586
         Top = 2
         Width = 177
         Height = 47
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
+        ExplicitLeft = 448
         object Label1: TLabel
           Left = 119
           Top = 28
@@ -247,15 +251,16 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     object plLeftClient: TPanel
       Left = 0
       Top = 51
-      Width = 637
+      Width = 775
       Height = 411
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 637
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
-        Width = 637
+        Width = 775
         Height = 411
         Align = alClient
         ColCount = 10
@@ -270,6 +275,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnMouseDown = sgQuoteMouseDown
         OnMouseWheelDown = sgQuoteMouseWheelDown
         OnMouseWheelUp = sgQuoteMouseWheelUp
+        ExplicitWidth = 637
       end
       object SpinButton1: TSpinButton
         Left = 45

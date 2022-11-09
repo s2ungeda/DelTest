@@ -29,7 +29,7 @@ function FmtString( iPre : integer; dVal : double; iDiv : integer = 0 ): string;
 
 function GetTimestamp(len: Integer = 13): string;
 function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
-function GetStrToTime(sTime : string) : TDateTime;
+function GetStrToTime(sTime : string; iType: integer = 0) : TDateTime;
 procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
 procedure CloseApp( sClassName : string );
 
@@ -223,15 +223,30 @@ begin
                     ,StrToInt(copy(sTmp, 21,3)) )  ;
 end;
 
-// no millisecond    "2022-03-25T20:00:00"
-function GetStrToTime(sTime : string) : TDateTime;
+
+{
+// itype = 0 : "2022-03-25T20:00:00"  no millisecond
+// itype = 1 : "11:22:33"
+}
+function GetStrToTime(sTime : string; iType: integer) : TDateTime;
 begin
+
+  if iType = 0 then begin
+  //  "2022-03-25T20:00:00"
   REsult := EncodeDate(  StrToInt(copy(sTime, 1, 4 ) ) , StrToInt( copy(sTime, 6, 2 )) , StrToInt( copy(sTime, 9,2)) )
           + EnCodeTime(StrToInt(copy(sTime, 12,2))
                     ,StrToInt(copy(sTime, 15,2))
                     ,StrToInt(copy(sTime, 18,2))
                     ,0 )  ;
-
+  end else
+  if iType = 1 then
+  begin
+  //  "20:00:00"
+  REsult := Date + EnCodeTime(StrToInt(copy(sTime, 1,2))
+                    ,StrToInt(copy(sTime, 4,2))
+                    ,StrToInt(copy(sTime, 7,2))
+                    ,0 )  ;
+  end;
 end;
 
 

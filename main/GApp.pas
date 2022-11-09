@@ -11,9 +11,6 @@ uses
 
 type
 
-  TLogLevel = ( llFatal, llError, llWarning, llInfo, llDebug, llTrace );
-  TLogDataType  = ( ldExRate );
-
   TApp = class
   private
     FEngine : TDalinEngine;
@@ -158,16 +155,14 @@ begin
     result := false;
 end;
 
+////  LOG
 
 procedure TApp.Log(lLevel : TLogLevel; stPrefix: string; const fmt: string;
   const Args: array of const);
 begin
-
   if IsLogLevel(lLevel) then
     FLog.Log(integer(lLevel), stPrefix, Format( fmt, Args ) );
 end;
-
-
 
 procedure TApp.Log(lLevel: TLogLevel; stData: string);
 begin
@@ -188,6 +183,7 @@ begin
     FLog.Log(integer(lLevel), stPrefix, stData);
 end;
 
+////
 
 procedure TApp.DebugLog(const fmt: string; const Args: array of const);
 begin
