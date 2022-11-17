@@ -48,6 +48,10 @@ type
 	  function RequestBalance : boolean; override;
     function RequestPositons : boolean; override;
     function RequestOrders: boolean; override;
+
+    	// to shared memory
+    function SenderOrder( aOrder : TOrder ): boolean ; override;
+
   end;
 
 implementation
@@ -425,8 +429,6 @@ begin
   inherited  RestNotify( Sender )
 end;
 
-
-
 procedure TBinanceFutures.ParseRequestData(iCode: integer; sName,
   sData: string);
 begin
@@ -446,5 +448,52 @@ begin
 		  gBinReceiver.ParseFutAllOrderBook( sData );
 
 end;
+
+
+{$region 'shared memory function' }
+
+function TBinanceFutures.SenderOrder(aOrder: TOrder): boolean;
+var
+	sData, stTmp : string;
+begin
+	// '|' 를 구분자 사용
+
+  if aOrder.OrderType = otNormal then
+  begin
+
+    case aOrder.PriceControl of
+      pcLimit: stTmp := 'limit';
+      pcMarket:stTmp := 'market';
+    end;
+
+    sData := Format('%s|%s|%s|%s|%s', [
+      aOrder.Symbol.OrgCode,
+      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      aOrder.PriceBI.OrgVal,
+      aOrder.OrderQtyBI.OrgVal,
+      stTmp,
+      aOrder.Symbol.Spec.SettleCode
+    ]);
+
+    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+      rtNewOrder,  sData , aOrder.LocalNo
+      )
+  end else
+  if aOrder.OrderType = otCancel then
+  begin
+    sData := Format('%s|%s|%s|%s', [
+      aOrder.OrderNo,
+      aOrder.Symbol.Code,
+      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      aOrder.Symbol.Spec.SettleCode
+    ]);
+
+    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+      rtCnlOrder,  sData , aOrder.OrderNo
+      )
+  end;
+end;
+
+{$endregion}
 
 end.

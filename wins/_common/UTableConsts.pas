@@ -27,13 +27,20 @@ const
     70 );
 
 
-  quoteMon_TitleCnt = 10;
+  quoteMon_TitleCnt = 14;
   quoteMon_Title : array [0..quoteMon_TitleCnt-1] of string = ('코인', '거래소'
-    ,'KIP', 'WCD','SP','현재가','등락'
-    ,'고','저', '일거래액');
+    ,'KIP', 'WCD','SP','현재가'
+    ,'매도잔량','매도가','매수가','매수잔량'
+    ,'등락' ,'고','저', '일거래액');
   quoteMon_Width : array [0..quoteMon_TitleCnt-1] of integer = (70, 40
-    , 60, 60, 60, 80, 60
-    , 60, 60, 60 );
+    , 60, 60, 60, 80
+    , 70, 70, 70, 70
+    , 60, 60, 60, 60 );
+
+  Mon_CurCol = 5;
+  Mon_AskCol = 7;
+  Mon_BidCol = 8;
+
 
   CoinCol = 0;
   ExCol   = 1;

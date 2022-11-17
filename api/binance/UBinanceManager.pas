@@ -207,7 +207,6 @@ begin
     mtSpot: ;
     mtFutures:  Result := Exchanges[mtFutures].RequestOrder( aOrder ) ;
   end;
-
 end;
 
 function TBinanceManager.Subscrib(aSymbol: TSymbol): boolean;

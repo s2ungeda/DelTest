@@ -199,7 +199,9 @@ begin
     if i <= (high(iLeft)-1) then
       iLeft[i] := iSum;
 
-    if i=9 then
+    if i=10 then
+      iLeft[6] := iSum
+    else if i=13 then
       iLeft[7] := iSum;
 
   end;
@@ -497,6 +499,12 @@ begin
 //      ,  FmtString( 2, aSymbol.SPrice ), '') );
     PutData( iCol, iRow, aSymbol.PriceToStr( aSymbol.Last ) );
 
+// 추가된 컬럼 2022.11.09
+    PutData( iCol, iRow, Format('%.0n ', [ (aSymbol.Asks[0].Price * aSymbol.Asks[0].Volume) / 1000 ]) );
+    PutData( iCol, iRow, aSymbol.PriceToStr(aSymbol.Asks[0].Price ) );
+    PutData( iCol, iRow, aSymbol.PriceToStr(aSymbol.Bids[0].Price ) );
+    PutData( iCol, iRow, Format('%.0n ', [ (aSymbol.Bids[0].Price * aSymbol.Bids[0].Volume) / 1000 ]) );
+
     // 전일종가 대신 오픈...
     if aSymbol.PrevClose <= 0 then  dTmp := 1
     else dTmp := aSymbol.PrevClose;
@@ -514,6 +522,17 @@ begin
 //      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '○', 'X') );
 //      PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '○', 'X') );
 //    end;
+
+    // 현재가 같은 호가..하이라이트...
+    if Cells[ Mon_CurCol , iRow] = Cells[ Mon_AskCol , iRow] then
+      Objects[ Mon_AskCol, iRow] := Pointer( 100 )
+    else
+      Objects[ Mon_AskCol, iRow] := Pointer( -100 );
+
+    if Cells[ Mon_CurCol , iRow] = Cells[ Mon_BidCol, iRow] then
+      Objects[ Mon_BidCol, iRow] := Pointer( 100 )
+    else
+      Objects[ Mon_BidCol, iRow] := Pointer( -100 );
 
   end;
 end;
@@ -544,11 +563,13 @@ procedure TFrmQuoteMonitors.sgQuoteDrawCell(Sender: TObject; ACol,
     aFont, aBack : TColor;
     dFormat : Word;
     iMode : integer;
+    iVal  : integer;
 begin
   aFont   := clBlack;
   dFormat := DT_CENTER ;
   aRect   := Rect;
   aBack   := clWhite;
+  iVal    := 0;
 
   with sgQuote do
   begin
@@ -559,11 +580,24 @@ begin
       aBack := clMoneyGreen;
     end else
     begin
-      if ACol in [3..9] then
+      if ACol in [3..13] then
         dFormat := DT_RIGHT;
+
+    // 매도/매수 하이라이트
+      if ACol in [Mon_AskCol..Mon_BidCol] then
+        if Objects[ ACol, ARow] <> nil then
+        begin
+          if ARow = 32 then
+            iVal := integer( Objects[ACol, ARow] );
+          iVal := integer( Objects[ACol, ARow] );
+          if iVal > 0 then begin
+            if ACol = Mon_AskCol then
+              aBack := Short_COLOR
+            else
+              aBack := LONG_COLOR;
+          end;
+        end;
     end;
-
-
 
     aRect.Top := Rect.Top + 4;
     if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then

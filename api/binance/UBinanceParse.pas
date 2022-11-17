@@ -745,6 +745,10 @@ begin
   begin
     aVal := aArr.Items[i];
     sTmp := aVal.GetValue<string>('symbol');
+
+    if sTmp = 'SRMUSDT' then
+      sTmp := 'SRMUSDT';
+
     aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sTmp+Fut_Suf);
     if aSymbol <> nil then
     begin

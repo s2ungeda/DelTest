@@ -263,7 +263,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         Width = 775
         Height = 411
         Align = alClient
-        ColCount = 10
+        ColCount = 14
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
