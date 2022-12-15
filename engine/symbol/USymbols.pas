@@ -100,6 +100,46 @@ type
     property Sales[i:Integer]: TTimeNSale read GetSale; default;
   end;
 
+
+  TDnwNetWork = class(TCollectionItem)
+  private
+    FName: string;
+    FWithdrawlState: boolean;
+    FDepositState: boolean;
+    FWithdrawFee: string;
+    FWithdrawMin: string;
+    procedure SetDepositState(const Value: boolean);
+    procedure SetWithdrawlState(const Value: boolean);
+
+  public
+
+    constructor Create( aColl : TCollection ); override;
+
+    property Name: string read FName write FName;
+    property WithDrawlState : boolean read FWithdrawlState write SetWithdrawlState;
+    property DepositState   : boolean read FDepositState   write SetDepositState;
+    property WithdrawFee    : string read FWithdrawFee     write FWithdrawFee;
+    property WithdrawMin    : string read FWithdrawMin     write FWithdrawMin;
+  end;
+
+  TDnwNetWorkList = class(TCollection)
+  private
+    function GetNetwork(i: Integer): TDnwNetWork;
+
+  public
+
+    DpCnt : array [0..1] of integer;
+    WdCnt : array [0..1] of integer;
+
+    constructor Create;
+    procedure init;
+
+    function New: TDnwNetWork;
+    function IsDeposit( bState : boolean ) : boolean;
+    function IsWithdraw( bState : boolean ) : boolean;
+    property Network[i:Integer]: TDnwNetWork read GetNetwork; default;
+  end;
+
   TSymbol = class( TCollectionItem )
   private
  //   FExchangeCode: string;
@@ -155,6 +195,8 @@ type
     FWithDrawlTime: TDateTime;
     FLastID: int64;
     FTrnsTime: int64;
+    FNetworkList: TDnwNetWorkList;
+    FRefSymbol: TSymbol;
     procedure OnTermAddEvent(Sender: TObject);
   public
 
@@ -208,10 +250,12 @@ type
     property Bids : TMarketDepths read FBids;
     property Sales: TTimeNSales read FSales;
     property Ticks: TCollection read FTicks;
+    property NetworkList : TDnwNetWorkList read FNetworkList;
     //
     property TradeAble : boolean read FTradeAble write FTradeAble;
     property IsMargin  : boolean read FIsMargin write FIsMargin;
     property IsFuture  : boolean read FIsFuture write FIsFuture;
+    property RefSymbol : TSymbol read FRefSymbol write FRefSymbol;
     //
     property WithDrawlState : boolean read FWithdrawlState write FWithdrawlState;
     property DepositState   : boolean read FDepositState   write FDepositState;
@@ -346,6 +390,7 @@ uses
   , UTypes
   , UConsts , UApiConsts
   , GApp
+
   ;
 
 
@@ -427,6 +472,8 @@ constructor TSymbol.Create(aColl: TCollection);
 begin
   inherited Create( aColl );
 
+  FRefSymbol  := nil;
+
   FIsFuture:= false;
   FIsMargin:= false;
 
@@ -434,6 +481,7 @@ begin
   FAsks:= TMarketDepths.Create;
   FSales:= TTimeNSales.Create;
   FTicks := TCollection.Create( TTickItem);
+  FNetworkList:= TDnwNetWorkList.Create;
 
   FTerms    := TSTerms.Create;
   FTerms.OnAdd  := OnTermAddEvent;
@@ -472,6 +520,7 @@ end;
 destructor TSymbol.Destroy;
 begin
 
+  FNetworkList.Free;
   DataTrace.Free;
   FTicks.free;
   FBids.Free;
@@ -968,5 +1017,94 @@ end;
 
 
 
+
+{ TDnwNetWorkList }
+
+constructor TDnwNetWorkList.Create;
+begin
+  inherited Create( TDnwNetWork );
+  init;
+end;
+
+procedure TDnwNetWorkList.init;
+begin
+  DpCnt[0] := 0;
+  DpCnt[1] := 0;
+  WdCnt[0] := 0;
+  WdCnt[1] := 0;
+end;
+
+function TDnwNetWorkList.IsDeposit(bState: boolean): boolean;
+begin
+  if bState then begin
+    // 입금 정상인가..
+    Result := false;
+    if Count = DpCnt[0] then
+      Result := true
+  end else
+  begin
+    // 입금 금지인가?
+    Result := false;
+    if Count = DpCnt[1] then
+      Result := true;
+  end;
+end;
+
+function TDnwNetWorkList.IsWithdraw(bState: boolean): boolean;
+begin
+  if bState then begin
+    // 출금 정상인가..
+    Result := false;
+    if Count = WdCnt[0] then
+      Result := true
+  end else
+  begin
+    // 출금 금지인가?
+    Result := false;
+    if Count = WdCnt[1] then
+      Result := true;
+  end;
+end;
+
+function TDnwNetWorkList.GetNetwork(i: Integer): TDnwNetWork;
+begin
+  if (i >= 0) and (i <= Count-1) then
+    Result := Items[i] as TDnwNetWork
+  else
+    Result := nil;
+end;
+
+function TDnwNetWorkList.New: TDnwNetWork;
+begin
+  Result := Add as TDnwNetWork;
+end;
+
+{ TDnwNetWork }
+
+constructor TDnwNetWork.Create(aColl: TCollection);
+begin
+  inherited Create( aColl );
+
+end;
+
+procedure TDnwNetWork.SetDepositState(const Value: boolean);
+begin
+  if Value then
+    inc( (Collection as TDnwNetWorkList).DpCnt[0] )
+  else
+    inc( (Collection as TDnwNetWorkList).DpCnt[1] );
+
+  FDepositState := Value;
+end;
+
+procedure TDnwNetWork.SetWithdrawlState(const Value: boolean);
+begin
+  if Value then
+    inc( (Collection as TDnwNetWorkList).WdCnt[0] )
+  else
+    inc( (Collection as TDnwNetWorkList).WdCnt[1] );
+
+  FWithdrawlState := Value;
+end;
 
 end.

@@ -7,7 +7,7 @@ type
 
   TExchangeKind   = ( ekBinance , ekUpbit, ekBithumb );
   TMarketType     = ( mtSpot, mtFutures );
-  TAccountMarketType  = (amAll, amSpot, amMargin, amFuture );
+  TAccountMarketType  = (amAll, amSpot, {amMargin,} amFuture );
   TMajorSymbolKind = (msBTC, msETH, msXRP );
   TRequestType    = ( rtNewOrder , rtCnlOrder, rtOrderList, rtPosition, 
   	rtBalance, rtAbleOrder, rtOrdDetail, rtTradeAmt );
@@ -31,11 +31,8 @@ type
     Prepare    : string;
     Port       : integer;
     MarketType : TMarketType;
-
-    Key : string;
-    Secret  : string;    
+    Key, Secret : string;
   end;
-
 
   TExchangeInfo = record
     Name : string;
@@ -50,9 +47,16 @@ type
     procedure SetInfo( i:integer; stName : string ; isMar,isFut, isDome : boolean );
   end;
 
+
+//  TExAccountInfo = record
+//    Code, Name, Key, Secret : string;
+//    ExType : TExchangeKind;
+//  end;
+
   function GetSettleType( sCur : string): TSettleCurType;
   function ExKindToStr( aKind : TExchangeKind ) : string;
   function MarketToStr( aType : TMarketType ) : string;
+  function ExistExType( aExStr : string; var aExKind : TExchangeKind   ) : boolean;
 
 implementation
 
@@ -92,5 +96,19 @@ begin
   Result := TMarketTypeDesc[ aType ];
 end;
 
+function ExistExType( aExStr : string; var aExKind : TExchangeKind   ) : boolean;
+var
+  i : TExchangeKind;
+begin
+  Result := false;
+
+  for I := ekBinance to High(TExchangeKindShortDesc) do
+    if TExchangeKindShortDesc[i] = aExStr then
+    begin
+      aExKind := i;
+      Result  := true;
+      break;
+    end;
+end;
 
 end.

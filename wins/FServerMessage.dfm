@@ -3,7 +3,7 @@ object FrmServerMessage: TFrmServerMessage
   Top = 0
   Caption = #49436#48260#47700#49464#51648
   ClientHeight = 182
-  ClientWidth = 493
+  ClientWidth = 720
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,12 +12,13 @@ object FrmServerMessage: TFrmServerMessage
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object lvLog: TListView
     Left = 0
     Top = 0
-    Width = 493
+    Width = 720
     Height = 182
     Align = alClient
     Columns = <
@@ -30,11 +31,12 @@ object FrmServerMessage: TFrmServerMessage
         Width = 80
       end
       item
+        AutoSize = True
         Caption = #45236#50857
-        Width = 300
       end>
     TabOrder = 0
     ViewStyle = vsReport
     OnDrawItem = lvLogDrawItem
+    ExplicitWidth = 493
   end
 end

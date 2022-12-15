@@ -23,12 +23,15 @@ type
     RESTClient3: TRESTClient;
     BitReq: TRESTRequest;
     RESTResponse3: TRESTResponse;
+    RESTClient4: TRESTClient;
+    BinSpotReq: TRESTRequest;
+    RESTResponse4: TRESTResponse;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    procedure initControls;
 
+    procedure initControls;
     { Private declarations }
   public
     { Public declarations }
@@ -68,7 +71,8 @@ begin
 
   initControls;
 
-  App.RestManager.init( BinReq, UpbReq, BitReq );
+  // 거래소마다 TReqclient 를 따로 사용...
+  App.RestManager.init( BinReq, UpbReq, BitReq, BinSpotReq );
   mt := TSharedThread.Create( App.RestManager.OnSharedDataNotify, false );
   App.RestManager.OnPushData := mt.PushData;
 end;
@@ -85,6 +89,7 @@ begin
   BinReq.Client.BaseURL := App.ApiConfig.GetBaseUrl( ekBinance, mtFutures);
   UpbReq.Client.BaseURL := App.ApiConfig.GetBaseUrl( ekUpbit, mtSpot);
   BitReq.Client.BaseURL := App.ApiConfig.GetBaseUrl( ekBithumb, mtSpot );
+  BinSpotReq.Client.BaseURL := App.ApiConfig.GetBaseUrl( ekBinance, mtSpot);
 end;
 
 procedure TFrmRestMain.OnNotify(const S: string);

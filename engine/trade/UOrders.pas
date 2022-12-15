@@ -310,10 +310,10 @@ begin
     begin
       FState      := osRejected;
       FRejectCode := sRjtCode;
+      FModify     := false;
 
       if Assigned(FOnStateChanged) then
-        FOnStateChanged(Self);    
-          
+        FOnStateChanged(Self);
     end else
     if FOrderType = otCancel then begin
     	FOrderType := otNormal;

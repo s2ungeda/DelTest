@@ -91,10 +91,11 @@ begin
 
   QuoteSock[0]  := TBinanceWebSocket.Create(QOUTE_SOCK, 0,  mtSpot ) ;
   QuoteSock[0].init( 'stream.binance.com:9443/ws' );
+//  wss://testnet.binance.vision/ws  테스트넷
 
   QuoteSock[1]  := TBinanceWebSocket.Create(QOUTE_SOCK, 1, mtFutures ) ;
-  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
-//  QuoteSock[1].init( 'stream.binancefuture.com/ws' ); // 테스트넷
+//  QuoteSock[1].init( 'fstream.binance.com/ws' );    // 리얼
+  QuoteSock[1].init( 'stream.binancefuture.com/ws' ); // 테스트넷
 
 
   sKey  := (Exchanges[mtSpot] as TBinanceSpotNMargin).RequestListenKey( true );
@@ -150,7 +151,7 @@ procedure TBinanceManager.OnTimer(Sender: TObject);
 //  iState, i : integer;
 begin
   // 1초에 한번
-  //Exchanges[mtSpot].RequestDNWState;
+  Exchanges[mtSpot].RequestDNWState;
 
 end;
 

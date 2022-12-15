@@ -5,8 +5,8 @@ interface
 uses
   system.SysUtils,
 
-  UDalinEngine, ULogThread , UConfig, UTypes
-  , FWinConfig
+  UDalinEngine, ULogThread , UConfig,  UTypes
+  , FWinConfig , FServerMessage
   ;
 
 type
@@ -23,9 +23,14 @@ type
     FAppStatus: TAppStatus;
     FOnAppStatusEvent: TAppStatusEvent;
     FErrorString: string;
+
     function  IsLogLevel(lLevel: TLogLevel): boolean;
     procedure SetAppStatus(const Value: TAppStatus);
+    procedure PushLog(lLevel: TLogLevel; stPreFix, stData: string);
   public
+
+    LogItems: array [TLogLevel] of TAppLogItems;
+
     constructor Create;
     destructor  Destroy; override;
 
@@ -63,25 +68,37 @@ type
 var
   App : TApp;
   gWinCfg : TFrmWinConfig;
+  gMessage: TFrmServerMessage;
 
 implementation
 
 uses
   GLibs   ,
-  UConsts
+  UConsts ,
+  Windows
   ;
 
 { TApp }
 
 constructor TApp.Create;
+var
+  alv : TLogLevel;
 begin
+//( llFatal, llError, llWarning, llInfo, llDebug, llTrace );
   FEngine := TDalinEngine.Create;
   FLog    := TLogThread.Create;
   FAppStatus := asNone;
+
+  for alv := llFatal to High(TLogLevel) do
+    LogItems[alv] := TAppLogItems.Create;
+
+  gMessage   := TFrmServerMessage.Create( nil );
 end;
 
 
 destructor TApp.Destroy;
+var
+  alv : TLogLevel;
 begin
 
   if gWinCfg <> nil then
@@ -90,6 +107,12 @@ begin
   FEngine.Free;
   App.Log(llInfo, '', '--- Engine free ---');
   FLog.Terminate;
+
+  if gMessage <> nil then
+    gMessage.Free;
+
+  for alv := llFatal to High(TLogLevel) do
+    LogItems[alv].Free;
 
   inherited;
 end;
@@ -149,38 +172,80 @@ end;
 
 function TApp.IsLogLevel( lLevel : TLogLevel ) : boolean;
 begin
+
   if Integer(lLevel) <= FConfig.LOG_LEVEL then
     result := true
   else
+    result := false;
+
+  if FLog = nil then
     result := false;
 end;
 
 ////  LOG
 
+procedure TApp.PushLog(lLevel : TLogLevel; stPreFix, stData: string);
+var
+  aLog : TAppLogItem;
+begin
+  aLog := nil;
+
+  case lLevel of
+    llFatal,
+    llError,
+    llWarning:
+      begin
+        aLog := LogItems[lLevel].New(lLevel);
+        with aLog do
+        begin
+//          LogSource := stSource;
+          LogTitle  := stPreFix;
+          LogDesc   := stData;
+//          LogData   := stData;
+        end;
+
+      end;
+    else exit;
+  end;
+
+  if (aLog <> nil) and ( gMessage <> nil ) then begin
+    PostMessage( gMessage.Handle, WM_LOGARRIVED, Integer( lLevel ), 0);
+    gMessage.Show;
+  end;
+end;
+
 procedure TApp.Log(lLevel : TLogLevel; stPrefix: string; const fmt: string;
   const Args: array of const);
 begin
-  if IsLogLevel(lLevel) then
+  if IsLogLevel(lLevel) then begin
+    PushLog(lLevel, stPrefix, Format( fmt, Args ));
     FLog.Log(integer(lLevel), stPrefix, Format( fmt, Args ) );
+  end;
 end;
 
 procedure TApp.Log(lLevel: TLogLevel; stData: string);
 begin
-  if IsLogLevel(lLevel) then
+  if IsLogLevel(lLevel) then begin
+    PushLog(lLevel, '', stData);
     FLog.Log(integer(lLevel), '', stData);
+  end;
 end;
 
 procedure TApp.Log(lLevel: TLogLevel; const fmt: string;
   const Args: array of const);
 begin
-  if IsLogLevel(lLevel) then
+  if IsLogLevel(lLevel) then begin
+    PushLog(lLevel, '', Format( fmt, Args ));
     FLog.Log(integer(lLevel), '', Format( fmt, Args ) );
+  end;
 end;
 
 procedure TApp.Log(lLevel : TLogLevel; stPrefix, stData: string);
 begin
-  if IsLogLevel(lLevel) then
+  if IsLogLevel(lLevel) then begin
+    PushLog(lLevel, stPrefix, stData);
     FLog.Log(integer(lLevel), stPrefix, stData);
+  end;
 end;
 
 ////

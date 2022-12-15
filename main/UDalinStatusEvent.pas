@@ -27,7 +27,7 @@ begin
     asInit:
         if not App.Engine.ApiManager.GetMaster then begin
           App.Log(llError, '', 'Failed PrepareMaster');
-          ShowMessage('Failed PrepareMaster');
+//          ShowMessage('Failed PrepareMaster');
           //AppStatusEvent( asError);
         end
         else
@@ -38,7 +38,7 @@ begin
         if not App.Engine.ApiManager.InitMarketWebSocket then
         begin
           App.Log(llError, '', 'Failed InitMarketWebSocket') ;
-          ShowMessage('Failed InitMarketWebSocket');
+//          ShowMessage('Failed InitMarketWebSocket');
           Exit;
         end;
 
@@ -56,25 +56,25 @@ begin
 
     asRecovery :
       begin
-        App.Engine.ApiManager.MakeCloseData;  
+        App.Engine.ApiManager.MakeCloseData;
 
         // 계좌 생성
         App.Engine.TradeCore.AccountLoad;
 
         // 잔고 조회
-        if not App.Engine.ApiManager.RequestBalance then
-        begin
-          App.Log(llError, '', 'Failed RequestBalance') ;
-          ShowMessage('Failed RequestBalance');
-          Exit;
-        end;
-        // 포지션 조회
-        if not App.Engine.ApiManager.RequestPositons then
-        begin
-          App.Log(llError, '', 'Failed RequestPositons') ;
-          ShowMessage('Failed RequestPositons');
-          Exit;
-        end;
+//        if not App.Engine.ApiManager.RequestBalance then
+//        begin
+//          App.Log(llError, '', 'Failed RequestBalance') ;
+//          ShowMessage('Failed RequestBalance');
+//          Exit;
+//        end;
+//        // 포지션 조회
+//        if not App.Engine.ApiManager.RequestPositons then
+//        begin
+//          App.Log(llError, '', 'Failed RequestPositons') ;
+//          ShowMessage('Failed RequestPositons');
+//          Exit;
+//        end;
         // 미체결 주문 조회.
 //        if not App.Engine.ApiManager.RequestOrders then
 //        begin
@@ -86,7 +86,7 @@ begin
         if not App.Engine.ApiManager.ConnectAll then
         begin
           App.Log(llError, '', 'Failed ConnectAll') ;
-          ShowMessage('Failed ConnectAll');
+//          ShowMessage('Failed ConnectAll');
           Exit;
         end;
 
@@ -103,7 +103,8 @@ begin
       begin
         //
         App.Engine.ApiManager.SubscribeAll;
-        App.Engine.ApiManager.StartRequest;
+//        App.Engine.ApiManager.StartRequest;
+        FrmDalinMain.ExecuteSubApp;
         FrmDalinMain.Show;
 
       end;

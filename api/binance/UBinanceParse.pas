@@ -50,8 +50,13 @@ type
     procedure ParseFutAllTicker( aData : string );
     procedure ParseFutAllOrderBook( aData : string );
 
-    property Parent : TExchangeManager read FParent;
+    // shared memory function
+    procedure ParseFutNewOrder( aData, aRef : string );
+    procedure ParseFutCnlOrder( aData, aRef : string );
+    procedure ParseFutAccountInfo( aData, aRef : string );
+    procedure ParseFutOrderList( aData, aRef : string );
 
+    property Parent : TExchangeManager read FParent;
   end;
 var
   gBinReceiver : TBinanceParse;
@@ -77,10 +82,6 @@ end;
 
 
 
-procedure TBinanceParse.ParseFutAccountUpdate(aJson: TJsonObject);
-begin
-
-end;
 
 procedure TBinanceParse.ParseFutaggTrade(aJson: TJsonObject);
 var
@@ -249,13 +250,6 @@ begin
   finally
     if aVal <> nil then aVal.Free;
   end;
-end;
-
-
-
-procedure TBinanceParse.ParseFutBookTicker(aJson: TJsonObject);
-begin
-
 end;
 
 // 조회로 변경했기에..사용안함..
@@ -475,6 +469,11 @@ begin
   end;
 end;
 
+procedure TBinanceParse.ParseFutBookTicker(aJson: TJsonObject);
+begin
+
+end;
+
 {
   TOrderState = (osReady,
                    // with server
@@ -496,11 +495,18 @@ begin
       Result := osRejected
 end;
 
+
+
+procedure TBinanceParse.ParseFutAccountUpdate(aJson: TJsonObject);
+begin
+
+end;
+
 procedure TBinanceParse.ParseFutOrderUpdate(aJson: TJsonObject);
 var
   aObj : TJsonObject;
   aVal : TJsonValue;
-  sID, sTmp, sCode, sStatus : string;
+  cID, sID, sTmp, sCode, sStatus : string;
 
   aAcnt   : TAccount;
   aSymbol : TSymbol;
@@ -515,13 +521,14 @@ var
   aStatus  : TOrderState;
 begin
 
-  App.DebugLog( 'binan order : %s ' , [ aJson.ToJSON ]);
+  App.DebugLog( 'binan Fut order : %s ' , [ aJson.ToJSON ]);
 
   aVal  := aJson.GetValue('o');
   if aVal = nil then Exit;
 
   sCode := aVal.FindValue('s').Value;
-  sID   := aVal.FindValue('c').Value;
+  cID   := aVal.FindValue('c').Value; // client id
+  sID   := aVal.FindValue('i').Value; // order  id;
 
   //App.Engine.TradeCore.
   aAcnt := App.Engine.TradeCore.FindAccount(ekBinance, amFuture);
@@ -530,36 +537,41 @@ begin
   if aSymbol = nil then Exit;
 
   aOrder  := App.Engine.TradeCore.FindOrder( ekBinance, aAcnt, aSymbol, sID);
+
   if aOrder = nil then
   begin
 
-    sTmp  := aVal.FindValue('S').Value;
-    iSide := 1;
-    if sTmp = 'SELL' then
-      iSide := -1
-    else
-      iSide  := 1;
-
-    sTmp  := aVal.FindValue('o').Value;
-    if sTmp = 'MARKET' then
-      pcValue := pcMarket
-    else pcValue := pcLimit;
-
-    dOrderQty := aVal.GetValue<double>('q', 0 );
-    dPrice    := aVal.GetValue<double>('p', 0 );
-
-    aOrder := App.Engine.TradeCore.Orders[ekBinance].NewOrder( aAcnt, aSymbol,
-      iSide, dOrderQty, pcValue, dPrice, tmGTC );
-
-    aOrder.ReduceOnly := aVal.GetValue<boolean>('R', false);
-    aOrder.OrderNo    := sID;
+    aOrder := App.Engine.TradeCore.FindOrder(ekBinance, cID );
     if aOrder = nil then
     begin
-      App.Log(llError, 'biance future not found order : %s, %s, %s, %s, %s ',
-        [ sID, sCode, ifThenStr( iSide = 1, '매수','매도')
-          , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)  ]  );
-      Exit;
-    end ;
+      sTmp  := aVal.FindValue('S').Value;
+      iSide := 1;
+      if sTmp = 'SELL' then
+        iSide := -1
+      else
+        iSide  := 1;
+
+      sTmp  := aVal.FindValue('o').Value;
+      if sTmp = 'MARKET' then
+        pcValue := pcMarket
+      else pcValue := pcLimit;
+
+      dOrderQty := aVal.GetValue<double>('q', 0 );
+      dPrice    := aVal.GetValue<double>('p', 0 );
+
+      aOrder := App.Engine.TradeCore.Orders[ekBinance].NewOrder( aAcnt, aSymbol,
+        iSide, dOrderQty, pcValue, dPrice, tmGTC );
+
+      aOrder.ReduceOnly := aVal.GetValue<boolean>('R', false);
+
+      if aOrder = nil then
+      begin
+        App.Log(llError, 'biance future not found order : %s, %s, %s, %s, %s ',
+          [ sID, sCode, ifThenStr( iSide = 1, '매수','매도')
+            , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)  ]  );
+        Exit;
+      end ;
+    end;
   end;
 
   iTime := aJson.GetValue<int64>('T');
@@ -568,8 +580,10 @@ begin
   sTmp  :=  aVal.FindValue('X').Value;
   aStatus := GetOrderStatus( sTmp );
 
+  aOrder.OrderNo    := sID;
+
   App.DebugLog('Binance Fut : %s, %s, %s, %s, %s, %s, %s ', [  sTmp, sID, sCode
-    , ifThenStr( iSide = 1, '매수','매도')
+    , ifThenStr( aOrder.Side = 1, '매수','매도')
     , aSymbol.PriceToStr(dPrice), aSymbol.QtyToStr(dOrderQty)
     , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Limit' )
     ]  );
@@ -594,14 +608,13 @@ begin
         ]);
 
         aFill := App.Engine.TradeCore.Fills[ekBinance].New( sTrdID, dtTime, now,
-          sID, aAcnt, aSymbol, dFillVol , iSide, dFillPrice);
+          sID, aAcnt, aSymbol, dFillVol , aOrder.Side, dFillPrice);
 
         App.Engine.TradeBroker.Fill( aOrder, aFill );
       end;
     osCanceled  : App.Engine.TradeBroker.Cancel( aOrder, 0 ) ;
     osRejected  : App.Engine.TradeBroker.Accept( aOrder, dtTime, false );
   end;
-
 
 end;
 
@@ -689,6 +702,10 @@ begin
       Spec.QuoteCode   := aObj.GetValue('quoteAsset').Value;  // USTD
       Spec.SettleCode  := aObj.GetValue('symbol').Value;;
     end;
+
+    if sCode = 'SRMUSDT' then
+      sCode := 'SRMUSDT';
+
 
     sTmp := aObj.GetValue('status').Value;
     if sTmp = 'TRADING' then aSymbol.TradeAble := true  else aSymbol.TradeAble := false;
@@ -841,14 +858,13 @@ end;
 
 
 
-
-
-
 procedure TBinanceParse.ParseDNWState(aData: string);
 var
   aObj : TJsonObject;
+  aVal, aVal2 : TJsonValue;
+  aArr, aArr2 : TJsonArray;
   aPair: TJsonPair;
-  I: Integer;
+  I, j : Integer;
   sTmp : string;
   aSymbol : TSymbol;
 
@@ -860,33 +876,72 @@ begin
   end;
 
   try
-
-    aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+//    aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+//    try
+//      for I := 0 to aObj.Size-1 do
+//      begin
+//        aPair := aObj.Get(i);
+//
+//        sTmp  := aPair.JsonString.Value;
+//        if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
+//
+//        aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
+//        if aSymbol <> nil then
+//        begin
+//
+//          var iRes : integer;
+//          iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
+//                                        , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
+//          if iRes > 0 then
+//            App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
+//        end;
+//      end;
+//    finally
+//      aObj.Free;
+//    end;
+    aArr  := TJsonObject.ParseJSONValue( aData ) as TJsonArray;
     try
-      for I := 0 to aObj.Size-1 do
+      for I := 0 to aArr.Size-1 do
       begin
-        aPair := aObj.Get(i);
-
-        sTmp  := aPair.JsonString.Value;
-        if FParent.Codes.IndexOf(sTmp) < 0 then Continue;
+        aVal  := aArr.Get(i);
+        sTmp  := aVal.GetValue<string>('coin', '');
+        if ( sTmp = '') or ( FParent.Codes.IndexOf(sTmp) < 0 ) then continue;
 
         aSymbol := App.Engine.SymbolCore.FindSymbol( FParent.ExchangeKind, sTmp+'USDT' );
         if aSymbol <> nil then
         begin
 
           var iRes : integer;
-          iRes := aSymbol.CheckDnwState(  aPair.JsonValue.GetValue<boolean>('depositStatus')
-                                        , aPair.JsonValue.GetValue<boolean>('withdrawStatus') ) ;
+          iRes := aSymbol.CheckDnwState(  aVal.GetValue<boolean>('depositAllEnable')
+                                        , aVal.GetValue<boolean>('withdrawAllEnable') ) ;
           if iRes > 0 then
             App.Engine.SymbolBroker.DnwEvent( aSymbol, iRes);
-        end;
 
+          aSymbol.NetworkList.init;
+          aSymbol.NetworkList.Clear;
+          // network list
+          aArr2 := aVal.GetValue<TJsonArray>('networkList', nil);
+          if aArr2 = nil then continue;
+          for j := 0 to aArr2.Size-1 do
+          begin
+            var aNetwork : TDnwNetWork;
+            aNetwork := aSymbol.NetworkList.New;
+            aVal2 := aArr2.Get(j) ;
+            aNetwork.Name  := aVal2.GetValue<string>('name', '');
+            aNetwork.DepositState   := aVal2.GetValue<boolean>('depositEnable');
+            aNetwork.WithDrawlState := aVal2.GetValue<boolean>('withdrawEnable');
+            aNetwork.WithdrawMin    := aVal2.GetValue<string>('withdrawMin','0');
+            aNetwork.WithdrawFee    := aVal2.GetValue<string>('withdrawFee','0');
+          end;
+
+        end;
       end;
+
     finally
-      aObj.Free;
+      if aArr <> nil then aArr.Free;
     end;
   except on e : exception do
-    App.Log(llError, 'ParseDNWState parse error : %s, %s ' ,[ e.Message, aData ] );
+    App.Log(llError, 'ParseDNWState parse error : %s, %d, %d, %s ' ,[ e.Message, i, j, aData ] );
   end;
 end;
 
@@ -1348,5 +1403,149 @@ begin
   end;
 
 end;
+
+
+{$REGION 'shared memory function'}
+
+procedure TBinanceParse.ParseFutNewOrder(aData, aRef: string);
+var
+  aObj    : TJsonObject;
+  sTmp, sCode, sMsg, sOID, sStatus : string;
+  aOrder  : TOrder;
+  bAcpt   : boolean;
+  dtTime  : TDateTime;
+  iTime   : int64;
+begin
+
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseFutNewOrder data is empty : %s, %s',[aData, aRef] ) ;
+    Exit;
+  end;
+
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+
+  try
+    if aObj = nil  then Exit;
+
+    sCode := aObj.GetValue<string>('code', '');
+    sTmp  := aObj.GetValue<string>('clientOrderId','');
+
+    if( sTmp = '' ) and ( sCode <> '' ) then
+    begin
+      bAcpt := false;
+      sMsg  := aObj.GetValue<string>('msg','');
+      sStatus := '9999';
+      dtTime  := now;
+      App.Log( llError, '주문거부 : %s, %s', [aRef, aData] );
+    end else
+    begin
+      bAcpt := true;
+      sOID  := aObj.GetValue('orderId').Value;
+      iTime := aObj.GetValue<int64>('updateTime');
+      dtTime:= UnixTimeToDateTime( iTime );
+    end;
+
+    aOrder:= App.Engine.TradeCore.FindOrder(FParent.ExchangeKind, sTmp );
+    if aOrder = nil then
+    begin
+      App.Log(llError, '%s not found order : %s , %s ', [ TExShortDesc[FParent.ExchangeKind], aData, aRef  ] );
+      Exit;
+    end;
+
+    aOrder.OrderNo  :=  sOID;
+
+    App.DebugLog('%s Fut : %s, %s, %s, %s, %s, %s, %s ', [  TExShortDesc[FParent.ExchangeKind],
+        sMsg, sOID, aOrder.Symbol.Code
+      , ifThenStr( aOrder.Side > 0, '매수','매도')
+      , aOrder.PriceBI.OrgVal, aOrder.OrderQtyBI.OrgVal
+      , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Limit' )
+      ]  );
+
+		App.Engine.TradeBroker.Accept( aOrder, dtTime, bAcpt, sStatus ) ;
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
+end;
+
+procedure TBinanceParse.ParseFutCnlOrder(aData, aRef: string);
+var
+  aObj    : TJsonObject;
+  sTmp, sCode, sMsg, sOID, sStatus : string;
+  aOrder  : TOrder;
+  bAcpt   : boolean;
+  dtTime  : TDateTime;
+  iTime   : int64;
+begin
+
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseFutCnlOrder data is empty : %s, %s',[aData, aRef] ) ;
+    Exit;
+  end;
+
+  aObj := TJsonObject.ParseJSONValue( aData) as TJsonObject;
+
+  try
+    if aObj = nil  then Exit;
+
+    sCode := aObj.GetValue<string>('code', '');
+    sTmp  := aObj.GetValue<string>('clientOrderId','');
+
+    if( sTmp = '' ) and ( sCode <> '' ) then
+    begin
+      sOID  := aRef;
+      bAcpt := false;
+      sMsg  := aObj.GetValue<string>('msg','');
+      sStatus := '9999';
+      dtTime  := now;
+      App.Log( llError, '취소 주문거부 : %s, %s', [aRef, aData] );
+    end else
+    begin
+      bAcpt := true;
+      sOID  := aObj.GetValue('orderId').Value;
+      iTime := aObj.GetValue<int64>('updateTime');
+      dtTime:= UnixTimeToDateTime( iTime );
+    end;
+
+    aOrder:= App.Engine.TradeCore.FindOrder(FParent.ExchangeKind, sOID, DIV_ORD_NO );
+    if aOrder = nil then
+    begin
+      App.Log(llError, '%s not found order : %s , %s ', [ TExShortDesc[FParent.ExchangeKind], aData, aRef  ] );
+      Exit;
+    end;
+
+//    aOrder.OrderNo  :=  sOID;
+
+    App.DebugLog('%s Fut : %s, %s, %s, %s, %s, %s, %s ', [  TExShortDesc[FParent.ExchangeKind],
+        sMsg, sOID, aOrder.Symbol.Code
+      , ifThenStr( aOrder.Side > 0, '매수','매도')
+      , aOrder.PriceBI.OrgVal, aOrder.OrderQtyBI.OrgVal
+      , ifThenStr( aOrder.ReduceOnly, 'Reduce', 'Limit' )
+      ]  );
+
+//		App.Engine.TradeBroker.Accept( aOrder, dtTime, bAcpt, sStatus ) ;
+    App.Engine.TradeBroker.Cancel(aOrder, bAcpt, sStatus);
+
+  finally
+    if aObj <> nil then aObj.Free;
+  end;
+end;
+
+
+procedure TBinanceParse.ParseFutAccountInfo(aData, aRef: string);
+begin
+  App.DebugLog( 'ParseFutAccountInfo : %s, %s', [ aRef, aData] );
+end;
+
+
+procedure TBinanceParse.ParseFutOrderList(aData, aRef: string);
+begin
+  App.DebugLog( 'ParseFutOrderList : %s, %s', [ aRef, aData] );
+end;
+
+
+{$ENDREGION}
 
 end.

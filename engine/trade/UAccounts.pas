@@ -31,6 +31,7 @@ type
     FPriKey: string;
   //  FBalances: TStrings;
     FTradeAmt: double;
+    FName: string;
     function GetName: string;
   public
     AvailableAmt :  array [TSettleCurType] of double;            // 주문가능금액
@@ -47,7 +48,7 @@ type
 
     property ApiKey : string read FApiKey;
     property PriKey : string read FPriKey;
-    property Name	  : string read GetName;
+    property Name	  : string read GetName write FName;
 
     property TradeAmt : double read FTradeAmt write FTradeAmt;
 
@@ -62,15 +63,16 @@ type
   public
     constructor Create;
     Destructor Destroy ; override;
-    function New( sKey, sPri: String; aKind: TExchangeKind ): TAccount; overload;  
-    function New( sKey, sPri: String; aKind: TExchangeKind; aMarket : TAccountMarketType ): TAccount; overload;  
-    function Find( sKey: string) : TAccount; overload;
+    //function New( sKey, sPri: String; aKind: TExchangeKind ): TAccount; overload;
+    function New( sKey, sPri: String; aKind: TExchangeKind; aMarket : TAccountMarketType ): TAccount; overload;
+
+    //function Find( sKey: string) : TAccount; overload;
     function Find( aKind: TExchangeKind) : TAccount; overload;
     function Find( aKind: TExchangeKind; aMarket : TAccountMarketType) : TAccount; overload;
     function Represent: String;
-    
     property Accounts[i: Integer]: TAccount read GetAccount; default;
-  end;  
+  end;
+
   TAccountList = class(TStringList)
   private
     function GetAccount(i: Integer): TAccount;
@@ -164,23 +166,24 @@ begin
     end;
   end;
 end;
-function TAccounts.Find(sKey: string): TAccount;
-var
-  I: Integer;
-  aAcnt : TAccount;
-begin
-	Result := nil;
-  for I := 0 to Count-1 do
-	begin
-		aAcnt := GetAccount(i);
-    if ( aAcnt.ApiKey = sKey ) then
-    begin  
-      Result := aAcnt;
-      Break;
-    end;
-  end;
 
-end;
+//function TAccounts.Find(sKey: string): TAccount;
+//var
+//  I: Integer;
+//  aAcnt : TAccount;
+//begin
+//	Result := nil;
+//  for I := 0 to Count-1 do
+//	begin
+//		aAcnt := GetAccount(i);
+//    if ( aAcnt.ApiKey = sKey ) then
+//    begin
+//      Result := aAcnt;
+//      Break;
+//    end;
+//  end;
+//end;
+
 function TAccounts.Find(aKind: TExchangeKind): TAccount;
 var
   I: Integer;
@@ -197,6 +200,7 @@ begin
     end;
   end;
 end;
+
 function TAccounts.GetAccount(i: Integer): TAccount;
 begin
   if (i >= 0) and (i <= Count-1) then
@@ -204,6 +208,7 @@ begin
   else
     Result := nil;
 end;
+
 function TAccounts.New(sKey, sPri: String; aKind: TExchangeKind;
   aMarket: TAccountMarketType): TAccount;
 begin
@@ -222,22 +227,25 @@ begin
     Result.ExchangeKind	:= aKind;
   end;
 end;
-function TAccounts.New(sKey, sPri: String; aKind: TExchangeKind): TAccount;
-begin
-  if (sKey = '') or ( sPri = '' ) then begin
-    Result := nil;
-    Exit;
-  end;
-  Result := Find(sKey);
-  if Result = nil then
-  begin
-    Result := Add as TAccount;
-    Result.FApiKey := sKey;
-    Result.FPriKey := sPri;
-    Result.ExchangeKind	:= aKind;
-    Result.AccountType	:= amAll;
-  end;
-end;
+
+//function TAccounts.New(sKey, sPri: String; aKind: TExchangeKind): TAccount;
+//begin
+//  if (sKey = '') or ( sPri = '' ) then begin
+//    Result := nil;
+//    Exit;
+//  end;
+//
+//  Result := Find(sKey);
+//  if Result = nil then
+//  begin
+//    Result := Add as TAccount;
+//    Result.FApiKey := sKey;
+//    Result.FPriKey := sPri;
+//    Result.ExchangeKind	:= aKind;
+//    Result.AccountType	:= amAll;
+//  end;
+//end;
+
 function TAccounts.Represent: String;
 begin
 end;

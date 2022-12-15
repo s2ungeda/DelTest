@@ -23,7 +23,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     Width = 775
     Height = 19
     Panels = <>
-    ExplicitWidth = 637
   end
   object plLeft: TPanel
     Left = 0
@@ -34,7 +33,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
     BevelOuter = bvNone
     Caption = 'plLeft'
     TabOrder = 1
-    ExplicitWidth = 637
     object plLeftTop: TPanel
       Left = 0
       Top = 0
@@ -44,7 +42,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       BevelOuter = bvNone
       ParentBackground = False
       TabOrder = 0
-      ExplicitWidth = 637
       DesignSize = (
         775
         51)
@@ -156,30 +153,29 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         TabOrder = 6
       end
       object Panel4: TPanel
-        Left = 586
+        Left = 530
         Top = 2
-        Width = 177
+        Width = 233
         Height = 47
         Anchors = [akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 7
-        ExplicitLeft = 448
         object Label1: TLabel
-          Left = 119
+          Left = 184
           Top = 28
           Width = 45
           Height = 13
           Caption = '('#45800#50948':'#50613')'
         end
         object Label2: TLabel
-          Left = 77
+          Left = 142
           Top = 6
           Width = 80
           Height = 13
           Caption = #52572#49548' '#51068#44144#47000#45824#44552
         end
         object cbUB: TCheckBox
-          Left = 32
+          Left = 97
           Top = 3
           Width = 36
           Height = 17
@@ -190,7 +186,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           OnClick = cbUBClick
         end
         object cbBT: TCheckBox
-          Left = 32
+          Left = 97
           Top = 26
           Width = 36
           Height = 17
@@ -201,7 +197,7 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           OnClick = cbUBClick
         end
         object edtAmt: TEdit
-          Left = 66
+          Left = 131
           Top = 24
           Width = 50
           Height = 21
@@ -210,6 +206,17 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
           TabOrder = 2
           Text = '50'
           OnKeyDown = edtAmtKeyDown
+        end
+        object cbTradeAble: TCheckBox
+          Left = 26
+          Top = 3
+          Width = 65
+          Height = 17
+          Caption = #47588#47588#44032#45733
+          Checked = True
+          State = cbChecked
+          TabOrder = 3
+          OnClick = cbUBClick
         end
       end
       object Button1: TButton
@@ -256,14 +263,13 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 637
       object sgQuote: TStringGrid
         Left = 0
         Top = 0
         Width = 775
         Height = 411
         Align = alClient
-        ColCount = 14
+        ColCount = 15
         DefaultRowHeight = 19
         DefaultDrawing = False
         FixedCols = 0
@@ -275,7 +281,6 @@ object FrmQuoteMonitors: TFrmQuoteMonitors
         OnMouseDown = sgQuoteMouseDown
         OnMouseWheelDown = sgQuoteMouseWheelDown
         OnMouseWheelUp = sgQuoteMouseWheelUp
-        ExplicitWidth = 637
       end
       object SpinButton1: TSpinButton
         Left = 45

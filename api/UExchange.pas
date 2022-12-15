@@ -82,9 +82,12 @@ type
     function RequestDNWState : boolean; virtual; abstract;
     function RequestCandleData( sUnit : string; sCode : string ) : boolean; virtual; abstract;
 
-    function RequestBalance : boolean; overload; virtual; abstract;    
+    // 과거데이터호출
+    function RequestBalance : boolean; overload; virtual; abstract;
     function RequestPositons : boolean; virtual; abstract;
     function RequestOrders: boolean; virtual; abstract;
+    //
+
     function RequestOrder( aOrder : TOrder ) : boolean; virtual; abstract;
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); overload; virtual; abstract; 

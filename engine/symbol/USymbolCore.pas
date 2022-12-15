@@ -665,6 +665,7 @@ begin
           Underlying := aUnder;
 
         aUnder.IsFuture := true;
+        aUnder.RefSymbol:= Result;
 
         sFQN   := Format( '%s@%s.%s', [ aCode+Fut_Suf, aCode, GetBaseFuturesFQN( aExKind ) ]);
         aSpec  := FSpecs.Find( sFQN );

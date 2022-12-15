@@ -4,7 +4,7 @@ object FrmNormalOrder: TFrmNormalOrder
   BorderStyle = bsDialog
   Caption = #51068#48152#51452#47928
   ClientHeight = 208
-  ClientWidth = 532
+  ClientWidth = 529
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object FrmNormalOrder: TFrmNormalOrder
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
-    Left = 330
+    Left = 327
     Top = 0
     Width = 202
     Height = 208
@@ -50,10 +50,30 @@ object FrmNormalOrder: TFrmNormalOrder
   object Panel2: TPanel
     Left = 0
     Top = 0
-    Width = 330
+    Width = 329
     Height = 208
     Align = alLeft
     TabOrder = 1
+    object lbDepth: TLabel
+      Left = 157
+      Top = 87
+      Width = 3
+      Height = 13
+    end
+    object rgPrice: TRadioGroup
+      Left = 40
+      Top = 71
+      Width = 100
+      Height = 36
+      Columns = 2
+      Ctl3D = True
+      ItemIndex = 1
+      Items.Strings = (
+        #54840#44032
+        #44032#44201)
+      ParentCtl3D = False
+      TabOrder = 12
+    end
     object edtQty: TLabeledEdit
       Left = 46
       Top = 31
@@ -82,9 +102,9 @@ object FrmNormalOrder: TFrmNormalOrder
       Width = 65
       Height = 21
       Style = csDropDownList
-      ItemIndex = 2
+      ItemIndex = 0
       TabOrder = 2
-      Text = #48727#50040
+      Text = #48148#51060#45240#49828
       OnChange = cbExKindChange
       Items.Strings = (
         #48148#51060#45240#49828
@@ -92,16 +112,16 @@ object FrmNormalOrder: TFrmNormalOrder
         #48727#50040)
     end
     object edtCode: TEdit
-      Left = 75
-      Top = 6
+      Left = 134
+      Top = 4
       Width = 76
       Height = 21
       TabOrder = 3
       OnKeyDown = edtCodeKeyDown
     end
     object rbBuy: TRadioButton
-      Left = 157
-      Top = 10
+      Left = 164
+      Top = 37
       Width = 46
       Height = 17
       Caption = #47588#49688
@@ -111,8 +131,8 @@ object FrmNormalOrder: TFrmNormalOrder
       OnClick = rbBuyClick
     end
     object rbSell: TRadioButton
-      Left = 157
-      Top = 33
+      Left = 216
+      Top = 39
       Width = 46
       Height = 17
       Caption = #47588#46020
@@ -120,18 +140,18 @@ object FrmNormalOrder: TFrmNormalOrder
       OnClick = rbSellClick
     end
     object cbReduce: TCheckBox
-      Left = 157
-      Top = 56
-      Width = 97
+      Left = 164
+      Top = 60
+      Width = 85
       Height = 17
       Caption = 'Reduct-Only'
       TabOrder = 6
     end
     object btnOrder: TButton
       Left = 216
-      Top = 11
+      Top = 6
       Width = 109
-      Height = 39
+      Height = 27
       Caption = #47588#49688' '#51452#47928
       TabOrder = 7
       OnClick = btnOrderClick
@@ -155,7 +175,7 @@ object FrmNormalOrder: TFrmNormalOrder
     end
     object Button1: TButton
       Left = 4
-      Top = 106
+      Top = 104
       Width = 75
       Height = 25
       Caption = #51092#44256#51312#54924
@@ -180,10 +200,24 @@ object FrmNormalOrder: TFrmNormalOrder
       TabOrder = 11
       OnClick = Button3Click
     end
+    object cbMarket: TComboBox
+      Left = 75
+      Top = 4
+      Width = 54
+      Height = 21
+      Style = csDropDownList
+      ItemIndex = 1
+      TabOrder = 13
+      Text = 'Fut'
+      OnChange = cbMarketChange
+      Items.Strings = (
+        'Spot'
+        'Fut')
+    end
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 288
-    Top = 56
+    Left = 272
+    Top = 152
   end
 end

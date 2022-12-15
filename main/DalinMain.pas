@@ -47,6 +47,8 @@ type
   public
     { Public declarations }
     procedure Start;
+    procedure ExecuteSubApp;
+    procedure CloseSubApp;
     procedure SetValue;
     procedure LoadEnv(aStorage: TStorage);
     procedure SaveEnv(aStorage: TStorage);
@@ -73,6 +75,7 @@ begin
   App.log( llError, 'Application Error : ' + E.Message );
   //gEnv.AppMsg( WIN_ERR, 'Application Error : ' + E.Message );
 end;
+
 procedure TFrmDalinMain.FormCreate(Sender: TObject);
 begin
   //
@@ -100,6 +103,26 @@ begin
   AppStatusEvent(asType);
 end;
 
+procedure TFrmDalinMain.ExecuteSubApp;
+var
+  i : integer;
+begin
+  for I := 0 to 1 do
+    if App.Config.PrcsInfo[i].Active then
+      ExecuteApp( Handle, App.Config.PrcsInfo[i].ClassName
+        , App.Config.PrcsInfo[i].AppName  );
+end;
+
+procedure TFrmDalinMain.CloseSubApp;
+var
+  i : integer;
+begin
+
+  for I := 0 to 1 do
+    if App.Config.PrcsInfo[i].Active then
+      CloseApp( App.Config.PrcsInfo[i].ClassName );
+end;
+
 procedure TFrmDalinMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   i : integer;
@@ -125,7 +148,7 @@ begin
   App.Engine.ApiManager.DisConnectAll;
   App.Log(llInfo, '', '--- DisConnectAll ---');
 
-  CloseApp( App.Config.ClassName );
+  CloseSubApp;
 
   Action := caFree;
 end;
@@ -141,7 +164,6 @@ end;
 
 procedure TFrmDalinMain.GetExRate( bInit : boolean );
 begin
-  // 삭제될 함수..이젠 파일에서 안 읽음
   ReadExRate( bInit );
   stsBar.Panels[0].Text := Format(' %.2f', [ App.Engine.ApiManager.ExRate.GetExRate ] );
 end;
@@ -149,9 +171,6 @@ end;
 procedure TFrmDalinMain.init;
 begin
   App := TApp.Create;
-  // 파이썬 엔진은 하나만..생성해야 해서.
-  //App.Engine.ApiManager.ExRate.QueryExRate := TPhtnToDlph.Create( TObject(PyThonEngine), self );
-
   FExRate := 0;
   FDnw    := 0;
 end;
@@ -242,6 +261,8 @@ begin
   GetExRate( false );
   QryTimer.Interval :=  GetInterval;
 end;
+
+
 
 procedure TFrmDalinMain.SaveEnv( aStorage : TStorage );
 begin
@@ -356,7 +377,7 @@ begin
  // Exit;
   App.AppStatus := asinit;
 //  App.AppStatus := asload;
-  ExcuteApp( Handle, App.Config.ClassName, App.Config.AppName  );
+
 end;
 
 function TFrmDalinMain.GetRect( oRect : TRect ) : TRect ;

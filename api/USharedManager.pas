@@ -87,11 +87,11 @@ begin
   end;
 
   case aReqType of
-    rtNewOrder: c3 := TR_NEW_ORD;
-    rtCnlOrder: c3 := TR_CNL_ORD;
-    rtOrderList: c3 := TR_REQ_ORD;
-    rtPosition: c3 := TR_REQ_POS;
-    rtBalance: c3 := TR_REQ_BAL;
+    rtNewOrder:   c3 := TR_NEW_ORD;
+    rtCnlOrder:   c3 := TR_CNL_ORD;
+    rtOrderList:  c3 := TR_REQ_ORD;
+    rtPosition:   c3 := TR_REQ_POS;
+    rtBalance:    c3 := TR_REQ_BAL;
     rtOrdDetail : c3 := TR_ORD_DETAIL;
     rtTradeAmt  : c3 := TR_TRD_AMT;
   end;

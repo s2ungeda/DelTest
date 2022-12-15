@@ -14,6 +14,8 @@ const
   up2 = 14;
   bt1 = 18;
   bt2 = 21;
+  // 트레이딩 가능 여부 셋
+  ABLE_COL = 12;
   
 type
   TFrmPriceTable = class(TForm)
@@ -287,6 +289,11 @@ begin
       Cells[CurCol+1, iRow+1] := Format('%.1f %%',[(aSymbol.Last    - aSymbol.DayOpen) / dTmp * 100 ]);
       Cells[CurCol+1, iRow+2] := Format('%.1f %%',[(aSymbol.DayLow  - aSymbol.DayOpen) / dTmp * 100 ]);
 
+      if not aSymbol.TradeAble then
+        Objects[ABLE_COL,iRow] := Pointer(-100)
+      else
+        Objects[ABLE_COL,iRow] := Pointer(100);
+
     end else
     begin
       iBRow := FindBinRow( iRow );
@@ -309,8 +316,8 @@ begin
 //      Cells[ CurCol - 1, iRow] := aSymbol.QtyToStr( aSymbol.Bids[0].Volume );//  Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Bids[0].Volume ]);
     end;
 
-    Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, '○', 'X');
-    Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, '○', 'X');
+    Cells[ CurCol + 2, iRow] := ifThenStr( aSymbol.DepositState, 'O', 'X');
+    Cells[ CurCol + 3, iRow] := ifThenStr( aSymbol.WithDrawlState, 'O', 'X');
 
     Cells[ CurCol , iRow]   := aSymbol.PriceToStr( aSymbol.Last ); // Format('%*.n', [ aSymbol.Spec.Precision, aSymbol.Last ]);
     Cells[ DAyAmtCol, iRow] := Format('%.*n', [ 0, aSymbol.DayAmount ]);
@@ -423,6 +430,9 @@ begin
   with sgKimp do
   begin
 
+    Canvas.Font.Style   := [];
+    Canvas.Font.Size    := 10;
+
     stTxt := Cells[ ACol, ARow];
 
     if ARow = 0 then
@@ -434,7 +444,22 @@ begin
       iMode := (ARow-1) div 3;
       if iMode mod 2 <> 0 then
         aBack := GRID_MOD_COLOR;
-        
+
+      // binance 종목..
+      if ARow mod 3 = 1 then
+      begin
+
+        if Objects[ ABLE_COL, ARow] <> nil then
+        begin
+          iVal := integer( Objects[ABLE_COL, ARow] );
+          if iVal < 0 then begin
+            Canvas.Font.Style   := Canvas.Font.Style + [fsItalic];
+            Canvas.Font.Size    := 8;
+            aFont := clSilver;
+          end;
+        end;
+      end;
+
 			//  CurCol = 8;
       if ( ACol in [ CurCol-6..CurCol] ) then
       begin
@@ -466,7 +491,7 @@ begin
           if Objects[ExCol, ARow] <> nil then
             dFormat := DT_LEFT
           else begin
-            if ( ARow mod 3 ) = 0  then 
+            if ( ARow mod 3 ) = 0  then
             	dFormat := DT_RIGHT;
 //            else if (ARow mod 3 ) = 1 then dFomat := DT_RIGHT;
 

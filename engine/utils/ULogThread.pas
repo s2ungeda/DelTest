@@ -2,6 +2,7 @@ unit ULogThread;
 interface
 uses
   System.Classes, System.SysUtils  , Windows, Forms
+  , UTypes
   ;
 type
 
@@ -10,6 +11,31 @@ type
   2. PreFix
   3. Data
   }
+
+  TAppLogItem = class( TCollectionItem )
+  public
+    LogTime   : TDateTime;
+    LogSource : string;
+    LogTitle  : string;
+    LogDesc   : string;
+    LogData   : TObject;
+  end;
+
+  TAppLogItems = class( TCollection )
+  private
+    function GetLogItem(i: integer): TAppLogItem;
+  public
+    LogKind : TLogLevel;
+    BLog    : Boolean;
+    Critcal : TRtlCriticalSection;
+
+    Constructor Create;
+    Destructor  Destroy; override;
+
+    function New( lkValue : TLogLevel ) : TAppLogItem;
+    property LogItem[ i : integer] : TAppLogItem read GetLogItem; default;
+  end;
+
   PLogData = ^TLogData;
   TLogData = record
     Level : string;
@@ -233,6 +259,42 @@ begin
   WaitForSingleObject(LogMutex, INFINITE);
   LogQueue.Add(vLogData);
   ReleaseMutex(LogMutex);
+end;
+
+{ TAppLogItems }
+
+constructor TAppLogItems.Create;
+begin
+  inherited Create( TAppLogItem );
+  BLog  := True;
+  InitializeCriticalSection( Critcal );
+end;
+
+destructor TAppLogItems.Destroy;
+begin
+  DeleteCriticalSection( Critcal );
+  inherited;
+end;
+
+function TAppLogItems.GetLogItem(i: integer): TAppLogItem;
+begin
+  if ( i<0 ) and ( i>=Count) then
+    Result := nil
+  else
+    Result  := Items[i] as TAppLogItem;
+end;
+
+function TAppLogItems.New(lkValue: TLogLevel): TAppLogItem;
+begin
+  EnterCriticalSection(Critcal);
+  LogKind := lkValue;
+  Result  := Insert(0) as TAppLogItem;
+  Result.LogTime  :=  now;
+
+  if Count > 300 then
+    Delete(Count-1);
+
+  LeaveCriticalSection(Critcal)
 end;
 
 end.

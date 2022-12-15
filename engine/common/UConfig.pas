@@ -8,6 +8,12 @@ uses
 
 type
 
+  TProcessInfo = record
+    AppName : string;
+    ClassName : string;
+    Active : boolean;
+  end;
+
   TConfig = record
     LOG_DIR   : string;
     QUOTE_DIR : string;
@@ -16,8 +22,7 @@ type
     DATA_FILE : string;
     VERBOSE  : boolean;
 
-    AppName : string;
-    ClassName : string;
+    PrcsInfo : array [0..1] of TProcessInfo;
 
     VerifyMod : boolean;
 //    FontName : string;
@@ -33,7 +38,7 @@ implementation
 function TConfig.LoadConfig: boolean;
 var
   pIniFile : TIniFile;
-  stDir : string;
+  stDir, sSec : string;
 begin
   result := true;
 
@@ -53,8 +58,17 @@ begin
 
       DATA_FILE := pIniFile.ReadString('File', 'DataFile', 'Sauri');
 
-      AppName := pIniFile.ReadString('App', 'ExFile', 'Sauri');
-      ClassName := pIniFile.ReadString('App', 'ClassName', 'Sauri');
+      ////////////////////////////////////////////////////////////////
+      sSec  := 'ExRate';
+      PrcsInfo[0].AppName   := pIniFile.ReadString(sSec, 'ExFile', 'Sauri');
+      PrcsInfo[0].ClassName := pIniFile.ReadString(sSec, 'ClassName', 'Sauri');
+      PrcsInfo[0].Active    := pIniFile.ReadInteger(sSec,'Active', 0) = 1;
+
+      sSec  := 'Rest';
+      PrcsInfo[1].AppName   := pIniFile.ReadString(sSec , 'ExFile', 'Sauri');
+      PrcsInfo[1].ClassName := pIniFile.ReadString(sSec, 'ClassName', 'Sauri');
+      PrcsInfo[1].Active    := pIniFile.ReadInteger(sSec,'Active', 0) = 1;
+
       /////////////////////////////////////////////////////////////
       VerifyMod  := pIniFile.ReadInteger('ENV', 'VerifyMod', 1) = 1;
 //      FontName  := pIniFile.ReadString('ENV', 'Font', 'Arial') ;

@@ -15,7 +15,9 @@ type
     procedure lvLogDrawItem(Sender: TCustomListView; Item: TListItem;
       Rect: TRect; State: TOwnerDrawState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   private
+    FLogCount : array [ TLogLevel ] of integer;
     procedure UpdateLog(iKind: integer; bNew: boolean = false );
     { Private declarations }
   public
@@ -31,6 +33,7 @@ implementation
 uses
   GApp
   , UConsts
+  , ULogThread
   ;
 
 
@@ -40,6 +43,14 @@ procedure TFrmServerMessage.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Action := caHide;
+end;
+
+procedure TFrmServerMessage.FormCreate(Sender: TObject);
+var
+  I: TLogLevel;
+begin
+  for I := llFatal to High(TLogLevel) do
+    FLogCount[i] := 0;
 end;
 
 procedure TFrmServerMessage.lvLogDrawItem(Sender: TCustomListView;
@@ -120,50 +131,56 @@ begin
 end;
 
 procedure TFrmServerMessage.UpdateLog( iKind : integer; bNew : boolean);
-//var
-//  stLine : string;
-//  aColor : TColor;
-//  iLast, i : integer;
-//  aItem : TAppLogItem;
-//  aList : TListItem;
-//  aKind : TLogLevel;
+var
+  stLine : string;
+  aColor : TColor;
+  iLast, i : integer;
+  aItem : TAppLogItem;
+  aList : TListItem;
+  aKind : TLogLevel;
 begin
 
-//  if App = nil then Exit;
-//
-//  aKind := TLogLevel( iKind );
-//
-//  if aKind in [ llDebug..llTrace] then
-//  begin
-//    lvLog.Items.Count := 0;
-//    lvLog.Invalidate;
-//    Exit;
-//  end;
-//
-//  if bNew then
-//  begin
-//    //lvLog.Items.Clear;
-//    lvLog.Items.Count := gAppLog.LogList[ aKind ].Count;
-//    lvLog.Invalidate;
-//  end else
-//  begin
-//    aList := lvLog.Items.Insert(0);
-//    aItem := gAppLog.LogList[ aKind ].LogItem[0];
-//    if aItem = nil then Exit;
-//
-//    aList.Data  := aItem;
-//    aList.Caption := FormatDateTime( 'hh:nn:ss', aItem.LogTime );
-//
-//    aList.SubItems.Add( aItem.LogTitle );
-//    aList.SubItems.Add( aItem.LogDesc );
-//    lvLog.Refresh;
-//  end;
-//
-//  if lvLog.Items.Count > 0 then
-//  begin
-//    lvLog.Selected := lvLog.Items[0];
-//    lvLog.ItemFocused := lvLog.Items[0];
-//  end;
+  if App = nil then Exit;
+
+  aKind := TLogLevel( iKind );
+
+  if bNew then
+  begin
+    //lvLog.Items.Clear;
+    lvLog.Items.Count := App.LogItems[ aKind ].Count;
+    lvLog.Invalidate;
+  end else
+  begin
+
+    var iCnt : integer;
+    iCnt := App.LogItems[ aKind ].Count - FLogCount[aKind];
+
+    if iCnt >= 0 then
+      for I := iCnt-1 downto 0 do
+      begin
+
+        aItem := App.LogItems[ aKind ].LogItem[i];
+        if aItem = nil then continue;// Exit;
+
+        aList := lvLog.Items.Insert(0);
+
+        aList.Data  := aItem;
+        aList.Caption := FormatDateTime( 'hh:nn:ss', aItem.LogTime );
+
+        aList.SubItems.Add( aItem.LogTitle );
+        aList.SubItems.Add( aItem.LogDesc );
+
+        inc(FLogCount[aKind]);
+      end;
+
+    lvLog.Refresh;
+  end;
+
+  if lvLog.Items.Count > 0 then
+  begin
+    lvLog.Selected := lvLog.Items[0];
+    lvLog.ItemFocused := lvLog.Items[0];
+  end;
 
 end;
 

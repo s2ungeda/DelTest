@@ -8,6 +8,13 @@ object DataModule1: TDataModule1
     Top = 88
     object nFile: TMenuItem
       Caption = #54028#51068
+      object Message1: TMenuItem
+        Caption = 'Message'
+        OnClick = Message1Click
+      end
+      object N7: TMenuItem
+        Caption = '-'
+      end
       object N1: TMenuItem
         Caption = #51333#47308
       end

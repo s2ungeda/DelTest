@@ -7,9 +7,11 @@ uses
   , UStorage, USymbols
   , UApiTypes, UDistributor
   ;
+
+const tst : array [0..4] of string =  ('네트워크','입금','출금','최저출금','출금수수료');
+
 type
   TFrmDnwStates = class(TForm)
-    StatusBar1: TStatusBar;
     plLeft: TPanel;
     plLeftTop: TPanel;
     plLeftClient: TPanel;
@@ -22,6 +24,9 @@ type
     cbAuto2: TCheckBox;
     edtSec2: TLabeledEdit;
     reLoadTimer: TTimer;
+    plBottom: TPanel;
+    sgDetail: TStringGrid;
+    Button1: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy(Sender: TObject);
@@ -34,6 +39,11 @@ type
     procedure btnSortClick(Sender: TObject);
     procedure reLoadTimerTimer(Sender: TObject);
     procedure cbAuto2Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure sgDnwMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure sgDetailDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
   private
     FFontSize: integer;
     FRow , FSaveRow , FTerm, FCount, FCount2, FTerm2   : integer;
@@ -50,6 +60,7 @@ type
     function GetData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): string;
     function GetPriceData(aSymbol: TSymbol; iCol: integer; bDpst : boolean  ): double;
     function findBase(base: string): boolean;
+    procedure updateDetail(aSymbol: TSymbol);
     { Private declarations }
   public
     { Public declarations }
@@ -96,6 +107,7 @@ begin
 end;
 
 
+
 procedure TFrmDnwStates.initControls;
 var
   i : integer;
@@ -112,6 +124,19 @@ begin
   sgDnw.Canvas.Font.Name := 'Arial';
   sgDnw.Canvas.Font.Size := 10;
 
+  with sgDetail do
+  begin
+    for I := 0 to high(tst) do
+      Cells[i,0] := tst[i];
+
+    ColWidths[0] := 200;
+    ColWidths[1] := 30;
+    ColWidths[2] := 30;
+
+    Canvas.Font.Name := 'Arial';
+    Canvas.Font.Size := 10;
+  end;
+
   FRow      := -1;
   FCount    := 0;
   FTerm     := StrToInt( edtSec.Text );
@@ -125,6 +150,7 @@ begin
 //
 //  end;
   FSymbols := TList.Create;
+
 end;
 
 function TFrmDnwStates.findBase( base : string ) : boolean;
@@ -238,7 +264,22 @@ begin
 
   case iCol of
     0 : Result := aSymbol.Spec.BaseCode;
-    2, 4, 6 : Result := ifThenStr( bDpst , ifThenStr( aSymbol.DepositState, 'O', 'X')
+    2 :
+      begin
+        if bDpst then begin
+          if aSymbol.DepositState then
+            result := ifThenStr( aSymbol.NetworkList.IsDeposit(true), 'O', '△')
+          else
+            result := ifThenStr( aSymbol.NetworkList.IsDeposit(false), 'X', '△');
+        end else
+        begin
+          if aSymbol.WithDrawlState then
+            result := ifThenStr( aSymbol.NetworkList.IsWithdraw(true), 'O', '△')
+          else
+            result := ifThenStr( aSymbol.NetworkList.IsWithdraw(false), 'X', '△');
+        end;
+      end;
+    4, 6 : Result := ifThenStr( bDpst , ifThenStr( aSymbol.DepositState, 'O', 'X')
       , ifThenStr( aSymbol.WithDrawlState, 'O', 'X') )  ;
     3, 5, 7 :
         if bDpst then
@@ -375,6 +416,57 @@ end;
 //  end;
 //end;
 
+procedure TFrmDnwStates.sgDetailDrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+  var
+    stTxt : string;
+    aRect : TRect;
+    aFont, aBack : TColor;
+    dFormat : Word;
+    iMode : integer;
+begin
+
+  aFont   := clBlack;
+  dFormat := DT_CENTER ;
+  aRect   := Rect;
+  aBack   := clWhite;
+
+  with sgDetail do
+  begin
+    stTxt := Cells[ ACol, ARow];
+    if ARow = 0 then begin
+      aBack := clBtnFace;
+    end else
+    begin
+      if ACol = 0 then
+        dFormat := DT_LEFT
+      else if ACol in [3..4] then
+        dFormat := DT_RIGHT;
+    end;
+
+    Canvas.Font.Color   := aFont;
+    Canvas.Brush.Color  := aBack;
+
+    aRect.Top := Rect.Top + 2;
+    if ( ARow > 0 ) and ( dFormat = DT_RIGHT ) then
+      aRect.Right := aRect.Right - 2;
+    dFormat := dFormat or DT_VCENTER;
+    Canvas.FillRect( Rect);
+    DrawText( Canvas.Handle, PChar( stTxt ), Length( stTxt ), aRect, dFormat );
+
+    if ARow = 0 then begin
+      Canvas.Pen.Color := clBlack;
+      Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
+                       Point(Rect.Right, Rect.Bottom),
+                       Point(Rect.Right, Rect.Top)]);
+      Canvas.Pen.Color := clWhite;
+      Canvas.PolyLine([Point(Rect.Left,  Rect.Bottom),
+                       Point(Rect.Left,  Rect.Top),
+                       Point(Rect.Right, Rect.Top)]);
+    end
+  end;
+end;
+
 procedure TFrmDnwStates.sgDnwDrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
   var
@@ -405,30 +497,11 @@ begin
       if ACol in [9..13] then
         dFormat := DT_RIGHT;
 
-
-      //  0,1,2 ->0    3,4,5 ->1   6,7,8 -> 2
-//      iMode := (ARow-1) div 3;
-//      if iMode mod 2 <> 0 then
-//        aBack := GRID_MOD_COLOR;
-//      if ( ACol in [ CurCol-6..CurCol] ) then
-//      begin
-//        dFormat := DT_RIGHT  ;
-//        if Objects[ExCol, ARow] <> nil then
-//          if ACol <> CurCol then
-//            dFormat := DT_CENTER;
-//      end else
-//      begin
-//        if ACol = CurCol+1 then begin
-//          if Objects[ExCol, ARow] <> nil then
-//            dFormat := DT_LEFT
-//          else  if Objects[ExCol, ARow-2] <> nil then
-//            dFormat := DT_RIGHT;
-//        end
-//        else if ACol = DayAmtCol then
-//          dFormat := DT_RIGHT  ;
-//      end;
+      if ARow = FRow then
+      begin
+        aBack := $00F2BEB9;
+      end;
     end;
-
 
     Canvas.Font.Color   := aFont;
     Canvas.Brush.Color  := aBack;
@@ -466,6 +539,63 @@ begin
     end;
   end;
 end;
+
+procedure TFrmDnwStates.sgDnwMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+  var
+    aCol, aRow : integer;
+    aPoint : TPoint;
+begin
+  //
+  aRow := FRow;
+  sgDnw.MouseToCell( X, Y, aCol, FRow);
+
+  if ( aCol = 2) and ( FRow >= 1) and ( FRow < sgDnw.RowCount ) then
+  begin
+    var aSymbol : TSymbol;
+    aSymbol := TSymbol( sgDnw.Objects[BN_CoinCol,FRow] );
+    updateDetail( aSymbol );
+  end;
+
+  sgDnw.Repaint;
+end;
+
+procedure TFrmDnwStates.updateDetail( aSymbol : TSymbol );
+var
+  i, iCnt : integer;
+begin
+  if aSymbol = nil then Exit;
+
+  for I := 1 to sgDetail.RowCount-1 do
+    sgDetail.Rows[i].Clear;
+
+  sgDetail.RowCount := aSymbol.NetworkList.Count + 1;
+  if sgDetail.RowCount > 4 then
+    iCnt := 4
+  else
+    iCnt := sgDetail.RowCount;
+
+  var aNet : TDnwNetWork;
+  with sgDetail do
+  for I := 0 to aSymbol.NetworkList.Count-1 do
+  begin
+    aNet  := aSymbol.NetworkList.Network[i];
+    Cells[0,i+1]  := aNet.Name;
+    Cells[1,i+1]  := ifThenStr( aNet.DepositState, 'O', 'X');
+    Cells[2,i+1]  := ifThenStr( aNet.WithDrawlState, 'O', 'X');
+    Cells[3,i+1]  := aNet.WithdrawMin;
+    Cells[4,i+1]  := aNet.WithdrawFee;
+  end;
+
+  plBottom.Height := sgDetail.DefaultRowHeight * iCnt + iCnt +5;
+
+  if not plBottom.Visible then
+    plBottom.Visible := true;
+
+  if ( sgDetail.RowCount > 2 ) and ( sgDetail.FixedRows < 1) then
+    sgDetail.FixedRows := 1;
+end;
+
 procedure TFrmDnwStates.SymbolProc(Sender, Receiver: TObject; DataID: Integer;
   DataObj: TObject; EventID: TDistributorID);
   var
@@ -529,6 +659,11 @@ begin
 //  RefreshClick( nil );
 
   refreshTimer.Enabled := cbAuto.Checked;
+end;
+
+procedure TFrmDnwStates.Button1Click(Sender: TObject);
+begin
+  plBottom.Visible := false;
 end;
 
 procedure TFrmDnwStates.cbAuto2Click(Sender: TObject);

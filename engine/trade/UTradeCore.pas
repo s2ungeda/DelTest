@@ -49,10 +49,14 @@ uses
   ;
 { TTradeCore }
 procedure TTradeCore.AccountLoad;
+//var
+//  I: Integer;
 var
   I: TExchangeKind;
   aAcnt : TAccount;
-begin  
+begin
+  // account 라 표현했지만.. 거래소랑 비교하면 wallets 라 할수 잇다!!??.
+  // spot 과 future 마켓은 다르지만 api 는 같을수도 있고 다를수도 잇음..
   for I := ekBinance to High( TExchangeKind ) do
   begin
     if i = ekBinance then
@@ -63,8 +67,26 @@ begin
         	,App.Engine.ApiConfig.GetSceretKey( I, mtFutures )   , I  , amFuture  );
     end else
     	aAcnt := FAccounts[i].New( App.Engine.ApiConfig.GetApiKey( I, mtSpot )
-      	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I    );
+      	,App.Engine.ApiConfig.GetSceretKey( I, mtSpot )   , I , amSpot   );
   end;
+//begin
+//
+//  for I := 0 to High(App.Engine.ApiConfig.ExAccountInfo) do
+//  begin
+//    var exType : TExchangeKind;
+//    if ExistExType( App.Engine.ApiConfig.ExAccountInfo[i].Code, exType ) then
+//    begin
+//      var aCnt : TAccount;
+//
+//      App.Engine.ApiConfig.ExAccountInfo[i].ExType := exType;
+//      aCnt := FAccounts[exType].New( App.Engine.ApiConfig.ExAccountInfo[i].Key,
+//        App.Engine.ApiConfig.ExAccountInfo[i].Secret, exType );
+//
+//      if aCnt <> nil then
+//        aCnt.Name := App.Engine.ApiConfig.ExAccountInfo[i].Name;
+//    end;
+//  end;
+
 end;
 constructor TTradeCore.Create;
 var

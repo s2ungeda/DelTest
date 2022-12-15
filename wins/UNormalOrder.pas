@@ -32,6 +32,9 @@ type
     Button2: TButton;
     Timer1: TTimer;
     Button3: TButton;
+    rgPrice: TRadioGroup;
+    lbDepth: TLabel;
+    cbMarket: TComboBox;
     procedure rbSellClick(Sender: TObject);
     procedure rbBuyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -49,8 +52,10 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
+    procedure cbMarketChange(Sender: TObject);
   private
     FExKind : TExchangeKind;
+    FAccMarket : TAccountMarketType;
     FSymbol : TSymbol;
     FAccount: TAccount;
     FPosition : TPosition;
@@ -58,6 +63,11 @@ type
     procedure initControls;
     procedure DoPosition(aPos: TPosition);
     procedure UpdatePosition;
+    procedure ClearBalGrid;
+    procedure SetOrderObjects;
+    procedure SetAccMarkets;
+
+    function  GetMarket : TMarketType;
     { Private declarations }
   public
     { Public declarations }
@@ -136,6 +146,7 @@ end;
 procedure TFrmNormalOrder.cbExKindChange(Sender: TObject);
 var
   aKind : TExchangeKind;
+  aPosition : TPosition;
 begin
   aKind     := TExchangeKind( cbExKind.ItemIndex );
 
@@ -143,11 +154,86 @@ begin
     FSymbol := nil;
 
   FExKind   := aKind;
-  FAccount  := App.Engine.TradeCore.FindAccount( FExKind );
-  FPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
 
-  if FPosition <> nil then
-    UpdatePosition;
+  SetAccMarkets;
+  SetOrderObjects;
+
+//  FAccount  := App.Engine.TradeCore.FindAccount( FExKind );
+//  aPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
+//
+//  if aPosition <> FPosition then begin
+//    ClearBalGrid;
+//    FPosition := aPosition;
+//  end;
+//
+//  UpdatePosition;
+end;
+
+procedure TFrmNormalOrder.cbMarketChange(Sender: TObject);
+var
+  aAccount : TAccount;
+begin
+  FAccMarket := TAccountMarketType( cbMarket.ItemIndex +1 );
+  aAccount  := App.Engine.TradeCore.FindAccount( FExKind, FAccMarket);
+
+  if aAccount <> FAccount then
+    FAccount := aAccount;
+
+  SetOrderObjects;
+end;
+
+
+procedure TFrmNormalOrder.SetOrderObjects;
+var
+  aPosition : TPosition;
+begin
+  if( FSymbol = nil )  or ( FAccount = nil ) then
+    Exit;
+
+  aPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
+
+  if aPosition <> FPosition then begin
+    ClearBalGrid;
+    FPosition := aPosition;
+  end;
+
+  UpdatePosition;
+end;
+
+procedure TFrmNormalOrder.SetAccMarkets;
+begin
+  cbMarket.Clear;
+  case FExKind of
+    ekBinance:
+      begin
+        cbMarket.Items.Add('Spot');
+        cbMarket.Items.Add('Fut');
+        cbMarket.ItemIndex := 1;
+      end;
+    ekBithumb, ekUpbit:
+      begin
+        cbMarket.Items.Add('Spot');
+        cbMarket.ItemIndex := 0;
+      end;
+  end;
+
+  if cbMarket.Items.Count > 0 then
+    cbMarketChange(nil);
+end;
+
+procedure TFrmNormalOrder.ClearBalGrid;
+begin
+
+  with sgBal do
+  begin
+  	Cells[1,0]	:= '';
+    Cells[1,1]	:= '';
+    Cells[1,2]	:= '';
+
+    Cells[3,0]	:= '';
+		Cells[3,1]	:= '';
+    Cells[3,2]	:= '';
+  end;
 end;
 
 procedure TFrmNormalOrder.edtCodeKeyDown(Sender: TObject; var Key: Word;
@@ -162,7 +248,7 @@ begin
     //if (FSymbol <> nil ) and ( FSymbol.Spec.BaseCode = sText) then Exit;
     if sText <> '' then
     begin
-      aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( sText, FExKind);
+      aSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( sText, FExKind, GetMarket );
       if aSymbol = FSymbol then Exit;
 
       if FSymbol <> nil then
@@ -172,10 +258,8 @@ begin
 
       initGrid( sgHoga, false );
       FSymbol   := aSymbol;
-      FPosition := App.Engine.TradeCore.FindPosition( FAccount, FSymbol );
+      SetOrderObjects;
 
-      if FPosition <> nil then
-        UpdatePosition;
     end;
   end;
 end;
@@ -201,6 +285,11 @@ begin
   App.Engine.QuoteBroker.Cancel(Self );
   App.Engine.TradeBroker.Unsubscribe( Self );
 
+end;
+
+function TFrmNormalOrder.GetMarket: TMarketType;
+begin
+  Result := TMarketType( cbMarket.ItemIndex );
 end;
 
 procedure TFrmNormalOrder.rbBuyClick(Sender: TObject);
@@ -259,21 +348,76 @@ procedure TFrmNormalOrder.sgHogaMouseDown(Sender: TObject; Button: TMouseButton;
     aCol, aRow : integer;
     sTxt : string;
     dPrice: double;
+    bIn : boolean;
 begin
+
   sgHoga.MouseToCell( X, Y, aCol, aRow );
+  bIn  := false;
 
   if FSymbol = nil then Exit;
 
   dPrice := 0.0;
-  if (aCol = 0) and ( aRow <=4) then begin
-    //sTxt := sgHoga.Cells[aCol, aRow];
-    dPrice  := FSymbol.Asks[aRow].Price;
-  end
-  else if ( aCol = 2 ) and ( aRow > 4 ) then begin
-    //sTxt := sgHoga.Cells[aCol, aRow];
-    dPrice  := FSymbol.Bids[aRow-5].Price;
-  end;                                                 
+//  if (aCol = 0) and ( aRow <=4) then begin
+//    //sTxt := sgHoga.Cells[aCol, aRow];
+//    dPrice  := FSymbol.Asks[aRow].Price;
+//  end
+//  else if ( aCol = 2 ) and ( aRow > 4 ) then begin
+//    //sTxt := sgHoga.Cells[aCol, aRow];
+//    dPrice  := FSymbol.Bids[aRow-5].Price;
+//  end;
 
+  if rgPrice.ItemIndex = 0 then begin
+
+    if (aCol = 0) and ( aRow <=4) then begin
+      //sTxt := sgHoga.Cells[aCol, aRow];
+      dPrice  := FSymbol.Asks[abs(aRow-4)].Price;
+    end
+    else if ( aCol = 2 ) and ( aRow > 4 ) then begin
+      //sTxt := sgHoga.Cells[aCol, aRow];
+      dPrice  := FSymbol.Bids[aRow-5].Price;
+    end;
+
+    if (aCol=0) and (aRow in [0..4] ) then
+    begin
+      lbDepth.Caption := Format( '매도 %d 호가', [ abs(aRow-5) ] );
+      bIn := true;
+    end else
+    if (aCol=2) and ( aRow>=5) then
+    begin
+      lbDepth.Caption := Format( '매수 %d 호가', [ aRow-4 ] );
+      bIn := true;
+    end;
+
+    if bIn then
+    begin
+      FCol := aCol;
+      FRow := aRow;
+    end;
+  end else
+  begin
+    lbDepth.Caption := '';
+
+    if ( aRow <=4 ) then begin
+      //sTxt := sgHoga.Cells[aCol, aRow];
+      dPrice  := FSymbol.Asks[abs(aRow-4)].Price;
+    end
+    else if ( aRow > 4 ) then begin
+      //sTxt := sgHoga.Cells[aCol, aRow];
+      dPrice  := FSymbol.Bids[aRow-5].Price;
+    end;
+
+//    if  (aRow in [0..4] ) then
+//    begin
+//      lbDepth.Caption := Format( '매도 %d 호가', [ abs(aRow-5) ] );
+//    end else
+//    if  ( aRow>=5) then
+//    begin
+//      lbDepth.Caption := Format( '매수 %d 호가', [ aRow-4 ] );
+//    end;
+
+  end;
+
+  if IsZero( dPrice ) then Exit;
 	sTxt	:= FmtString( GetPrecision( FSymbol, dPrice ), dPrice , 1 );
 
   if sTxt <> '' then
@@ -345,21 +489,31 @@ end;
 procedure TFrmNormalOrder.UpdatePosition;
 var
 	dTotCoin : double;
+  iPre : integer;
 begin
 
 	if FPosition = nil then Exit;
 
+  iPre := 0;
+  if FExKind = ekBinance then
+    iPre := 4;
+
   with sgBal do
   begin
   	Cells[1,0]	:= FPosition.Symbol.QtyToStr( FPosition.Volume );
-    Cells[1,1]	:= Format('%.0n', [ Floor( FPosition.EntryOTE ) + 0.001 ])  ;
-    Cells[1,2]	:= Format('%.0n', [ Floor( FPosition.Account.AvailableAmt[scKRW] ) + 0.001  ]  );
+    Cells[1,1]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.EntryOTE,
+      Floor( FPosition.EntryOTE ) + 0.001 )  ])  ;
+    Cells[1,2]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.AvailableAmt[scKRW],
+      Floor( FPosition.Account.AvailableAmt[scKRW] ) + 0.001 ) ]  );
 
     dTotCoin		:= App.Engine.TradeCore.Positions[FExKind].GetOpenPL( FPosition.Account );
 
-    Cells[3,0]	:= Format('%.0n', [ Floor( dTotCoin + FPosition.Account.Balance[scKRW] ) + 0.001 ] );
-		Cells[3,1]	:= Format('%.0n', [ Floor( FPosition.Account.Balance[scKRW] ) + 0.001  ]  );
-    Cells[3,2]	:= Format('%.0n', [ Floor( dTotcoin ) + 0.001 ] );// FPosition.Symbol.QtyToStr( dTotCoin );
+    Cells[3,0]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, dTotCoin + FPosition.Account.Balance[scKRW],
+      Floor( dTotCoin + FPosition.Account.Balance[scKRW] ) + 0.001 ) ] );
+		Cells[3,1]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.Balance[scKRW],
+      Floor( FPosition.Account.Balance[scKRW] ) + 0.001 ) ]  );
+    Cells[3,2]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, dTotCoin,
+      Floor( dTotcoin ) + 0.001 ) ] );// FPosition.Symbol.QtyToStr( dTotCoin );
   end;
 end;
 
@@ -378,6 +532,10 @@ begin
   begin
     Cells[1, 4-i] := FSymbol.PriceToStr( FSymbol.Asks[i].Price );
     Cells[0, 4-i] := FSymbol.QtyToStr( FSymbol.Asks[i].Volume) ;
+
+    if (rgPrice.ItemIndex = 0 ) and  ( FCol = 0 ) and ( FRow = 4-i ) then
+      edtPrice.Text :=  FmtString( GetPrecision( FSymbol, FSymbol.Asks[i].Price ),
+         FSymbol.Asks[i].Price , 1 );
   end;
 
   with sgHoga do
@@ -385,10 +543,14 @@ begin
   begin
     Cells[1, 5+i] := FSymbol.PriceToStr( FSymbol.Bids[i].Price );
     Cells[2, 5+i] := FSymbol.QtyToStr( FSymbol.Bids[i].Volume) ;
+
+    if (rgPrice.ItemIndex = 0 ) and ( FCol = 2 ) and ( FRow = 5+i ) then
+      edtPrice.Text :=  FmtString( GetPrecision( FSymbol, FSymbol.Bids[i].Price ),
+         FSymbol.Bids[i].Price , 1 );
   end;
 
   UpdatePosition;
-  
+
 end;
 
 end.

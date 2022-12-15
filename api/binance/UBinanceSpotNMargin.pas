@@ -13,6 +13,10 @@ uses
 
   ;
 
+const
+  REQ_END_POINT = '/sapi/v1/capital/config/getall';
+//  REQ_END_POINT = '/sapi/v1/asset/assetDetail';
+
 type
   TBinanceSpotNMargin = class( TExchange )
   private
@@ -103,7 +107,7 @@ end;
 
 function TBinanceSpotNMargin.RequestMaster: boolean;
 begin
-  Result := RequestSpotMaster          
+  Result := RequestSpotMaster
          and RequestMarginMaster
          and RequestSpotTicker
          and RequestDNWStateSync
@@ -319,7 +323,7 @@ begin
   SetParam('signature', sig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
 
-  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
+  if not RequestAsync( ReceiveDNWState , rmGET, REQ_END_POINT) then
      App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
 
   Result := true;
@@ -339,10 +343,8 @@ begin
   SetParam('signature', sig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtSpot ), pkHTTPHEADER );
 
-//  if not RequestAsync( ReceiveDNWState , rmGET, '/sapi/v1/asset/assetDetail') then
-//     App.Log( llError, 'Failed %s RequestDNWState ', [ TExchangeKindDesc[GetExKind]] );
 
-  if Request( rmGET, '/sapi/v1/asset/assetDetail', '', sJson, sOut ) then
+  if Request( rmGET, REQ_END_POINT, '', sJson, sOut ) then
   begin
 //    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
     gBinReceiver.ParseDNWState( sJson );
@@ -434,7 +436,7 @@ begin
   aItem := CyclicItems.New('status');
   aItem.Interval  := 3000;
   aItem.Index     := 0;
-  aItem.Resource	:= '/sapi/v1/asset/assetDetail';  
+  aItem.Resource	:= REQ_END_POINT;//'/sapi/v1/asset/assetDetail';
   aITem.Method		:= rmGET;
 
   aItem := CyclicItems.New('listenkey');

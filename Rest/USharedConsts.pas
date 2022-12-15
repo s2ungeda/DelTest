@@ -13,15 +13,14 @@ const
   SHRD_PUSH = 0;
   SHRE_POP  = 1;
   // 바이낸 주문 배열 인덱스
-  BO_CNT = 8;
+  BO_CNT = 7;
   BO_CODE  = 0;
   BO_LS    = 1;
   BO_PRC   = 2;
   BO_QTY   = 3;
   BO_TYPE  = 4;
   BO_CID   = 5;
-  BO_TIF   = 6;
-  BO_RDO   = 7;    // reduce only
+  BO_RDO   = 6;    // reduce only
 
   // 바이낸 취소 배열 인덱스
   BC_CNT = 2;

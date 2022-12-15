@@ -12,8 +12,10 @@ uses
   , UTypes
   ;
 
-type
+const
+  ABLE_COL = 14;
 
+type
 
   TFrmQuoteMonitors = class(TForm)
     StatusBar1: TStatusBar;
@@ -49,6 +51,7 @@ type
     PopupMenu1: TPopupMenu;
     Font1: TMenuItem;
     SpinButton5: TSpinButton;
+    cbTradeAble: TCheckBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -261,6 +264,7 @@ begin
   edtAmt.Text := aStorage.FieldByName('Amount').AsStringDef('50');
   cbUB.Checked:= aStorage.FieldByName('UB').AsBooleanDef(true);
   cbBT.Checked:= aStorage.FieldByName('BT').AsBooleanDef(true);
+  cbTradeAble.Checked := aStorage.FieldByName('TA').AsBooleanDef(true);
 
   edtSec.Text     := aStorage.FieldByName('Second' ).AsStringDef('10');
   cbAuto.Checked  := aStorage.FieldByName('Auto' ).AsBooleanDef(true);
@@ -326,6 +330,15 @@ begin
     ( FShowSubEx[1] <> aSymbol.Spec.ExchangeType ) then
     Exit ( false );
 
+  if cbTradeAble.Checked then
+  begin
+    var bSymbol : TSymbol;
+    bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance, mtSpot);
+
+    if ( bSymbol <> nil ) and ( not bSymbol.RefSymbol.TradeAble) then
+      Exit (false);
+  end;
+
   if ( not cbUB.Checked ) and ( not cbBT.Checked ) then
     Exit  ( true )
   else  begin
@@ -345,6 +358,7 @@ begin
       else Exit (true);
     end;
   end;
+
 
 
   result := true;
@@ -386,7 +400,7 @@ begin
   begin
     aSymbol := App.Engine.SymbolCore.CommSymbols.CommSymbols[i];
     if not CheckFilter( aSymbol ) then begin
-      sgQuote.RowCount := sgQuote.RowCount -1;
+//      sgQuote.RowCount := sgQuote.RowCount -1;
       continue;
     end;
     FDataList.Add( aSymbol );
@@ -517,11 +531,25 @@ begin
     PutData( iCol, iRow, Format('%.*n', [ 0, aSymbol.DayAmount ]) );
 
     bSymbol := App.Engine.SymbolCore.BaseSymbols.FindSymbol( aSymbol.Spec.BaseCode, ekBinance, mtSpot);
- //   if bSymbol <> nil then
- //   begin
-//      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, '○', 'X') );
+
+    if bSymbol = nil then begin
+      PutData( iCol, iRow, 'X');
+      Objects[ABLE_COL,iRow] := Pointer(100);
+    end
+    else begin
+      PutData( iCol, iRow, ifThenStr( bSymbol.IsFuture, 'O', 'X') );
 //      PutData( iCol, iRow, ifThenStr( bSymbol.IsMargin, '○', 'X') );
-//    end;
+
+      if bSymbol.RefSymbol <> nil then
+      begin
+        if bSymbol.RefSymbol.TradeAble then
+          Objects[ABLE_COL,iRow] := Pointer(100)
+        else
+          Objects[ABLE_COL,iRow] := Pointer(-100);
+      end;
+    end;
+
+
 
     // 현재가 같은 호가..하이라이트...
     if Cells[ Mon_CurCol , iRow] = Cells[ Mon_AskCol , iRow] then
@@ -544,6 +572,7 @@ begin
   aStorage.FieldByName('Amount').AsString := edtAmt.Text;
   aStorage.FieldByName('UB').AsBoolean := cbUB.Checked;
   aStorage.FieldByName('BT').AsBoolean := cbBT.Checked;
+  aStorage.FieldByName('TA').AsBoolean := cbTradeAble.Checked;
 
   aStorage.FieldByName('Second' ).AsString := edtSec.Text;
   aStorage.FieldByName('Auto' ).AsBoolean  := cbAuto.Checked;
@@ -573,6 +602,10 @@ begin
 
   with sgQuote do
   begin
+
+    Canvas.Font.Style   := [];
+    Canvas.Font.Size    := 10;
+
     stTxt := Cells[ ACol, ARow];
 
     if ARow = 0 then
@@ -582,6 +615,19 @@ begin
     begin
       if ACol in [3..13] then
         dFormat := DT_RIGHT;
+
+//      if ACol = ABLE_COL then
+//      begin
+        if Objects[ ABLE_COL, ARow] <> nil then
+        begin
+          iVal := integer( Objects[ABLE_COL, ARow] );
+          if iVal < 0 then begin
+            Canvas.Font.Style   := Canvas.Font.Style + [fsItalic];
+            Canvas.Font.Size    := 8;
+            aFont := clSilver;
+          end;
+        end;
+//      end;
 
     // 매도/매수 하이라이트
       if ACol in [Mon_AskCol..Mon_BidCol] then

@@ -17,7 +17,7 @@ object FrmRestMain: TFrmRestMain
   PixelsPerInch = 96
   TextHeight = 13
   object m: TMemo
-    Left = 8
+    Left = -136
     Top = 36
     Width = 784
     Height = 185
@@ -44,34 +44,50 @@ object FrmRestMain: TFrmRestMain
   end
   object RESTClient2: TRESTClient
     Params = <>
-    Left = 392
+    Left = 248
     Top = 48
   end
   object UpbReq: TRESTRequest
     Client = RESTClient2
     Params = <>
     Response = RESTResponse2
-    Left = 392
+    Left = 248
     Top = 104
   end
   object RESTResponse2: TRESTResponse
-    Left = 392
+    Left = 248
     Top = 152
   end
   object RESTClient3: TRESTClient
     Params = <>
-    Left = 688
-    Top = 48
+    Left = 312
+    Top = 56
   end
   object BitReq: TRESTRequest
     Client = RESTClient3
     Params = <>
     Response = RESTResponse3
-    Left = 688
-    Top = 88
+    Left = 312
+    Top = 96
   end
   object RESTResponse3: TRESTResponse
-    Left = 688
-    Top = 144
+    Left = 312
+    Top = 152
+  end
+  object RESTClient4: TRESTClient
+    Params = <>
+    Left = 376
+    Top = 56
+  end
+  object BinSpotReq: TRESTRequest
+    Client = RESTClient4
+    Params = <>
+    Response = RESTResponse4
+    Left = 376
+    Top = 96
+  end
+  object RESTResponse4: TRESTResponse
+    Left = 376
+    Top = 152
   end
 end

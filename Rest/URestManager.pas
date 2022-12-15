@@ -9,7 +9,9 @@ uses
 
   UApiTypes ,
 
-  USharedData   , USharedConsts
+  USharedData   , USharedConsts ,
+
+  UBinFutRequests,  UBinSpotRequests
   ;
 
 type
@@ -17,15 +19,15 @@ type
   TRestManager = class
   private
     FRestReq : array [TExchangeKind] of TRESTRequest ;
+    FRestReq2: TRESTRequest;
     FOnPushData: TSharedPushData;
+    FBinFutReq: TBinFutReuqest;
+    FBinSpotReq: TBinSpotRequest;
 
     function CheckShareddData( var sArr : TArray<string>; sData: string;
                iCount : integer; aPrcName : string ) : boolean;
 
     procedure PushData( aExKind : TExchangeKind; aMarket : TMarketType; c3 : char;  sData, sRef : string );
-
-    procedure RequestBinFutNewOrder( sData, sRef : string );
-    procedure RequestBinFutCnlOrder( sData, sRef : string );
 
     //  bithumb
     procedure RequestBitOrderList( sData, sRef : string );
@@ -50,11 +52,15 @@ type
   public
     Constructor Create;
     Destructor  Destroy; override;
-    procedure init( bn, up, bt : TRESTRequest );
+    procedure init( bn, up, bt, bnSpot : TRESTRequest );
     procedure OnSharedDataNotify( aData : TDataItem );
 
 
     property OnPushData : TSharedPushData read FOnPushData write FOnPushData;
+
+    property BinFutReq : TBinFutReuqest read FBinFutReq write FBinFutReq;
+    property BinSpotReq : TBinSpotRequest read FBinSpotReq write FBinSpotReq;
+
   end;
 
 implementation
@@ -98,14 +104,20 @@ end;
 destructor TRestManager.Destroy;
 begin
 
+  FBinFutReq.Free;
+  FBinSpotReq.Free;
   inherited;
 end;
 
-procedure TRestManager.init(bn, up, bt: TRESTRequest);
+procedure TRestManager.init(bn, up, bt, bnSpot: TRESTRequest);
 begin
   FRestReq[ekBinance] := bn;
   FRestReq[ekUpbit]   := up;
   FrestReq[ekBithumb] := bt;
+  FRestReq2           := bnSpot;
+
+  FBinFutReq  := TBinFutReuqest.Create(Self, bn );
+  FBinSpotReq := TBinSpotRequest.Create(Self, bnSpot);
 end;
 
 
@@ -114,11 +126,21 @@ begin
   App.DebugLog('%d, %s, %s', [ aData.size, AnsiString( aData.data ), aData.ref ] );
   case aData.exKind of
     EX_BN:  // binance
-      case aData.trDiv of
-        TR_NEW_ORD : RequestBinFutNewOrder( AnsiString( aData.data ), aData.ref ) ;
-        TR_CNL_ORD : RequestBinFutCnlOrder( AnsiString( aData.data ), aData.ref ) ;
-        TR_REQ_POS : ;//
-
+      if aData.market = 'F' then begin
+        case aData.trDiv of
+          TR_NEW_ORD : FBinFutReq.RequestNewOrder( AnsiString( aData.data ), aData.ref ) ;
+          TR_CNL_ORD : FBinFutReq.RequestCnlOrder( AnsiString( aData.data ), aData.ref ) ;
+          TR_REQ_BAL : FBinFutReq.RequestBalance(  AnsiString( aData.data ), aData.ref ) ;
+          TR_REQ_ORD : FBinFutReq.RequestOrderList(  AnsiString( aData.data ), aData.ref ) ;
+        end;
+      end else
+      if aData.market = 'S' then begin
+        case aData.trDiv of
+          TR_NEW_ORD : FBinSpotReq.RequestNewOrder( AnsiString( aData.data ), aData.ref ) ;
+          TR_CNL_ORD : FBinSpotReq.RequestCnlOrder( AnsiString( aData.data ), aData.ref ) ;
+          TR_REQ_BAL : FBinSpotReq.RequestBalance(  AnsiString( aData.data ), aData.ref ) ;
+          TR_REQ_ORD : FBinSpotReq.RequestOrderList(  AnsiString( aData.data ), aData.ref ) ;
+        end;
       end;
     EX_UP:  // upbit
       case aData.trDiv of
@@ -160,7 +182,7 @@ begin
       mtSpot:   c2 := 'S';
       mtFutures:c2 := 'F' ;
     end;
-    
+
     FOnPushData( c1, c2, c3, sData, sRef );
   end;
 end;
@@ -212,63 +234,6 @@ end;
 
 // bithumb api --------------------------------------------------------------------------------------
 
-procedure TRestManager.RequestBinFutCnlOrder(sData, sRef: string);
-var
-  sArr  : TArray<string>;
-  sTime, sBody, sSig, outJson, outRes : string;
-begin
-  if not CheckShareddData( sArr, sData, BC_CNT, 'BinFutCnlOrder') then Exit;
-
-  sTime := GetTimestamp;
-  sBody := Format('symbol=%s&orderId=%s&timestamp=%s',
-    [ sArr[BC_CODE], sArr[BC_OID], sTime ]);
-
-  sSig  := CalculateHMACSHA256(sBody,App.ApiConfig.GetSceretKey( ekBinance, mtFutures) );
-  sBody := sBody + Format('&signature=%s', [ sSig ]);
-  FRestReq[ekBinance].AddParameter('X-MBX-APIKEY',
-      App.ApiConfig.GetApiKey( ekBinance, mtFutures) , pkHTTPHEADER );
-
-  if not Request( ekBinance,rmDELETE, '/fapi/v1/order?'+sBody, outJson, outRes ) then
-    App.Log( llError, '', 'Failed %s RequestBinFutCnlOrder (%s, %s)',
-    [ TExchangeKindDesc[ekBinance], outRes, outJson] );
-
-
-
-end;
-
-procedure TRestManager.RequestBinFutNewOrder(sData, sRef: string);
-var
-  sArr  : TArray<string>;
-  sRsrc, outJson, outRes : string;
-  sTime, sBody, sSig : string;
-begin
-  if not CheckShareddData( sArr, sData, BO_CNT, 'BinFutNewOrder') then Exit;
-
-  sBody := Format('symbol=%s&side=%s&type=%s&timeInForce=GTC&quantity=%s&price=%s&timestamp=%s',
-    [ sArr[BO_CODE],sArr[BO_LS], sArr[BO_TYPE], sArr[BO_QTY], sArr[BO_PRC] , sTime ]);
-
-  sSig  := CalculateHMACSHA256(sBody,App.ApiConfig.GetSceretKey( ekBinance, mtFutures) );
-  sBody := sBody + Format('&signature=%s', [ sSig ]);
-  FRestReq[ekBinance].AddParameter('X-MBX-APIKEY',
-      App.ApiConfig.GetApiKey( ekBinance, mtFutures) , pkHTTPHEADER );
-
-//  if Request( ekBinance, rmPOST, '/fapi/v1/order?'+sBody, outJson , outRes ) then
-//  begin
-//
-//  end else
-//  begin
-//    App.Log( llError, '', 'Failed %s RequestBinFutNewOrder (%s, %s)',
-//      [ TExchangeKindDesc[ekBinance], outRes, outJson] );
-//  end;
-
-
-  if not Request( ekBinance ,rmPOST, '/fapi/v1/order?'+sBody, outJson, outRes ) then
-    App.Log( llError, '', 'Failed %s RequestBinFutNewOrder (%s, %s)',
-    [ TExchangeKindDesc[ekBinance], outRes, outJson] );
-
-  PushData( ekBinance, mtFutures, TR_NEW_ORD, outJson, sRef );
-
-end;
 
 procedure TRestManager.RequestBitBalance(sData, sRef: string);
 var
@@ -400,9 +365,9 @@ begin
 
     if not Request( aExKind ,rmPOST, sRsrc, outJson, outRes ) then
       App.Log( llError, '', 'Failed %s RequestBitNewOrder (%s, %s)',
-      [ TExchangeKindDesc[aExKind], outRes, outJson] );       
+      [ TExchangeKindDesc[aExKind], outRes, outJson] );
 
-   	PushData( aExKind, mtSpot, TR_NEW_ORD, outJson, sRef );              
+   	PushData( aExKind, mtSpot, TR_NEW_ORD, outJson, sRef );
 	except
   end;  
 end;

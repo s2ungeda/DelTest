@@ -27,10 +27,13 @@ type
     N3: TMenuItem;
     N4: TMenuItem;
     N5: TMenuItem;
+    N7: TMenuItem;
+    Message1: TMenuItem;
     procedure Kimp1Click(Sender: TObject);
     procedure nExchangeClick(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure N5Click(Sender: TObject);
+    procedure Message1Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -174,26 +177,21 @@ end;
 
 
 
-// Quote wins open
-procedure TDataModule1.Kimp1Click(Sender: TObject);
+
+procedure TDataModule1.Message1Click(Sender: TObject);
 begin
-  //
   if (Sender = nil) or not (Sender is TComponent) then Exit;
 
   case (Sender as TComponent).Tag of
-    0 : App.Engine.FormBroker.Open(ID_KIMP_TABLE, 0);
-    1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
-    2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
-    3 : App.Engine.FormBroker.Open(ID_RPRSNT_WDC, 0);
-    4 : App.Engine.FormBroker.Open(ID_TEST, 0);
+    0 : if gMessage <> nil then gMessage.Show;
+    1 : ;
+    2 : ;
   end;
-
-
 end;
 
 procedure TDataModule1.N5Click(Sender: TObject);
 begin
-  if (Sender = nil) or not (Sender is TComponent) then Exit;      
+  if (Sender = nil) or not (Sender is TComponent) then Exit;
 
   case (Sender as TComponent).Tag of
     0 : App.Engine.FormBroker.Open(ID_ORDER, 0);
@@ -215,6 +213,22 @@ begin
   end;
 
 end;
+
+// Quote wins open
+procedure TDataModule1.Kimp1Click(Sender: TObject);
+begin
+  //
+  if (Sender = nil) or not (Sender is TComponent) then Exit;
+
+  case (Sender as TComponent).Tag of
+    0 : App.Engine.FormBroker.Open(ID_KIMP_TABLE, 0);
+    1 : App.Engine.FormBroker.Open(ID_QUOTE_MONITOR, 0);
+    2 : App.Engine.FormBroker.Open(ID_JUNG_KOPI, 0);
+    3 : App.Engine.FormBroker.Open(ID_RPRSNT_WDC, 0);
+    4 : App.Engine.FormBroker.Open(ID_TEST, 0);
+  end;
+end;
+
 
 
 

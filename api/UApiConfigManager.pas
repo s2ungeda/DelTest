@@ -20,6 +20,7 @@ type
   public
 
     ExchangeInfo : array of TExchangeInfo;
+//    ExAccountInfo : array of TExAccountInfo;
 
     constructor Create;
     destructor Destroy; override;
@@ -56,6 +57,7 @@ end;
 destructor TApiConfigManager.Destroy;
 begin
   ExchangeInfo := nil;
+  //ExAccountInfo:= nil;
   inherited;
 end;
 
@@ -108,7 +110,6 @@ begin
       /////////////////////////////////////////////////////////////
 
       iCnt := pIniFile.ReadInteger('Exchange', 'Count', 0);
-
       SetLength( ExchangeInfo, iCnt );
 
       for I := 0 to iCnt-1 do
@@ -127,8 +128,6 @@ begin
 
       for I := 0 to iCnt-1 do
       begin
-
-
         for j := mtSpot to High(TMarketType) do
           if ( j = mtSpot ) or ((  j = mtFutures ) and ( ExchangeInfo[i].IsFuture ))  then
           begin
@@ -142,17 +141,30 @@ begin
           end;
       end;
 
+//      나중에 삭제..
+//      iCnt := pIniFile.ReadInteger('Account', 'Count', 0);
+//      SetLength( ExAccountInfo, iCnt );
+//
+//      for I := 0 to iCnt-1 do
+//      begin
+//        stDir := Format('Account_%d', [i+1]);
+//        ExAccountInfo[i].Code := pIniFile.ReadString( stDir, 'Code', 'Sauri' );
+//        ExAccountInfo[i].Name := pIniFile.ReadString( stDir, 'Name', 'Sauri' );
+//        ExAccountInfo[i].Key  := pIniFile.ReadString( stDir, 'ApiKey', 'Sauri' );
+//        ExAccountInfo[i].Secret := pIniFile.ReadString( stDir, 'SecretKey', 'Sauri' );
+//      end;
+
       //App.Log(llInfo, '', '---start---');
       /////////////////////////////////////////////////////////////
       if App.Config.VERBOSE then
         for I := 0 to iCnt-1 do
           for j := mtSpot to mtFutures do
           begin
-            App.Log( llDebug, '', '%d %s[%s] %s, %s, %s', [i, ExchangeInfo[i].Name
-                , TMarketTypeDesc[j]
-                , ExchangeInfo[i].MarketInfo[j].BaseUrl
-                , ExchangeInfo[i].MarketInfo[j].Key
-                , ExchangeInfo[i].MarketInfo[j].Secret ]   );
+//            App.Log( llDebug,  '%d %s[%s] %s, %s, %s', [i, ExchangeInfo[i].Name
+//                , TMarketTypeDesc[j]
+//                , ExchangeInfo[i].MarketInfo[j].BaseUrl
+//                , ExchangeInfo[i].MarketInfo[j].Key
+//                , ExchangeInfo[i].MarketInfo[j].Secret ]  ) ;
           end;
 
 

@@ -30,7 +30,7 @@ function FmtString( iPre : integer; dVal : double; iDiv : integer = 0 ): string;
 function GetTimestamp(len: Integer = 13): string;
 function UnixTimeToDateTime( UnixTime : int64;  len: Integer = 13 ) : TDateTime;
 function GetStrToTime(sTime : string; iType: integer = 0) : TDateTime;
-procedure ExcuteApp( aHandle : HWND; sClassName , sAppName : string );
+procedure ExecuteApp( aHandle : HWND; sClassName , sAppName : string );
 procedure CloseApp( sClassName : string );
 
 //--------------------------------------- controls
@@ -250,7 +250,7 @@ begin
 end;
 
 
-procedure ExcuteApp( aHandle : HWND; sClassName, sAppName : string );
+procedure ExecuteApp( aHandle : HWND; sClassName, sAppName : string );
 var
   aH : THandle;
 begin

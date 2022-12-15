@@ -7,7 +7,7 @@ uses
 
   UExchange,
 
-  UOrders,
+  UOrders,  USymbols,
 
   UApiTypes
 
@@ -38,8 +38,8 @@ type
 
 
     procedure ParseRequestData( iCode : integer; sName : string; sData : string ); override;
-    procedure CyclicNotify( Sender : TObject ); override; 
-    procedure RestNotify( Sender : TObject ); override;    
+    procedure CyclicNotify( Sender : TObject ); override;
+    procedure RestNotify( Sender : TObject ); override;
 
     procedure RequestData( iMod : integer );
 
@@ -51,7 +51,11 @@ type
 
     	// to shared memory
     function SenderOrder( aOrder : TOrder ): boolean ; override;
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );override;
 
+    procedure RequestBalance( aSymbol : TSymbol ) ; overload; override;
+		procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure RequestTradeAmt(aSymbol: TSymbol); override;
   end;
 
 implementation
@@ -93,6 +97,8 @@ end;
 
 
 
+
+
 function TBinanceFutures.RequestBalance: boolean;
 var
   data, sig, sTime: string;
@@ -121,6 +127,8 @@ begin
   Result := true;
 
 end;
+
+
 
 function TBinanceFutures.RequestCandleData(sUnit, sCode: string): boolean;
 var
@@ -305,7 +313,7 @@ end;
 //end;
 
 function TBinanceFutures.RequestMaster: boolean;
-begin  
+begin
   
   Result := RequestFuttMaster
          and RequestFutTicker;
@@ -334,14 +342,18 @@ begin
 
   sSig  := CalculateHMACSHA256( sData, App.Engine.ApiConfig.GetSceretKey( GetExKind , mtFutures ) );
 
-  SetParam('timestamp', sTime );
-  SetParam('signature', sSig );
+  sData := sData + Format('&signature=%s', [ sSig ]);
+
+  App.DebugLog('queryString : %s', [sData]);
+
+//  SetParam('timestamp', sTime );
+//  SetParam('signature', sSig );
   SetParam('X-MBX-APIKEY', App.Engine.ApiConfig.GetApiKey( GetExKind , mtFutures ), pkHTTPHEADER );
 
-  if Request( rmPOST, '/fapi/v1/order', '', sJson, sOut ) then
+  if Request( rmPOST, '/fapi/v1/order?'+sData, '', sJson, sOut ) then
   begin
 //    App.Log( llDebug, '', '%s (%s, %s)', [ TExchangeKindDesc[GetExKind], sOut, sJson] );
-    gBinReceiver.ParseFutPosition( sJson );
+    gBinReceiver.ParseFutNewOrder( sJson, aOrder.LocalNo );//  ParseFutPosition( sJson );
   end else
   begin
     App.Log( llError, '', 'Failed %s RequestPositons (%s, %s)',
@@ -351,14 +363,8 @@ begin
 
   Result := true;
 
-
-
 end;
 
-function TBinanceFutures.RequestOrders: boolean;
-begin
-
-end;
 
 function TBinanceFutures.RequestPositons: boolean;
 var
@@ -387,8 +393,15 @@ begin
 
   Result := true;
 
+end;
+
+
+function TBinanceFutures.RequestOrders: boolean;
+begin
 
 end;
+
+
 
 procedure TBinanceFutures.MakeRest;
 var
@@ -452,46 +465,85 @@ end;
 
 {$region 'shared memory function' }
 
+procedure TBinanceFutures.RequestBalance(aSymbol: TSymbol);
+begin
+	App.Engine.SharedManager.RequestData( ekBinance, aSymbol.Spec.Market,
+      rtBalance,  aSymbol.OrgCode , aSymbol.Code
+      )  ;
+end;
+
+procedure TBinanceFutures.RequestOrderList(aSymbol: TSymbol);
+var
+	sData : string;
+begin
+	sData := Format('%s', [ aSymbol.Code ] );
+
+	App.Engine.SharedManager.RequestData( ekBinance, aSymbol.Spec.Market,
+      rtOrderList,  aSymbol.OrgCode , aSymbol.Code
+      )  ;
+end;
+
+procedure TBinanceFutures.RequestTradeAmt(aSymbol: TSymbol);
+begin
+  inherited;
+
+end;
+
+
+
 function TBinanceFutures.SenderOrder(aOrder: TOrder): boolean;
 var
-	sData, stTmp : string;
+	sData : string;
 begin
+//  Result := RequestOrder( aOrder );
+//  Exit;
 	// '|' 를 구분자 사용
 
   if aOrder.OrderType = otNormal then
   begin
 
-    case aOrder.PriceControl of
-      pcLimit: stTmp := 'limit';
-      pcMarket:stTmp := 'market';
-    end;
-
-    sData := Format('%s|%s|%s|%s|%s', [
+    sData := Format('%s|%s|%s|%s|%s|%s|%s', [
       aOrder.Symbol.OrgCode,
-      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
+      ifThenStr( aOrder.Side > 0 , 'BUY', 'SELL' ),
       aOrder.PriceBI.OrgVal,
       aOrder.OrderQtyBI.OrgVal,
-      stTmp,
-      aOrder.Symbol.Spec.SettleCode
+      'LIMIT',
+      aOrder.LocalNo,
+      ifThenStr(aOrder.ReduceOnly, 'true', 'false')
     ]);
 
-    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+    App.Engine.SharedManager.RequestData( ekBinance, aOrder.Symbol.Spec.Market,
       rtNewOrder,  sData , aOrder.LocalNo
       )
   end else
   if aOrder.OrderType = otCancel then
   begin
-    sData := Format('%s|%s|%s|%s', [
+    sData := Format('%s|%s', [
       aOrder.OrderNo,
-      aOrder.Symbol.Code,
-      ifThenStr( aOrder.Side > 0 , 'bid', 'ask' ),
-      aOrder.Symbol.Spec.SettleCode
+      aOrder.Symbol.OrgCode
     ]);
 
-    App.Engine.SharedManager.RequestData( ekBithumb, aOrder.Symbol.Spec.Market,
+    App.Engine.SharedManager.RequestData( ekBinance, aOrder.Symbol.Spec.Market,
       rtCnlOrder,  sData , aOrder.OrderNo
       )
   end;
+end;
+
+
+procedure TBinanceFutures.ReceivedData(aReqType: TRequestType; aData,
+  aRef: string);
+begin
+  with gBinReceiver do
+	case aReqType of
+    rtNewOrder  : ParseFutNewOrder( aData, aRef ) ;        // aRef is LocalHo
+    rtCnlOrder  : ParseFutCnlOrder( aData, aRef ) ;	      // aRef is OrderNo
+    rtOrderList : ParseFutOrderList( aData, aRef );		    // aRef is symbol code
+    rtBalance   : ParseFutAccountInfo( aData, aRef ) ;         // aref is symbol code
+//    rtAbleOrder : ParseSpotAvailableOrder( aData, aRef) ;   // aref is symbol code
+//    rtOrdDetail : ParseSpotOrderDetail( aData, aRef ) ;     // aref is OrderNo
+   // rtTradeAmt  : gUpRecevier.
+  end;
+
 end;
 
 {$endregion}
