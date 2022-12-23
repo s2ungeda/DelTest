@@ -55,6 +55,7 @@ type
 
     procedure RequestBalance( aSymbol : TSymbol ) ; overload; override;
 		procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure RequestPosition( aSymbol : TSymbol ); override;
     procedure RequestTradeAmt(aSymbol: TSymbol); override;
   end;
 
@@ -366,6 +367,8 @@ begin
 end;
 
 
+
+
 function TBinanceFutures.RequestPositons: boolean;
 var
   data, sig, sTime: string;
@@ -483,6 +486,13 @@ begin
       )  ;
 end;
 
+procedure TBinanceFutures.RequestPosition(aSymbol: TSymbol);
+begin
+	App.Engine.SharedManager.RequestData( ekBinance, aSymbol.Spec.Market,
+      rtPosition,  aSymbol.OrgCode , aSymbol.Code
+      )  ;
+end;
+
 procedure TBinanceFutures.RequestTradeAmt(aSymbol: TSymbol);
 begin
   inherited;
@@ -538,7 +548,8 @@ begin
     rtNewOrder  : ParseFutNewOrder( aData, aRef ) ;        // aRef is LocalHo
     rtCnlOrder  : ParseFutCnlOrder( aData, aRef ) ;	      // aRef is OrderNo
     rtOrderList : ParseFutOrderList( aData, aRef );		    // aRef is symbol code
-    rtBalance   : ParseFutAccountInfo( aData, aRef ) ;         // aref is symbol code
+    rtBalance   : ParseFutBalance( aData, aRef ) ;         // aref is symbol code
+    rtPosition  : ParseFutPositions(aData, aRef) ;         // aref is symbol code
 //    rtAbleOrder : ParseSpotAvailableOrder( aData, aRef) ;   // aref is symbol code
 //    rtOrdDetail : ParseSpotOrderDetail( aData, aRef ) ;     // aref is OrderNo
    // rtTradeAmt  : gUpRecevier.

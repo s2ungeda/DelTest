@@ -7,7 +7,7 @@ uses
 
   System.JSON,  Rest.Json ,   Rest.Types,
 
-  UExchange, USymbols ,  UMarketSpecs,
+  UExchange, USymbols , UOrders,  UMarketSpecs,
 
   UApiTypes
 
@@ -46,6 +46,17 @@ type
 
 	  function RequestBalance : boolean; override;
     function RequestOrders: boolean; override;
+
+    	// to shared memory
+    function SenderOrder( aOrder : TOrder ): boolean ; override;
+    procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );override;
+
+    procedure RequestBalance( aSymbol : TSymbol ) ; overload; override;
+		procedure RequestOrderList( aSymbol : TSymbol ); override;
+    procedure RequestPosition( aSymbol : TSymbol ); override;
+    procedure RequestTradeAmt(aSymbol: TSymbol); override;
+
+    procedure RequestOrderBook(aSymbol: TSymbol);override;
 
   end;
 
@@ -118,10 +129,7 @@ end;
 
 
 
-function TBinanceSpotNMargin.RequestOrders: boolean;
-begin
 
-end;
 
 // 저장해놓은 마스터 string 를 다시 파싱하면 됨.
 function TBinanceSpotNMargin.RequestSpotMaster: boolean;
@@ -237,7 +245,6 @@ begin
   Result := true;
 end;
 
-
 procedure TBinanceSpotNMargin.ReceiveDNWState;
 begin
   gBinReceiver.ParseDNWState( RestReq.Response.Content );
@@ -307,6 +314,11 @@ begin
   end;
 
   Result := true;
+
+end;
+
+procedure TBinanceSpotNMargin.RequestBalance(aSymbol: TSymbol);
+begin
 
 end;
 
@@ -482,6 +494,8 @@ end;
 
 
 
+
+
 procedure TBinanceSpotNMargin.ParseRequestData(iCode: integer; sName,
   sData: string);
 begin
@@ -499,8 +513,52 @@ begin
   end else
 		if sName = 'status' then
 	   	gBinReceiver.ParseDNWState( sData );
+end;
 
+{$REGION '......... shared memoroy function ..............' }
+
+function TBinanceSpotNMargin.SenderOrder(aOrder: TOrder): boolean;
+begin
 
 end;
+
+procedure TBinanceSpotNMargin.RequestOrderBook(aSymbol: TSymbol);
+begin
+	App.Engine.SharedManager.RequestData( ekBinance, aSymbol.Spec.Market,
+      rtOrderBook,  aSymbol.OrgCode , aSymbol.Code
+      )  ;
+end;
+
+procedure TBinanceSpotNMargin.RequestOrderList(aSymbol: TSymbol);
+begin
+  inherited;
+
+end;
+
+function TBinanceSpotNMargin.RequestOrders: boolean;
+begin
+
+end;
+
+procedure TBinanceSpotNMargin.RequestPosition(aSymbol: TSymbol);
+begin
+  inherited;
+
+end;
+
+procedure TBinanceSpotNMargin.ReceivedData(aReqType: TRequestType; aData,
+  aRef: string);
+begin
+  inherited;
+
+end;
+
+procedure TBinanceSpotNMargin.RequestTradeAmt(aSymbol: TSymbol);
+begin
+  inherited;
+
+end;
+
+{$ENDREGION}
 
 end.

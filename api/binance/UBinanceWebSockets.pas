@@ -218,7 +218,8 @@ begin
   try
     if FMarketType = mtSpot then
     begin
-        aList.Add( aSymbol.OrgCode +'@bookTicker' );
+//        aList.Add( aSymbol.OrgCode +'@bookTicker' );
+        aList.Add( aSymbol.OrgCode +'@depth' );
         aList.Add( aSymbol.OrgCode +'@trade' );
         aList.Add( aSymbol.OrgCode +'@miniTicker' );
     end else

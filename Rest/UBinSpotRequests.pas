@@ -18,6 +18,7 @@ type
     procedure RequestCnlOrder( sData, sRef : string );
     procedure RequestBalance( sData, sRef : string );
     procedure RequestOrderList( sData, sRef : string );
+    procedure RequestOrderbook( aData, sRef : string );
   end;
 
 implementation
@@ -60,6 +61,19 @@ begin
 end;
 
 // 미체결 리스트..
+procedure TBinSpotRequest.RequestOrderbook(aData, sRef: string);
+var
+  sBody, outJson, outRes : string;
+begin
+  sBody := Format('symbol=%s&limit=1000', [ Uppercase( aData ) ]);
+
+  if not Request( ekBinance,rmGET, '/api/v3/depth?'+sBody, outJson, outRes ) then
+    App.Log( llError, '', 'Failed %s %s RequestOrderbook (%s, %s)',
+    [ TExchangeKindDesc[ekBinance], TMarketTypeDesc[mtSpot], outRes, outJson] );
+
+  PushData( ekBinance, mtSpot, TR_ORD_BOOK, outJson, sRef );
+end;
+
 procedure TBinSpotRequest.RequestOrderList(sData, sRef: string);
 var
   sBody, sTime, outJson, outRes : string;

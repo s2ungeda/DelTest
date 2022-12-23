@@ -16,6 +16,7 @@ type
     FParent: TExchangeManager;
 
     procedure ParseSpotBookTicker( aJson : TJsonObject );
+    procedure ParseSpotDepthUpdate( aJson : TJsonObject; aData : string );
     procedure ParseSpotTrade( aJson : TJsonObject );
     procedure ParseSpotMiniTickers( aJson : TJsonObject );
 
@@ -41,7 +42,7 @@ type
     function  ParsePrepareFuttMaster( aData : string ) : boolean;
     procedure ParseFuttTicker( aData : string );
     procedure ParseListenKey(  aMarket : TMarketType; aData : string );
-    procedure ParseFutBalance(aData : string );
+    procedure ParseFutBalance(aData : string );  overload;
     procedure ParseFutPosition(aData : string );
 
     procedure ParseSocketData( aMarket : TMarketType; aData : string);
@@ -53,7 +54,8 @@ type
     // shared memory function
     procedure ParseFutNewOrder( aData, aRef : string );
     procedure ParseFutCnlOrder( aData, aRef : string );
-    procedure ParseFutAccountInfo( aData, aRef : string );
+    procedure ParseFutBalance( aData, aRef : string );  overload;
+    procedure ParseFutPositions( aData, aRef : string );
     procedure ParseFutOrderList( aData, aRef : string );
 
     property Parent : TExchangeManager read FParent;
@@ -468,6 +470,8 @@ begin
     
   end;
 end;
+
+
 
 procedure TBinanceParse.ParseFutBookTicker(aJson: TJsonObject);
 begin
@@ -1042,6 +1046,7 @@ var
 
   aSymbol : TSymbol;
   aPos    : TPosition;
+  var sType : TSettleCurType;
 begin
   if aData = '' then
   begin
@@ -1067,11 +1072,14 @@ begin
       if sCode = '' then continue;
 
       if sCode = 'USDT' then
-      begin
-        aAcnt.Balance[ scUSDT ] := aObj2.GetValue<double>('walletBalance', 0);
-        aAcnt.AvailableAmt[ scUSDT ] := aObj2.GetValue<double>('availableBalance', 0);
-        break;
-      end;
+        sType := scUSDT
+      else if sCode = 'BTC' then
+        sType := scBTC
+      else continue;
+
+      aAcnt.Balance[ sType ] := aObj2.GetValue<double>('walletBalance', 0);
+      aAcnt.AvailableAmt[ sType ] := aObj2.GetValue<double>('availableBalance', 0);
+
     end;
 
     aArr := aObj.GetValue('positions') as TJsonArray;
@@ -1165,6 +1173,7 @@ begin
 end;
 
 
+
 procedure TBinanceParse.ParseSpotTrade(aJson: TJsonObject);
 var
   sCode : string;
@@ -1237,6 +1246,34 @@ begin
 
 end;
 
+procedure TBinanceParse.ParseSpotDepthUpdate(aJson: TJsonObject; aData : string);
+var
+  sCode : string;
+  aQuote : TQuote;
+begin
+  sCode   := aJson.GetValue('s').Value;
+  aQuote  := App.Engine.QuoteBroker.Brokers[FParent.ExchangeKind].Find(sCode)    ;
+  if (aQuote = nil) or (aQuote.Symbol = nil ) then Exit;
+
+  if aQuote.ReqSnapshot then
+  begin
+    App.Engine.ApiManager.ExManagers[ekBinance].RequestOrderBook( aQuote.Symbol )	;
+    aQuote.ReqSnapshot := true;
+    App.DebugLog('%s Request snapshot', [ aQuote.Symbol.Code ] );
+  end;
+
+  if not aQuote.RcvSnapshot then
+  begin
+    aQuote.EventBuffer.Add( aData );
+    Exit;
+  end;
+
+  try
+    //App.Log(llDebug, 'depth',     aJson.Value);
+  except
+  end;
+end;
+
 procedure TBinanceParse.ParseSpotMiniTickers(aJson: TJsonObject);
 var
   sCode : string;
@@ -1258,12 +1295,8 @@ begin
       Symbol.DayVolume:= StrToFloat( aJson.GetValue('v').Value );
       Symbol.DayAmount:= StrToFloat( aJson.GetValue('q').Value ) * App.Engine.ApiManager.ExRate.Value / 100000000;
     end;
-
-
   except
   end;
-
-
 end;
 
 procedure TBinanceParse.ParseSpotTicker(aData: string);
@@ -1365,6 +1398,8 @@ begin
                   ParseSpotMiniTickers( aObj )
                 else if sTmp = 'bookTicker' then
                   ParseSpotBookTicker( aObj )
+                else if sTmp = 'depthUpdate' then
+                  ParseSpotDepthUpdate( aObj, aData )
                 else exit;
               mtFutures:
                 if sTmp = 'aggTrade' then
@@ -1534,15 +1569,188 @@ begin
 end;
 
 
-procedure TBinanceParse.ParseFutAccountInfo(aData, aRef: string);
+
+procedure TBinanceParse.ParseFutBalance(aData, aRef: string);
+var
+  aVal  : TJsonValue;
+  aArr  : TJsonArray;
+  i     : integer;
+  sTmp  : string;
+  scType: TSettleCurType;
+  aAcnt : TAccount;
 begin
-  App.DebugLog( 'ParseFutAccountInfo : %s, %s', [ aRef, aData] );
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseFutBalance data is empty : %s, %s',[aData, aRef] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.FindAccount(ekBinance, amFuture );
+  if aACnt = nil then Exit;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  if aArr = nil then Exit;
+
+  try
+    for I := 0 to aArr.Size-1 do
+    begin
+      aVal  := aArr.Get(i);
+      sTmp  := aVal.GetValue<string>('asset', '');
+
+      if sTmp = 'USDT' then scType := scUSDT
+      else if sTmp = 'BTC' then scType := scBTC
+      else continue;
+
+      aAcnt.Balance[scType] := aVal.GetValue<double>('balance',0);
+      aAcnt.AvailableAmt[scType]  := aVal.GetValue<double>('availableBalance',0);
+
+      App.Engine.TradeBroker.AccountEvent( aAcnt, 0 );
+
+      App.DebugLog( '%d. bal - %s, %s %.4f, %.4f', [ i, aAcnt.Name, TSettleCurTypeDesc[scType],
+        aAcnt.Balance[scType], aAcnt.AvailableAmt[scType] ]  );
+
+    end;
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
+end;
+
+
+procedure TBinanceParse.ParseFutPositions(aData, aRef: string);
+var
+  aVal  : TJsonValue;
+  aArr  : TJsonArray;
+  i     : integer;
+  sTmp  : string;
+
+  aAcnt : TAccount;
+  aPos  : TPosition;
+  aSymbol : TSymbol;
+
+begin
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseFutPositions data is empty : %s, %s',[aData, aRef] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.FindAccount(ekBinance, amFuture );
+  if aACnt = nil then Exit;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  if aArr = nil then Exit;
+
+  try
+    for I := 0 to aArr.Size-1 do
+    begin
+      aVal  := aArr.Get(i);
+      sTmp  := aVal.GetValue<string>('symbol', '');
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sTmp+Fut_Suf);
+      if aSymbol = nil then continue;
+
+      if aVal.GetValue<string>('notional', '') = '0' then continue;
+
+      var bNew : boolean;
+      bNew := false;
+
+      aPos  := App.Engine.TradeCore.FindPosition( aAcnt, aSymbol );
+      if aPos = nil then
+      begin
+        aPos  := App.Engine.TradeCore.NewPosition( aAcnt, aSymbol );
+        bNew  := true;
+      end;
+
+      aPos.Volume   := aVal.GetValue<double>( 'positionAmt', 0 );
+      aPos.AvgPrice := aVal.GetValue<double>( 'entryPrice', 0 );
+
+      if bNew then
+        App.Engine.TradeBroker.PositionEvent( aPos, 0);
+
+      App.DebugLog('%d. pos - %s, %s : %.4f, %.4f', [ i, aAcnt.Name, aSymbol.Code, aPos.Volume, aPos.AvgPrice] );
+
+    end;
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
+
 end;
 
 
 procedure TBinanceParse.ParseFutOrderList(aData, aRef: string);
+var
+  aVal  : TJsonValue;
+  aArr  : TJsonArray;
+  i, iSide   : integer;
+  sTmp, sOID : string;
+
+  aAcnt : TAccount;
+  aOrder  : TOrder;
+  aSymbol : TSymbol;
+
+  dOrderQty, dPrice : double;
+  pcValue : TPriceControl;
+  dtTime  : TDateTime;
 begin
-  App.DebugLog( 'ParseFutOrderList : %s, %s', [ aRef, aData] );
+  if aData = '' then
+  begin
+    App.Log(llError, 'Binance ParseFutOrderList data is empty : %s, %s',[aData, aRef] ) ;
+    Exit;
+  end;
+
+  aAcnt := App.Engine.TradeCore.FindAccount(ekBinance, amFuture );
+  if aACnt = nil then Exit;
+
+  aArr := TJsonObject.ParseJSONValue( aData) as TJsonArray;
+  if aArr = nil then Exit;
+
+  try
+    for I := 0 to aArr.Size-1 do
+    begin
+      aVal  := aArr.Get(i);
+      sTmp  := aVal.GetValue<string>('symbol', '');
+      aSymbol := App.Engine.SymbolCore.FindSymbol(ekBinance, sTmp+Fut_Suf);
+      if aSymbol = nil then continue;
+
+      sOID  := aVal.GetValue<string>('orderId', '');
+
+      aOrder  := App.Engine.TradeCore.Orders[ekBinance].ActiveOrders.FindOrder( sOID );
+      if aOrder = nil then
+      begin
+        sTmp  := aVal.FindValue('side').Value;
+        iSide := 1;
+        if sTmp = 'SELL' then
+          iSide := -1;
+
+        sTmp  := aVal.FindValue('type').Value;
+        if sTmp = 'MARKET' then
+          pcValue := pcMarket
+        else pcValue := pcLimit;
+
+        dOrderQty := aVal.GetValue<double>('origQty', 0 )
+                     - aVal.GetValue<double>('executedQty', 0 )  ;
+        dPrice    := aVal.GetValue<double>('price', 0 );
+
+        aOrder := App.Engine.TradeCore.Orders[ekBinance].NewOrder( aAcnt, aSymbol,
+          iSide, dOrderQty, pcValue, dPrice, tmGTC );
+
+        aOrder.ReduceOnly := aVal.GetValue<boolean>('reduceOnly', false);
+
+        aOrder.OrderNo  := sOID;
+        aOrder.LocalNo  := aVal.GetValue<string>( 'clientOrderId','');
+
+        dtTime:= UnixTimeToDateTime( aVal.GetValue<int64>('time') );
+
+        App.Engine.TradeBroker.Accept( aOrder, dtTime, true );
+
+        App.DebugLog( '%d, %s ', [ aOrder.Represent ]);
+
+      end;
+
+    end;
+  finally
+    if aArr <> nil then aArr.Free;
+  end;
+
 end;
 
 

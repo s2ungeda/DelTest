@@ -32,6 +32,7 @@ type
     procedure Send( aOrder : TOrder );
 
     procedure PositionEvent( aPos : TPosition ;  iDataID : integer );
+    procedure AccountEvent( aAcnt : TAccount ;   iDataID : integer );
 
   end;
 
@@ -77,6 +78,7 @@ begin
     FDistributor.Distribute(Self, TRD_DATA, aOrder, ORDER_REJECTED);
   end;
 end;
+
 
 procedure TTradeBroker.Cancel(aOrder: TOrder; dQty : double);
 begin
@@ -147,6 +149,11 @@ begin
  	FDistributor.Distribute(Self, TRD_DATA, aPos, POSITION_NEW);
 end;
 
+procedure TTradeBroker.AccountEvent(aAcnt: TAccount; iDataID: integer);
+begin
+	if aAcnt = nil then Exit;
+ 	FDistributor.Distribute(Self, TRD_DATA, aAcnt, ACCOUNT_INFO);
+end;
 
 
 procedure TTradeBroker.Send(aOrder: TOrder);

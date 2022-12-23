@@ -88,6 +88,7 @@ const
   TR_ABLE_ORD= 'A';			// 주문가능금액..
   TR_ORD_DETAIL = 'D';	// 주문상세조회.
   TR_TRD_AMT  = 'T';    // 거래액
+  TR_ORD_BOOK = 'H';    // 마켓뎁스..
 
   EX_BN = 'B';
   EX_UP = 'U';

@@ -24,6 +24,11 @@ type
     FSymbol: TSymbol;
     FDistributor: TDistributor;
     FLastEvent: TQuoteType;
+    FReqSnapshot: boolean;
+    FEventBuffer: TStrings;
+    FRcvSnapshot: boolean;
+    FBids: TMarketDepths;
+    FAsks: TMarketDepths;
 
     procedure SetSymbol(const Value: TSymbol);
     procedure checkHoga;
@@ -38,10 +43,19 @@ type
     destructor Destroy; override;
 
     procedure Update( dtTime : TDateTime );
+    procedure SetMarketDepth( iSize : integer );
 
     property Distributor: TDistributor read FDistributor;
     property LastEvent : TQuoteType read FLastEvent write FLastEvent;
     property Symbol: TSymbol read FSymbol write SetSymbol;
+    // only binance spot - local order book flag
+    property ReqSnapshot : boolean read FReqSnapshot write FReqSnapshot;
+    property RcvSnapshot : boolean read FRcvSnapshot write FRcvSnapshot;
+    property EventBuffer : TStrings read FEventBuffer write FEventBuffer;
+
+    property Asks : TMarketDepths read FAsks;
+    property Bids : TMarketDepths read FBids;
+
   end;
 
   TQuoteBroker = class(TCodedCollection)
@@ -369,12 +383,8 @@ begin
 
 //  if not Result.MakeTerm then
 //    Result.MakeTerm := bMakeTerm;
-//
-//  if gEnv.Engine.SymbolCore.Futures[0] = aSymbol then    //최근월선물은 항상 만든다
-//    Result.MakeTerm := true;
 
   Result.FDistributor.Subscribe(aSubscriber, 0, Result, ANY_EVENT, aHandler);
-
 end;
 
 
@@ -472,17 +482,37 @@ end;
 constructor TQuote.Create(aColl: TCollection);
 begin
   inherited Create(aColl);
+  FReqSnapshot  := false;
+  FRcvSnapshot  := false;
+
+  FAsks := nil;
+  FBids := nil;
+
   FSymbol := nil;
   FDistributor := TDistributor.Create;
+  FEventBuffer := TStringList.Create;
 end;
 
 destructor TQuote.Destroy;
 begin
+  if FAsks <> nil then
+    FAsks.Free;
+  if FBids <> nil then
+    FBids.Free;
+  FEventBuffer.Free;
   FDistributor.Free;
   inherited;
 end;
 
 
+
+procedure TQuote.SetMarketDepth(iSize: integer);
+begin
+  FAsks := TMarketDepths.Create;
+  FBids := TMarketDepths.Create;
+  FAsks.Size  := iSize;
+  FBids.Size  := iSize;
+end;
 
 procedure TQuote.SetSymbol(const Value: TSymbol);
 begin

@@ -49,7 +49,10 @@ type
     procedure RequestOrderList( aSymbol : TSymbol ) ;
     procedure RequestTradeAmt( aSymbol : TSymbol ) ;
     procedure RequestOrdeDetail( aOrder : TOrder ) ;
+    procedure RequestPosition( aSymbol : TSymbol  ) ;
 		procedure RequestBalance( aSymbol : TSymbol ) ; overload;
+    // only binance spot;
+    procedure RequestOrderBook( aSymbol : TSymbol );
 {$ENDREGION}
     // 상속 받아서 각 거래소 매니저에서 처리
     function InitMarketWebSockets : boolean ; virtual; abstract;
@@ -312,9 +315,19 @@ begin
   Exchanges[aOrder.Symbol.Spec.Market].RequestOrderDetail( aOrder );
 end;
 
+procedure TExchangeManager.RequestOrderBook(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestOrderBook( aSymbol );
+end;
+
 procedure TExchangeManager.RequestOrderList(aSymbol: TSymbol);
 begin
   Exchanges[aSymbol.Spec.Market].RequestOrderList( aSymbol );
+end;
+
+procedure TExchangeManager.RequestPosition(aSymbol: TSymbol);
+begin
+  Exchanges[aSymbol.Spec.Market].RequestPosition( aSymbol );
 end;
 
 procedure TExchangeManager.RequestTradeAmt(aSymbol: TSymbol);

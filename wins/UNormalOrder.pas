@@ -35,6 +35,7 @@ type
     rgPrice: TRadioGroup;
     lbDepth: TLabel;
     cbMarket: TComboBox;
+    Button4: TButton;
     procedure rbSellClick(Sender: TObject);
     procedure rbBuyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -53,6 +54,7 @@ type
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure cbMarketChange(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
   private
     FExKind : TExchangeKind;
     FAccMarket : TAccountMarketType;
@@ -141,6 +143,12 @@ procedure TFrmNormalOrder.Button3Click(Sender: TObject);
 begin
   if FSymbol <> nil then
 		App.Engine.ApiManager.ExManagers[FExKind].RequestTradeAmt( FSymbol );
+end;
+
+procedure TFrmNormalOrder.Button4Click(Sender: TObject);
+begin
+  if ( FExKind = ekBinance ) and ( GetMarket = mtFutures ) and ( FSymbol <> nil ) then
+    App.Engine.ApiManager.ExManagers[FExKind].RequestPosition( FSymbol );
 end;
 
 procedure TFrmNormalOrder.cbExKindChange(Sender: TObject);
@@ -503,14 +511,14 @@ begin
   	Cells[1,0]	:= FPosition.Symbol.QtyToStr( FPosition.Volume );
     Cells[1,1]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.EntryOTE,
       Floor( FPosition.EntryOTE ) + 0.001 )  ])  ;
-    Cells[1,2]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.AvailableAmt[scKRW],
+    Cells[1,2]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.AvailableAmt[scUSDT],
       Floor( FPosition.Account.AvailableAmt[scKRW] ) + 0.001 ) ]  );
 
     dTotCoin		:= App.Engine.TradeCore.Positions[FExKind].GetOpenPL( FPosition.Account );
 
-    Cells[3,0]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, dTotCoin + FPosition.Account.Balance[scKRW],
+    Cells[3,0]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, dTotCoin + FPosition.Account.Balance[scUSDT],
       Floor( dTotCoin + FPosition.Account.Balance[scKRW] ) + 0.001 ) ] );
-		Cells[3,1]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.Balance[scKRW],
+		Cells[3,1]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, FPosition.Account.Balance[scUSDT],
       Floor( FPosition.Account.Balance[scKRW] ) + 0.001 ) ]  );
     Cells[3,2]	:= Format('%.*n', [ iPre, ifThen( FExKind = ekBinance, dTotCoin,
       Floor( dTotcoin ) + 0.001 ) ] );// FPosition.Symbol.QtyToStr( dTotCoin );

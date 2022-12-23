@@ -94,6 +94,7 @@ begin
     rtBalance:    c3 := TR_REQ_BAL;
     rtOrdDetail : c3 := TR_ORD_DETAIL;
     rtTradeAmt  : c3 := TR_TRD_AMT;
+    rtOrderBook : c3 := TR_ORD_BOOK;
   end;
 
   SharedThread.PushData( c1, c2, c3, aData, aRef )  ;
@@ -126,6 +127,7 @@ begin
     rtBalance: c3 := TR_REQ_BAL;
     rtOrdDetail : c3 := TR_ORD_DETAIL;
     rtTradeAmt  : c3 := TR_TRD_AMT;
+    rtOrderBook : c3 := TR_ORD_BOOK;
   end;
 
   SharedThread.PushData( c1, c2, c3, aData, IntToStr( FRefCnt ) )  ;
@@ -161,6 +163,7 @@ begin
     TR_ABLE_ORD: Result := rtAbleOrder;			// 주문가능금액..
     TR_ORD_DETAIL : Result := rtOrdDetail;
     TR_TRD_AMT  : Result := rtTradeAmt;
+    TR_ORD_BOOK : Result := rtOrderBook;
   end;
 end;
 

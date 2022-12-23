@@ -214,6 +214,15 @@ object FrmNormalOrder: TFrmNormalOrder
         'Spot'
         'Fut')
     end
+    object Button4: TButton
+      Left = 247
+      Top = 106
+      Width = 75
+      Height = 25
+      Caption = #54252#51648#49496
+      TabOrder = 14
+      OnClick = Button4Click
+    end
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

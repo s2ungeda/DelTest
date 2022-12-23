@@ -62,6 +62,9 @@ const
   POSITION_ABLEQTY    = 212;
   POSITION_TRAD_AMT   = 213;
 
+    // wallet event
+  ACCOUNT_INFO = 220;
+
 
   DIV_ORD_NO = 1;
   DIV_LOC_NO = 0;

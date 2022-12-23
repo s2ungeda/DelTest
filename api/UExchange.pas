@@ -68,10 +68,14 @@ type
 //----------------------------------------------------------- common request
 {$REGION 'to shared memory define' }
 		procedure RequestBalance( aSymbol : TSymbol ) ; overload; virtual; abstract;
+    procedure RequestPosition( aSymbol : TSymbol ) ; virtual; abstract;
 		procedure RequestOrderDetail( aOrder : TOrder ); virtual; abstract;
     procedure RequestAvailableOrder( aSymbol : TSymbol ); virtual; abstract;
 		procedure RequestOrderList( aSymbol : TSymbol ); virtual; abstract;
     procedure RequestTradeAmt(aSymbol: TSymbol); virtual; abstract;
+    // only binance spot
+    procedure RequestOrderBook(aSymbol: TSymbol); virtual; abstract;
+
 		function  SenderOrder( aOrder : TOrder ): boolean ; virtual; abstract;
 
     procedure ReceivedData( aReqType : TRequestType;  aData, aRef : string );virtual; abstract;

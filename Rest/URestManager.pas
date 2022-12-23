@@ -132,6 +132,7 @@ begin
           TR_CNL_ORD : FBinFutReq.RequestCnlOrder( AnsiString( aData.data ), aData.ref ) ;
           TR_REQ_BAL : FBinFutReq.RequestBalance(  AnsiString( aData.data ), aData.ref ) ;
           TR_REQ_ORD : FBinFutReq.RequestOrderList(  AnsiString( aData.data ), aData.ref ) ;
+          TR_REQ_POS : FBinFutReq.RequestPosition(  AnsiString( aData.data ), aData.ref ) ;
         end;
       end else
       if aData.market = 'S' then begin
@@ -140,6 +141,7 @@ begin
           TR_CNL_ORD : FBinSpotReq.RequestCnlOrder( AnsiString( aData.data ), aData.ref ) ;
           TR_REQ_BAL : FBinSpotReq.RequestBalance(  AnsiString( aData.data ), aData.ref ) ;
           TR_REQ_ORD : FBinSpotReq.RequestOrderList(  AnsiString( aData.data ), aData.ref ) ;
+          TR_ORD_BOOK: FBinSpotReq.RequestOrderbook(  AnsiString( aData.data ), aData.ref ) ;
         end;
       end;
     EX_UP:  // upbit

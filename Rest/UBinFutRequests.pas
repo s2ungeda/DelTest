@@ -17,7 +17,7 @@ type
     procedure RequestNewOrder( sData, sRef : string );
     procedure RequestCnlOrder( sData, sRef : string );
     procedure RequestBalance( sData, sRef : string );
-//    procedure RequestBinFutPosition( sData, sRef : string );
+    procedure RequestPosition( sData, sRef : string );
     procedure RequestOrderList( sData, sRef : string );
   end;
 
@@ -44,30 +44,28 @@ begin
 end;
 
 
+procedure TBinFutReuqest.RequestPosition(sData, sRef: string);
+var
+  sBody, sTime, sSig, outJson, outRes : string;
+begin
+  //
+  sTime := GetTimestamp;
+  if sData = '' then
+    sBody := Format('timestamp=%s', [sTime])
+  else
+    sBody := Format('symbol=%s&timestamp=%s', [sData, sTime]);
 
-// 포지션과 잔고를 한번의 조회로 변경.
-//procedure TBinFutReuqest.RequestBinFutPosition(sData, sRef: string);
-//var
-//  sBody, sTime, sSig, outJson, outRes : string;
-//begin
-//  //
-//  sTime := GetTimestamp;
-//  if sData = '' then
-//    sBody := Format('timestamp=%s', [sTime])
-//  else
-//    sBody := Format('symbol=%s&timestamp=%s', [sData, sTime]);
-//
-//  sig(sBody);
-//
-//  if not Request( ekBinance,rmGET, '/fapi/v2/positionRisk?'+sBody, outJson, outRes ) then
-//    App.Log( llError, '', 'Failed %s RequestBinFutPosition (%s, %s)',
-//    [ TExchangeKindDesc[ekBinance], outRes, outJson] );
-//
-//  PushData( ekBinance, mtFutures, TR_REQ_POS, outJson, sRef );
-//
-//end;
+  sig(sBody);
 
-// 선물 : 포지션과 잔고를 한번에 조회..
+  if not Request( ekBinance,rmGET, '/fapi/v2/positionRisk?'+sBody, outJson, outRes ) then
+    App.Log( llError, '', 'Failed %s RequestBinFutPosition (%s, %s)',
+    [ TExchangeKindDesc[ekBinance], outRes, outJson] );
+
+  PushData( ekBinance, mtFutures, TR_REQ_POS, outJson, sRef );
+
+end;
+
+
 procedure TBinFutReuqest.RequestBalance(sData, sRef: string);
 var
   sBody, sTime, outJson, outRes : string;
@@ -83,7 +81,7 @@ begin
 //  RestReq.AddParameter('X-MBX-APIKEY',
 //      App.ApiConfig.GetApiKey( ekBinance, mtFutures) , pkHTTPHEADER );
 
-  if not Request( ekBinance,rmGET, '/fapi/v2/account?'+sBody, outJson, outRes ) then
+  if not Request( ekBinance,rmGET, '/fapi/v2/balance?'+sBody, outJson, outRes ) then
     App.Log( llError, '', 'Failed %s RequestBinFutBalance (%s, %s)',
     [ TExchangeKindDesc[ekBinance], outRes, outJson] );
 

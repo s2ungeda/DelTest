@@ -53,6 +53,7 @@ type
     FMainExKind: TExchangeKind;
     FSubExKind2: TExchangeKind;
     FSubExKind1: TExchangeKind;
+    // 인덱스 계산시 사용되는 바이낸스마켓..default : futures
     FMainExMarket: TMarketType;
     FMainWDC: TMainWDCArray;
 
